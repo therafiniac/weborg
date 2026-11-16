@@ -29,7 +29,8 @@ for upcoming phases.
 | UI        | React 19 + TypeScript (strict)               | Ecosystem, familiarity, settings-heavy UI                |
 | Styling   | Plain CSS + CSS custom properties            | Customisation is just variables; no preprocessor         |
 | Storage   | WXT `storage` (`browser.storage` wrapper)    | Typed items, built-in versioning and migrations          |
-| Icons     | Lucide (planned)                             | Maintained, tree-shakeable                               |
+| Icons     | Lucide (curated subset)                      | Maintained, tree-shakeable                               |
+| Drag/drop | @dnd-kit (core, sortable, utilities)         | Pointer, touch and keyboard; screen reader announcements |
 | Tests     | Vitest + Testing Library + WXT `fakeBrowser` | Fast, same config as Vite                                |
 | Quality   | ESLint, Prettier, `tsc --noEmit`, CI         | `npm run check` runs all of them                         |
 
@@ -154,6 +155,7 @@ interface WidgetDefinition<Data> {
   migrations?: Record<number, (old: unknown) => unknown>;
   Component: React.ComponentType<WidgetProps<Data>>;
   Settings?: React.ComponentType<WidgetSettingsProps<Data>>;
+  settingsSection?: { label: string; icon: LucideIcon }; // own settings tab
 }
 ```
 
@@ -197,6 +199,8 @@ interface LinksData {
   layout: "grid" | "tabs";
   tabSwitch: "click" | "hover"; // tabs layout only
   activeTab: string | null; // last selected tab, restored next time
+  showAddTile: boolean; // "+" tile on the page
+  lockLinks: boolean; // turns off dragging on the page
   columns: number;
   openInNewTab: boolean;
   shortcuts: boolean; // number keys 1-9
@@ -223,7 +227,21 @@ interface LinksData {
   when empty), then one tab per folder. Follows the WAI-ARIA tabs pattern
   (arrow keys, Home/End, roving tabindex); switches on click or, if chosen,
   hover after 150 ms. Number keys open links in the active tab.
-- Data history: v1 had no layout fields; v2 adds them (`linksMigrations`).
+- **Adding links**: a quick-add form (paste, Enter, repeat) in settings and
+  a "+" tile on the page (grid, folder popovers, tab panels) that opens the
+  same form in a popover attached to the tile.
+- **Drag and drop** (`@dnd-kit`): in settings every row has a handle
+  (pointer, touch, keyboard, screen reader announcements); on the page
+  tiles drag with pointer or touch after an 8px threshold, and the click
+  that ends a drag is swallowed. Rows and tiles do not shift while
+  dragging; the target is highlighted (folder) or marked with an insertion
+  line, so it never slides away. Releasing outside a target changes
+  nothing. Drop rules live in one pure function, `dropOnItem()`.
+- **Settings**: Quick Links declares `settingsSection`, so its settings get
+  their own "Links" tab with Your links / Layout / Style sub-tabs. Only one
+  link or folder is edited at a time; deletes can be undone.
+- Data history: v2 adds layout fields, v3 `showAddTile`, v4 `lockLinks`
+  (`linksMigrations`, all non-destructive).
 
 ## 6. Styling and customisation (Built)
 
@@ -316,22 +334,25 @@ deletes an uploaded image.
 
 ## 11. Decisions log
 
-| Date       | Decision                                   | Reason                                                   |
-| ---------- | ------------------------------------------ | -------------------------------------------------------- |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS    | See section 2                                            |
-| 2026-11-16 | MIT licence                                | Permissive open source licence                           |
-| 2026-11-16 | Extensions only, no website build          | Focus; can be added later with Vite                      |
-| 2026-11-16 | Widget data in `storage.local`, not sync   | Avoid the 8 KB per-item sync limit                       |
-| 2026-11-16 | No telemetry or crash reporting            | Privacy by default                                       |
-| 2026-11-16 | Background images in IndexedDB             | Too large for browser.storage; never synced              |
-| 2026-11-16 | Settings panel is non-modal                | Changes preview live on the page behind it               |
-| 2026-11-16 | DuckDuckGo is the default search engine    | Privacy by default; user can change it                   |
-| 2026-11-16 | Website icons are opt-in                   | Loading them reveals link domains to DuckDuckGo          |
-| 2026-11-16 | Curated icon set instead of all of Lucide  | Bundle size                                              |
-| 2026-11-16 | Text size as a percentage, not px          | One control scales every widget consistently             |
-| 2026-11-16 | No user custom CSS                         | Every option has a control; sanitised inputs only        |
-| 2026-11-17 | Folder popover anchored to its tile        | Keeps the visual link to the folder; no dimming          |
-| 2026-11-17 | Tabs layout for Quick Links                | Every category one click away; folders as tabs           |
-| 2026-11-17 | Migrations never overwrite existing values | WXT re-runs them on unversioned (restored) data          |
-| 2026-11-17 | Presets carry their own darken level       | Colourful pastels stay readable with white text          |
-| 2026-11-17 | Settings in tabs; maximise/minimise        | One section at a time; whole page visible when minimised |
+| Date       | Decision                                        | Reason                                                   |
+| ---------- | ----------------------------------------------- | -------------------------------------------------------- |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS         | See section 2                                            |
+| 2026-11-16 | MIT licence                                     | Permissive open source licence                           |
+| 2026-11-16 | Extensions only, no website build               | Focus; can be added later with Vite                      |
+| 2026-11-16 | Widget data in `storage.local`, not sync        | Avoid the 8 KB per-item sync limit                       |
+| 2026-11-16 | No telemetry or crash reporting                 | Privacy by default                                       |
+| 2026-11-16 | Background images in IndexedDB                  | Too large for browser.storage; never synced              |
+| 2026-11-16 | Settings panel is non-modal                     | Changes preview live on the page behind it               |
+| 2026-11-16 | DuckDuckGo is the default search engine         | Privacy by default; user can change it                   |
+| 2026-11-16 | Website icons are opt-in                        | Loading them reveals link domains to DuckDuckGo          |
+| 2026-11-16 | Curated icon set instead of all of Lucide       | Bundle size                                              |
+| 2026-11-16 | Text size as a percentage, not px               | One control scales every widget consistently             |
+| 2026-11-16 | No user custom CSS                              | Every option has a control; sanitised inputs only        |
+| 2026-11-17 | Folder popover anchored to its tile             | Keeps the visual link to the folder; no dimming          |
+| 2026-11-17 | Tabs layout for Quick Links                     | Every category one click away; folders as tabs           |
+| 2026-11-17 | Migrations never overwrite existing values      | WXT re-runs them on unversioned (restored) data          |
+| 2026-11-17 | Presets carry their own darken level            | Colourful pastels stay readable with white text          |
+| 2026-11-17 | Settings in tabs; maximise/minimise             | One section at a time; whole page visible when minimised |
+| 2026-11-17 | Quick Links settings in their own tab           | Most-used widget; too much to nest in the Widgets list   |
+| 2026-11-17 | Add @dnd-kit for drag and drop                  | Keyboard, touch and screen reader support out of the box |
+| 2026-11-17 | Static rows with drop highlights while dragging | Shifting rows moved folder targets away from the pointer |
