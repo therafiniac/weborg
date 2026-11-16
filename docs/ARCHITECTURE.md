@@ -313,7 +313,9 @@ deletes an uploaded image.
 
 ## 8b. Page controls (Built)
 
-Bottom-right buttons, hidden while the settings panel is open:
+Bottom-right buttons, hidden while the settings panel is open. They fade
+in only when the pointer reaches that corner, while one has keyboard focus,
+or while a hint shows; on touch screens (no hover) they are always visible.
 
 - **Eye**: hides every widget (`ui.widgetsHidden`); only the background and
   the buttons remain.
