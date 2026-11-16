@@ -43,6 +43,9 @@ function createStore<T>(item: AnyItem<T>): Store<T> {
         if (listeners.size === 0) {
           unwatch?.();
           unwatch = undefined;
+          // Unwatched values can go stale; force a fresh read next time
+          value = undefined;
+          loaded = false;
         }
       };
     },

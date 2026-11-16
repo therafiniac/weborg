@@ -1,0 +1,107 @@
+/* Shared control styles used by the settings UI */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.button:hover {
+  border-color: var(--color-muted);
+}
+
+.button--primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.button--danger {
+  border-color: var(--color-danger-bg);
+  color: var(--color-danger-bg);
+  background: transparent;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.875rem;
+}
+
+.field--inline {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.field label {
+  color: var(--color-muted);
+}
+
+.field input:not([type="checkbox"], [type="range"], [type="color"]),
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input[type="range"] {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.field input[type="color"] {
+  width: 3rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+}
+
+.hint {
+  margin: 0 0 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
