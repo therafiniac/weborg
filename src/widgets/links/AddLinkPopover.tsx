@@ -1,7 +1,10 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
-import type { Link } from "./model";
+import SegmentedControl from "@/ui/SegmentedControl";
+
+import type { Folder, Link } from "./model";
+import NewFolderForm from "./settings/NewFolderForm";
 import QuickAddForm from "./settings/QuickAddForm";
 import { useAnchoredPopover } from "./useAnchoredPopover";
 
@@ -12,22 +15,29 @@ interface Props {
   title: string;
   style: CSSProperties;
   onAdd: (link: Link, folderId: string | null) => void;
+  /** Offer "Folder" as well as "Link" (not inside folders: no nesting). */
+  onAddFolder?: (folder: Folder) => void;
   onClose: () => void;
 }
 
-/** Small add-link form attached to the "+" tile. Stays open for more. */
+/**
+ * Small form attached to the "+" tile: add links (stays open for more) or,
+ * at the top level, create a folder.
+ */
 export default function AddLinkPopover({
   anchor,
   folderId,
   title,
   style,
   onAdd,
+  onAddFolder,
   onClose,
 }: Props) {
-  const { popoverRef, focusRef: urlRef } = useAnchoredPopover<
+  const [mode, setMode] = useState<"link" | "folder">("link");
+  const { popoverRef, focusRef } = useAnchoredPopover<
     HTMLDivElement,
     HTMLInputElement
-  >({ anchor, onClose });
+  >({ anchor, onClose, layoutKey: mode });
 
   return createPortal(
     <div
@@ -39,12 +49,35 @@ export default function AddLinkPopover({
     >
       <span className="folder-popup__arrow" aria-hidden />
       <div className="add-popover__body">
-        <QuickAddForm
-          title={title}
-          folderId={folderId}
-          urlRef={urlRef}
-          onAdd={onAdd}
-        />
+        {onAddFolder && (
+          <SegmentedControl<"link" | "folder">
+            label="What to add"
+            value={mode}
+            options={[
+              { value: "link", label: "Link" },
+              { value: "folder", label: "Folder" },
+            ]}
+            onChange={setMode}
+          />
+        )}
+        {mode === "link" || !onAddFolder ? (
+          <QuickAddForm
+            title={title}
+            folderId={folderId}
+            urlRef={focusRef}
+            autoFocus={mode === "link" && Boolean(onAddFolder)}
+            onAdd={onAdd}
+          />
+        ) : (
+          <NewFolderForm
+            nameRef={focusRef}
+            autoFocus
+            onCreate={(folder) => {
+              onAddFolder(folder);
+              onClose();
+            }}
+          />
+        )}
       </div>
     </div>,
     document.body,
