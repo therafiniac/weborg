@@ -167,3 +167,39 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
+.preset-swatches {
+  display: grid;
+  /* minmax(0, ...) lets columns shrink below the buttons' minimum size */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.preset-swatch {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1.6;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  transition: transform 0.15s ease;
+}
+
+.preset-swatch:hover {
+  transform: scale(1.05);
+}
+
+.preset-swatch[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preset-swatch {
+    transition: none;
+  }
+}
