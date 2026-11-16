@@ -26,8 +26,6 @@ interface Props {
   onChange: (settings: Settings) => void;
 }
 
-const HINT = "Inspired by Catppuccin Mocha.";
-
 export default function BackgroundSettings({ settings, onChange }: Props) {
   const definition = getBackground(settings.kind);
 
@@ -61,7 +59,6 @@ export default function BackgroundSettings({ settings, onChange }: Props) {
       {settings.kind === "colour" && (
         <Swatches
           label="Presets"
-          hint={HINT}
           swatches={COLOUR_PRESETS.map((preset) => ({
             id: preset.id,
             name: preset.name,
@@ -78,7 +75,6 @@ export default function BackgroundSettings({ settings, onChange }: Props) {
       {settings.kind === "gradient" && (
         <Swatches
           label="Presets"
-          hint={HINT}
           swatches={GRADIENT_PRESETS.map((preset) => ({
             id: preset.id,
             name: preset.name,
