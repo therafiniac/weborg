@@ -14,6 +14,8 @@ import {
   type Item,
   type Link,
   type LinksData,
+  type LinksLayout,
+  type TabSwitch,
 } from "./model";
 import StyleEditor from "./StyleEditor";
 import { resolveStyle } from "./style";
@@ -134,6 +136,32 @@ export default function LinksSettings({
       </div>
 
       <h4 className="settings-subheading">Options</h4>
+      <SelectField<LinksLayout>
+        label="Layout"
+        value={data.layout}
+        options={[
+          { value: "grid", label: "Grid (folders open as popovers)" },
+          { value: "tabs", label: "Tabs (folders become tabs)" },
+        ]}
+        onChange={(layout) => setData({ ...data, layout })}
+      />
+      {data.layout === "tabs" && (
+        <>
+          <SelectField<TabSwitch>
+            label="Switch tabs"
+            value={data.tabSwitch}
+            options={[
+              { value: "click", label: "On click" },
+              { value: "hover", label: "On hover" },
+            ]}
+            onChange={(tabSwitch) => setData({ ...data, tabSwitch })}
+          />
+          <p className="hint">
+            Links that aren&apos;t in a folder appear in a &ldquo;Links&rdquo;
+            tab.
+          </p>
+        </>
+      )}
       <RangeField
         label="Columns"
         min={1}

@@ -4,6 +4,7 @@ import type { WidgetProps } from "@/core/widgets/types";
 
 import FolderPopup from "./FolderPopup";
 import FolderTile from "./FolderTile";
+import LinksTabs from "./LinksTabs";
 import LinkTile from "./LinkTile";
 import type { Folder, Link, LinksData } from "./model";
 import { resolveStyle, styleClasses, styleVars } from "./style";
@@ -18,7 +19,7 @@ export function openLink(link: Link, newTab: boolean) {
   else window.location.assign(url);
 }
 
-export default function Links({ data }: WidgetProps<LinksData>) {
+export default function Links({ data, setData }: WidgetProps<LinksData>) {
   const style = resolveStyle(data.style);
   // The open folder and the tile it is attached to
   const [open, setOpen] = useState<{
@@ -42,7 +43,8 @@ export default function Links({ data }: WidgetProps<LinksData>) {
     open?.anchor?.focus();
   };
 
-  useNumberShortcuts(data.shortcuts, (index) => {
+  // Grid layout shortcuts; the tabs layout handles its own
+  useNumberShortcuts(data.shortcuts && data.layout !== "tabs", (index) => {
     if (openFolder) {
       const link = openFolder.links[index];
       if (link) openLink(link, data.openInNewTab);
@@ -57,6 +59,21 @@ export default function Links({ data }: WidgetProps<LinksData>) {
     return <p className="links__empty">Add links in settings.</p>;
 
   const classes = styleClasses(style);
+
+  if (data.layout === "tabs")
+    return (
+      <LinksTabs
+        data={data}
+        setData={setData}
+        className={classes}
+        style={styleVars(style, data.columns)}
+        onOpenLink={(index, links) => {
+          const link = links[index];
+          if (link?.kind === "link") openLink(link, data.openInNewTab);
+        }}
+      />
+    );
+
   // Never reserve more columns than there are items, so tiles stay centred
   const vars = styleVars(style, Math.min(data.columns, data.items.length));
 
