@@ -1,0 +1,110 @@
+import {
+  Bell,
+  BookOpen,
+  Bookmark,
+  Bot,
+  Briefcase,
+  Calendar,
+  Camera,
+  ChartLine,
+  Cloud,
+  Code,
+  Coffee,
+  Database,
+  Dumbbell,
+  FileText,
+  Film,
+  Folder,
+  Gamepad2,
+  Gift,
+  Globe,
+  GraduationCap,
+  Heart,
+  House,
+  Image,
+  Lock,
+  Mail,
+  Map,
+  MessageCircle,
+  Music,
+  Newspaper,
+  Palette,
+  Plane,
+  Rss,
+  Search,
+  Server,
+  Settings,
+  ShoppingCart,
+  Star,
+  Terminal,
+  Tv,
+  Users,
+  Utensils,
+  Video,
+  Wallet,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+
+/** Curated set: importing all of Lucide would add over 1 MB. */
+export const ICONS = {
+  globe: Globe,
+  house: House,
+  mail: Mail,
+  "message-circle": MessageCircle,
+  calendar: Calendar,
+  briefcase: Briefcase,
+  code: Code,
+  terminal: Terminal,
+  server: Server,
+  database: Database,
+  cloud: Cloud,
+  bot: Bot,
+  "file-text": FileText,
+  "book-open": BookOpen,
+  "graduation-cap": GraduationCap,
+  newspaper: Newspaper,
+  rss: Rss,
+  search: Search,
+  bookmark: Bookmark,
+  star: Star,
+  heart: Heart,
+  folder: Folder,
+  music: Music,
+  video: Video,
+  film: Film,
+  tv: Tv,
+  "gamepad-2": Gamepad2,
+  camera: Camera,
+  image: Image,
+  palette: Palette,
+  "shopping-cart": ShoppingCart,
+  wallet: Wallet,
+  "chart-line": ChartLine,
+  gift: Gift,
+  plane: Plane,
+  map: Map,
+  utensils: Utensils,
+  coffee: Coffee,
+  dumbbell: Dumbbell,
+  users: Users,
+  bell: Bell,
+  lock: Lock,
+  settings: Settings,
+  zap: Zap,
+} satisfies Record<string, LucideIcon>;
+
+export type IconName = keyof typeof ICONS;
+
+export const ICON_NAMES = Object.keys(ICONS) as IconName[];
+
+export const isIconName = (value: string): value is IconName =>
+  Object.hasOwn(ICONS, value);
+
+export const iconLabel = (name: string) =>
+  name.charAt(0).toUpperCase() + name.slice(1).replaceAll("-", " ");
+
+export function NamedIcon({ name, size }: { name: string; size?: number }) {
+  const Icon = isIconName(name) ? ICONS[name] : Globe;
+  return <Icon size={size} aria-hidden />;
+}
