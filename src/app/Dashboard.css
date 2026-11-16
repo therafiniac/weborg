@@ -2,6 +2,7 @@
   position: fixed;
   inset: 0;
   padding: var(--edge-padding, 0);
+  color: var(--dashboard-text, #ffffff);
   pointer-events: none;
 }
 
