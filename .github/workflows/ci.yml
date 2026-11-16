@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+  build:
+    name: Build ${{ matrix.browser }}
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx wxt zip -b ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weborg-${{ matrix.browser }}
+          path: .output/*.zip

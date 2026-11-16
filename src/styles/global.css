@@ -1,0 +1,45 @@
+:root {
+  --color-bg: #11111b;
+  --color-text: #cdd6f4;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg: #eff1f5;
+    --color-text: #4c4f69;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+.app__title {
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
