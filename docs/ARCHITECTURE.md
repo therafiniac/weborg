@@ -138,8 +138,7 @@ Export writes one JSON file: `{ format: "weborg", formatVersion, exportedAt,
 settings, background, widgets }`, where `widgets` maps instance ids to their
 data. The background image is not included. Import validates the file,
 rejects newer `formatVersion`s, drops data for unknown widgets, resets, then
-writes. Reset clears both storage areas and the image. Importing Tabliss
-exports may be added later as a converter.
+writes. Reset clears both storage areas and the image.
 
 ## 5. Widget system (Built)
 
@@ -319,9 +318,8 @@ deletes an uploaded image.
 
 | Date       | Decision                                   | Reason                                                   |
 | ---------- | ------------------------------------------ | -------------------------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork   | Own product, modern stack, MIT licence                   |
 | 2026-11-16 | WXT + React 19 + TypeScript + plain CSS    | See section 2                                            |
-| 2026-11-16 | MIT licence                                | Permissive; no Tabliss code is copied                    |
+| 2026-11-16 | MIT licence                                | Permissive open source licence                           |
 | 2026-11-16 | Extensions only, no website build          | Focus; can be added later with Vite                      |
 | 2026-11-16 | Widget data in `storage.local`, not sync   | Avoid the 8 KB per-item sync limit                       |
 | 2026-11-16 | No telemetry or crash reporting            | Privacy by default                                       |
