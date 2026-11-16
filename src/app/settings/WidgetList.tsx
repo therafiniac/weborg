@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 
 import {
@@ -18,6 +18,7 @@ import { removeWidgetData, useWidgetData } from "@/core/widgets/data";
 import type { WidgetDefinition } from "@/core/widgets/types";
 import { getWidget, widgets } from "@/widgets";
 
+import { useSettingsNav } from "./SettingsPanel";
 import WidgetStyleSettings from "./WidgetStyleSettings";
 
 import "./WidgetList.css";
@@ -198,8 +199,12 @@ function WidgetItem({
               ))}
             </select>
           </div>
-          {definition.Settings && (
-            <WidgetSettings instance={instance} definition={definition} />
+          {definition.Settings && definition.settingsSection ? (
+            <EditInSection definition={definition} />
+          ) : (
+            definition.Settings && (
+              <WidgetSettings instance={instance} definition={definition} />
+            )
           )}
           <WidgetStyleSettings
             display={instance.display}
@@ -223,4 +228,20 @@ function WidgetSettings({
   const Settings = definition.Settings;
   if (!Settings || data === undefined) return null;
   return <Settings instance={instance} data={data} setData={setData} />;
+}
+
+/** Widgets with their own settings tab get a shortcut instead of a form. */
+function EditInSection({ definition }: { definition: WidgetDefinition }) {
+  const goTo = useSettingsNav();
+  const label = definition.settingsSection!.label;
+  return (
+    <button
+      type="button"
+      className="button edit-in-section"
+      onClick={() => goTo(definition.type)}
+    >
+      Edit {label.toLowerCase()} in the {label} tab
+      <ArrowRight size={16} aria-hidden />
+    </button>
+  );
 }

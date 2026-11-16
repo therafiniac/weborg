@@ -14,6 +14,7 @@ import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
 import SettingsPanel from "@/app/settings/SettingsPanel";
 import WidgetList from "@/app/settings/WidgetList";
+import WidgetSection from "@/app/settings/WidgetSection";
 import {
   backgroundItem,
   normalizeBackground,
@@ -25,6 +26,7 @@ import {
   type Settings,
 } from "@/core/storage/settings";
 import { useStorageItem } from "@/core/storage/useStorageItem";
+import { widgets } from "@/widgets";
 
 export default function App() {
   const [stored, setStored] = useStorageItem(settingsItem);
@@ -105,6 +107,21 @@ export default function App() {
                 />
               ),
             },
+            // Widgets with lots of options get their own tab (e.g. Links)
+            ...widgets
+              .filter((definition) => definition.settingsSection)
+              .map((definition) => ({
+                id: definition.type,
+                label: definition.settingsSection!.label,
+                icon: definition.settingsSection!.icon,
+                content: (
+                  <WidgetSection
+                    definition={definition}
+                    settings={settings}
+                    onChange={saveSettings}
+                  />
+                ),
+              })),
             {
               id: "widgets",
               label: "Widgets",
