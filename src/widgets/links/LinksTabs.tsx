@@ -6,6 +6,7 @@ import AddLinkPopover from "./AddLinkPopover";
 import AddLinkTile from "./AddLinkTile";
 import type { Link, LinksData } from "./model";
 import { activeTabOf, buildTabs, LOOSE_TAB_ID, tabIndexForKey } from "./tabs";
+import { DraggableTile, DroppableTab } from "./TileDnd";
 import { useNumberShortcuts } from "./useNumberShortcuts";
 
 const HOVER_DELAY_MS = 150;
@@ -101,44 +102,47 @@ export default function LinksTabs({
         aria-label="Link folders"
       >
         {tabs.map((tab, index) => (
-          <button
-            key={tab.id}
-            ref={(element) => {
-              tabRefs.current[index] = element;
-            }}
-            id={tabId(tab.id)}
-            type="button"
-            role="tab"
-            className="links-tabs__tab"
-            aria-selected={tab.id === active.id}
-            aria-controls={panelId}
-            tabIndex={tab.id === active.id ? 0 : -1}
-            onClick={() => select(tab.id)}
-            onPointerEnter={() => {
-              if (data.tabSwitch !== "hover") return;
-              clearTimeout(hoverTimer.current);
-              hoverTimer.current = setTimeout(
-                () => select(tab.id),
-                HOVER_DELAY_MS,
-              );
-            }}
-            onPointerLeave={() => clearTimeout(hoverTimer.current)}
-            onKeyDown={(event) => {
-              const next = tabIndexForKey(event.key, index, tabs.length);
-              if (next === null) return;
-              event.preventDefault();
-              select(tabs[next]!.id);
-              tabRefs.current[next]?.focus();
-            }}
-          >
-            <span className="links__icon">
-              <NamedIcon name={tab.icon} />
-            </span>
-            <span className="links-tabs__name">{tab.name}</span>
-            <span className="links-tabs__count" aria-hidden>
-              {tab.links.length}
-            </span>
-          </button>
+          <DroppableTab key={tab.id} tabId={tab.id}>
+            {(dropOver) => (
+              <button
+                ref={(element) => {
+                  tabRefs.current[index] = element;
+                }}
+                id={tabId(tab.id)}
+                type="button"
+                role="tab"
+                className={`links-tabs__tab${dropOver ? " links-tabs__tab--drop" : ""}`}
+                aria-selected={tab.id === active.id}
+                aria-controls={panelId}
+                tabIndex={tab.id === active.id ? 0 : -1}
+                onClick={() => select(tab.id)}
+                onPointerEnter={() => {
+                  if (data.tabSwitch !== "hover") return;
+                  clearTimeout(hoverTimer.current);
+                  hoverTimer.current = setTimeout(
+                    () => select(tab.id),
+                    HOVER_DELAY_MS,
+                  );
+                }}
+                onPointerLeave={() => clearTimeout(hoverTimer.current)}
+                onKeyDown={(event) => {
+                  const next = tabIndexForKey(event.key, index, tabs.length);
+                  if (next === null) return;
+                  event.preventDefault();
+                  select(tabs[next]!.id);
+                  tabRefs.current[next]?.focus();
+                }}
+              >
+                <span className="links__icon">
+                  <NamedIcon name={tab.icon} />
+                </span>
+                <span className="links-tabs__name">{tab.name}</span>
+                <span className="links-tabs__count" aria-hidden>
+                  {tab.links.length}
+                </span>
+              </button>
+            )}
+          </DroppableTab>
         ))}
       </div>
 
@@ -161,13 +165,14 @@ export default function LinksTabs({
             style={{ "--links-columns": String(columns) } as CSSProperties}
           >
             {active.links.map((link, index) => (
-              <LinkTile
-                key={link.id}
-                link={link}
-                number={data.shortcuts && index < 9 ? index + 1 : undefined}
-                openInNewTab={data.openInNewTab}
-                favicons={data.favicons}
-              />
+              <DraggableTile key={link.id} id={link.id} isFolder={false}>
+                <LinkTile
+                  link={link}
+                  number={data.shortcuts && index < 9 ? index + 1 : undefined}
+                  openInNewTab={data.openInNewTab}
+                  favicons={data.favicons}
+                />
+              </DraggableTile>
             ))}
             {addTile(addLabel)}
           </nav>

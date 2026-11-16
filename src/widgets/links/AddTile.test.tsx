@@ -38,6 +38,7 @@ const base: LinksData = {
   tabSwitch: "click",
   activeTab: null,
   showAddTile: true,
+  lockLinks: false,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,
@@ -147,6 +148,29 @@ describe("+ tile", () => {
     });
     expect(linksMigrations[3]!({ showAddTile: false })).toEqual({
       showAddTile: false,
+    });
+  });
+});
+
+describe("page drag and drop", () => {
+  it("makes tiles draggable unless links are locked", () => {
+    const { container, unmount } = render(<Harness />);
+    expect(container.querySelectorAll(".links__drag")).toHaveLength(2);
+    unmount();
+
+    const locked = render(<Harness start={{ ...base, lockLinks: true }} />);
+    expect(locked.container.querySelectorAll(".links__drag")).toHaveLength(0);
+    // Links still work normally when locked
+    expect(screen.getByRole("link", { name: "Alpha" })).toBeInTheDocument();
+  });
+
+  it("v4 migration unlocks dragging without touching other values", () => {
+    expect(linksMigrations[4]!({ layout: "tabs" })).toEqual({
+      lockLinks: false,
+      layout: "tabs",
+    });
+    expect(linksMigrations[4]!({ lockLinks: true })).toEqual({
+      lockLinks: true,
     });
   });
 });

@@ -6,6 +6,7 @@ import AddLinkPopover from "./AddLinkPopover";
 import AddLinkTile from "./AddLinkTile";
 import FolderPopup from "./FolderPopup";
 import { addItem } from "./items";
+import { DraggableTile, TileDnd } from "./TileDnd";
 import FolderTile from "./FolderTile";
 import LinksTabs from "./LinksTabs";
 import LinkTile from "./LinkTile";
@@ -70,17 +71,25 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
 
   if (data.layout === "tabs")
     return (
-      <LinksTabs
-        data={data}
-        setData={setData}
-        className={classes}
-        style={styleVars(style, data.columns)}
-        onAddLink={addLink}
-        onOpenLink={(index, links) => {
-          const link = links[index];
-          if (link?.kind === "link") openLink(link, data.openInNewTab);
-        }}
-      />
+      <TileDnd
+        items={data.items}
+        enabled={!data.lockLinks}
+        onChange={(items) => setData({ ...data, items })}
+        overlayClassName={classes}
+        overlayStyle={styleVars(style, data.columns)}
+      >
+        <LinksTabs
+          data={data}
+          setData={setData}
+          className={classes}
+          style={styleVars(style, data.columns)}
+          onAddLink={addLink}
+          onOpenLink={(index, links) => {
+            const link = links[index];
+            if (link?.kind === "link") openLink(link, data.openInNewTab);
+          }}
+        />
+      </TileDnd>
     );
 
   // Never reserve more columns than there are tiles, so they stay centred
@@ -89,43 +98,61 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
 
   return (
     <>
-      <nav className={classes} style={vars} aria-label="Quick links">
-        {data.items.map((item, index) => {
-          const number = data.shortcuts && index < 9 ? index + 1 : undefined;
-          return item.kind === "link" ? (
-            <LinkTile
-              key={item.id}
-              link={item}
-              number={number}
-              openInNewTab={data.openInNewTab}
-              favicons={data.favicons}
-            />
-          ) : (
-            <FolderTile
-              key={item.id}
-              ref={(element) => {
-                if (element) folderRefs.current.set(item.id, element);
-                else folderRefs.current.delete(item.id);
-              }}
-              folder={item}
-              number={number}
-              open={openFolderId === item.id}
-              onOpen={() =>
-                // Clicking the open folder's tile again closes it
-                openFolderId === item.id ? setOpen(null) : showFolder(item.id)
+      <TileDnd
+        items={data.items}
+        enabled={!data.lockLinks}
+        onChange={(items) => setData({ ...data, items })}
+        overlayClassName={classes}
+        overlayStyle={vars}
+      >
+        <nav className={classes} style={vars} aria-label="Quick links">
+          {data.items.map((item, index) => {
+            const number = data.shortcuts && index < 9 ? index + 1 : undefined;
+            return (
+              <DraggableTile
+                key={item.id}
+                id={item.id}
+                isFolder={item.kind === "folder"}
+              >
+                {item.kind === "link" ? (
+                  <LinkTile
+                    link={item}
+                    number={number}
+                    openInNewTab={data.openInNewTab}
+                    favicons={data.favicons}
+                  />
+                ) : (
+                  <FolderTile
+                    ref={(element) => {
+                      if (element) folderRefs.current.set(item.id, element);
+                      else folderRefs.current.delete(item.id);
+                    }}
+                    folder={item}
+                    number={number}
+                    open={openFolderId === item.id}
+                    onOpen={() =>
+                      // Clicking the open folder's tile again closes it
+                      openFolderId === item.id
+                        ? setOpen(null)
+                        : showFolder(item.id)
+                    }
+                  />
+                )}
+              </DraggableTile>
+            );
+          })}
+          {data.showAddTile && (
+            <AddLinkTile
+              label="Add a link"
+              expanded={addAnchor !== null}
+              onClick={() =>
+                setAddAnchor(addAnchor ? null : addTileRef.current)
               }
+              ref={addTileRef}
             />
-          );
-        })}
-        {data.showAddTile && (
-          <AddLinkTile
-            label="Add a link"
-            expanded={addAnchor !== null}
-            onClick={() => setAddAnchor(addAnchor ? null : addTileRef.current)}
-            ref={addTileRef}
-          />
-        )}
-      </nav>
+          )}
+        </nav>
+      </TileDnd>
 
       {addAnchor && (
         <AddLinkPopover
