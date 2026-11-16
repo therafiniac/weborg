@@ -271,6 +271,12 @@ switching back restores them. Uploaded images (max 15 MB, `image/*` only)
 are stored in IndexedDB on the device and never synced. Blur and darken
 apply to every type; darken is an overlay so it never affects blur edges.
 
+Gradient presets (`core/background/presets.ts`) are built from the
+Catppuccin Mocha palette. Each preset carries the darken level that keeps
+white text at WCAG AA contrast (4.5:1); `presets.test.ts` fails if a preset
+breaks that. Reset restores the default background and, after asking,
+deletes an uploaded image.
+
 ## 9. Testing and quality
 
 - **Unit**: storage migrations, reducers, appearance-to-variables mapping.
@@ -314,3 +320,4 @@ apply to every type; darken is an overlay so it never affects blur edges.
 | 2026-11-17 | Folder popover anchored to its tile        | Keeps the visual link to the folder; no dimming   |
 | 2026-11-17 | Tabs layout for Quick Links                | Every category one click away; folders as tabs    |
 | 2026-11-17 | Migrations never overwrite existing values | WXT re-runs them on unversioned (restored) data   |
+| 2026-11-17 | Presets carry their own darken level       | Colourful pastels stay readable with white text   |
