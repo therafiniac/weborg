@@ -90,7 +90,10 @@ describe("Quick Links settings", () => {
         kind: "link",
         url: "https://github.com/",
       });
-      expect(screen.getByRole("status")).toHaveTextContent("Added github.com");
+      expect(screen.getByText("Added github.com")).toHaveAttribute(
+        "role",
+        "status",
+      );
       expect(url).toHaveValue("");
       expect(url).toHaveFocus();
     });
@@ -285,5 +288,37 @@ describe("Links settings tab in the app", () => {
         (await settingsItem.getValue()).widgets.some((w) => w.type === "links"),
       ).toBe(true),
     );
+  });
+});
+
+describe("Quick Links settings drag handles", () => {
+  it("gives every link and folder a labelled, keyboard-focusable handle", () => {
+    render(<Harness />);
+    for (const name of ["Alpha", "Bravo", "folder Work", "Charlie"]) {
+      const handle = screen.getByRole("button", { name: `Drag ${name}` });
+      expect(handle).toHaveAttribute("aria-roledescription", "sortable");
+      expect(handle).toHaveAttribute("tabindex", "0");
+    }
+  });
+
+  it("shows how to drop into an empty folder", () => {
+    render(
+      <Harness
+        start={{
+          ...initial,
+          items: [
+            ...initial.items,
+            {
+              kind: "folder",
+              id: "e",
+              name: "Empty",
+              icon: "folder",
+              links: [],
+            },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText("Empty. Drag links here.")).toBeInTheDocument();
   });
 });

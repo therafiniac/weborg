@@ -107,3 +107,80 @@ export function moveLinkTo(
     return [...items];
   return addItem(removeItem(items, linkId), link, folderId);
 }
+
+/**
+ * Result of dropping one item onto another (drag and drop):
+ * - a link dropped on a folder goes into it (at the end);
+ * - a link dropped on a link takes its place in that link's list;
+ * - a folder only moves among top-level items (dropping it on a nested
+ *   link means "where that link's folder is").
+ */
+export function dropOnItem(
+  items: readonly Item[],
+  activeId: string,
+  overId: string,
+): Item[] {
+  if (activeId === overId) return [...items];
+  const activeParent = parentOf(items, activeId);
+  const overParent = parentOf(items, overId);
+  if (activeParent === undefined || overParent === undefined) return [...items];
+
+  const active =
+    activeParent === null
+      ? items.find((item) => item.id === activeId)!
+      : findLink(items, activeId)!;
+
+  if (active.kind === "folder") {
+    const target = overParent ?? overId;
+    const from = items.findIndex((item) => item.id === activeId);
+    const to = items.findIndex((item) => item.id === target);
+    return to === -1 || from === to ? [...items] : arrayMove(items, from, to);
+  }
+
+  const over = items.find((item) => item.id === overId);
+  if (over?.kind === "folder") return moveLinkTo(items, activeId, over.id);
+
+  // Same list: move into the hovered link's position
+  if (activeParent === overParent) {
+    if (activeParent === null) {
+      const from = items.findIndex((item) => item.id === activeId);
+      const to = items.findIndex((item) => item.id === overId);
+      return arrayMove(items, from, to);
+    }
+    return items.map((item) =>
+      item.id === activeParent && isFolder(item)
+        ? {
+            ...item,
+            links: arrayMove(
+              item.links,
+              item.links.findIndex((link) => link.id === activeId),
+              item.links.findIndex((link) => link.id === overId),
+            ),
+          }
+        : item,
+    );
+  }
+
+  // Different lists: insert before the hovered link
+  const link = active;
+  const without = removeItem(items, activeId);
+  if (overParent === null) {
+    const to = without.findIndex((item) => item.id === overId);
+    return [...without.slice(0, to), link, ...without.slice(to)];
+  }
+  return without.map((item) => {
+    if (item.id !== overParent || !isFolder(item)) return item;
+    const to = item.links.findIndex((l) => l.id === overId);
+    return {
+      ...item,
+      links: [...item.links.slice(0, to), link, ...item.links.slice(to)],
+    };
+  });
+}
+
+function arrayMove<T>(list: readonly T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved!);
+  return next;
+}
