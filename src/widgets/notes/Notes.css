@@ -1,0 +1,20 @@
+.notes {
+  display: block;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.75rem;
+  background: rgb(0 0 0 / 0.3);
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+  resize: vertical;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.notes::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}
