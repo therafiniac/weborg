@@ -16,12 +16,14 @@
 .quick-add__row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
 }
 
-.quick-add__row input,
-.quick-add__row select {
-  flex: 1;
+.quick-add__row--secondary {
+  margin-top: 0.5rem;
+}
+
+.quick-add input,
+.quick-add select {
   min-width: 0;
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--color-border);
@@ -32,26 +34,38 @@
   font-size: 0.875rem;
 }
 
-/* The address needs more room than the name */
-.quick-add__row input[inputmode="url"] {
-  flex: 3;
+.quick-add__url {
+  flex: 1;
 }
 
-.quick-add__row input:not([inputmode="url"]) {
-  flex: 2;
-}
-
-.quick-add__row input[aria-invalid="true"] {
+.quick-add input[aria-invalid="true"] {
   border-color: var(--color-danger-bg);
 }
 
-.quick-add__row .button {
-  margin-left: auto;
+.quick-add .button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.quick-add__field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.quick-add__field input,
+.quick-add__field select {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8125rem;
 }
 
 .quick-add > p {
-  min-height: 1.2em;
-  margin: 0;
+  margin: 0.5rem 0 0;
 }
 
 /* Link list */

@@ -140,7 +140,16 @@ export default function LinksTab({ items, onChange }: Props) {
                 folder={item}
                 editing={editingId === item.id}
                 collapsed={collapsed.has(item.id)}
-                menu={orderMenu(item, index, items.length)}
+                menu={[
+                  {
+                    label: "Add link here",
+                    onSelect: () => {
+                      setQuickFolder(item.id);
+                      urlRef.current?.focus();
+                    },
+                  },
+                  ...orderMenu(item, index, items.length),
+                ]}
                 onToggleCollapsed={() =>
                   setCollapsed((set) => {
                     const next = new Set(set);
@@ -154,10 +163,6 @@ export default function LinksTab({ items, onChange }: Props) {
                 onChange={(patch) =>
                   change(updateItem<Folder>(items, item.id, patch))
                 }
-                onAddHere={() => {
-                  setQuickFolder(item.id);
-                  urlRef.current?.focus();
-                }}
               >
                 {item.links.map((link, linkIndex) =>
                   linkRow(link, linkIndex, item.links.length, item.id),

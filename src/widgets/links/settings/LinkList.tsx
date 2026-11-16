@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Pencil, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import type { ReactNode } from "react";
 
 import Menu, { type MenuItem } from "@/ui/Menu";
@@ -132,7 +132,6 @@ interface FolderRowProps {
   onEdit: () => void;
   onDone: () => void;
   onChange: (patch: Partial<Pick<Folder, "name" | "icon">>) => void;
-  onAddHere: () => void;
   children: ReactNode;
 }
 
@@ -145,7 +144,6 @@ export function FolderRow({
   onEdit,
   onDone,
   onChange,
-  onAddHere,
   children,
 }: FolderRowProps) {
   const label = folder.name || "Folder";
@@ -174,14 +172,6 @@ export function FolderRow({
           <span className="link-row__count" aria-hidden>
             {count}
           </span>
-        </button>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label={`Add a link to ${label}`}
-          onClick={onAddHere}
-        >
-          <Plus size={16} aria-hidden />
         </button>
         <button
           type="button"
@@ -220,9 +210,7 @@ export function FolderRow({
         (count > 0 ? (
           <ul className="link-list link-list--nested">{children}</ul>
         ) : (
-          <p className="hint link-row__empty">
-            Empty. Use + to add a link here.
-          </p>
+          <p className="hint link-row__empty">Empty</p>
         ))}
     </li>
   );
