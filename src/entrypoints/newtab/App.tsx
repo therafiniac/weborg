@@ -1,14 +1,9 @@
-import {
-  Archive,
-  Image,
-  LayoutGrid,
-  Settings as SettingsIcon,
-  Type,
-} from "lucide-react";
+import { Archive, Image, LayoutGrid, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Background from "@/app/Background";
 import Dashboard from "@/app/Dashboard";
+import PageControls from "@/app/PageControls";
 import AppearanceSettings from "@/app/settings/AppearanceSettings";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
@@ -68,15 +63,12 @@ export default function App() {
       <Dashboard settings={settings} />
 
       {!settingsOpen && (
-        <button
-          ref={toggleRef}
-          type="button"
-          className="settings-toggle"
-          aria-label="Open settings"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <SettingsIcon size={20} aria-hidden />
-        </button>
+        <PageControls
+          ui={settings.ui}
+          settingsRef={toggleRef}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onChange={(ui) => saveSettings({ ...settings, ui })}
+        />
       )}
 
       {settingsOpen && (

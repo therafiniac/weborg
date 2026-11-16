@@ -20,6 +20,8 @@ interface Props {
   onOpenLink: (index: number, links: LinksData["items"]) => void;
   onAddLink: (link: Link, folderId: string | null) => void;
   onAddFolder: (folder: Folder) => void;
+  /** Show the "+" tile (setting on and page not locked). */
+  canAdd: boolean;
 }
 
 /** Folders as tabs; the active tab's links fill the panel below. */
@@ -31,6 +33,7 @@ export default function LinksTabs({
   onOpenLink,
   onAddLink,
   onAddFolder,
+  canAdd,
 }: Props) {
   const baseId = useId();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -53,7 +56,7 @@ export default function LinksTabs({
   };
 
   const addTile = (label: string) =>
-    data.showAddTile && (
+    canAdd && (
       <AddLinkTile
         ref={addTileRef}
         label={label}
@@ -75,7 +78,7 @@ export default function LinksTabs({
     );
 
   if (tabs.length === 0 || !active)
-    return data.showAddTile ? (
+    return canAdd ? (
       <div className={className} style={style}>
         {addTile("Add a link")}
         {addPopover(null, "Add a link")}
@@ -88,7 +91,7 @@ export default function LinksTabs({
   const targetFolder = active.id === LOOSE_TAB_ID ? null : active.id;
   const addLabel =
     targetFolder === null ? "Add a link" : `Add a link to ${active.name}`;
-  const tileCount = active.links.length + (data.showAddTile ? 1 : 0);
+  const tileCount = active.links.length + (canAdd ? 1 : 0);
   const columns = Math.max(1, Math.min(data.columns, tileCount));
   const panelId = `${baseId}-panel`;
   const tabId = (id: string) => `${baseId}-tab-${id}`;

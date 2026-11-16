@@ -38,7 +38,6 @@ const base: LinksData = {
   tabSwitch: "click",
   activeTab: null,
   showAddTile: true,
-  lockLinks: false,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,
@@ -51,11 +50,18 @@ const latest = (): LinksData => updates.mock.lastCall?.[0] ?? base;
 const work = () =>
   latest().items.find((i): i is Folder => i.kind === "folder")!;
 
-function Harness({ start = base }: { start?: LinksData }) {
+function Harness({
+  start = base,
+  locked = false,
+}: {
+  start?: LinksData;
+  locked?: boolean;
+}) {
   const [data, setData] = useState(start);
   return (
     <Links
       instance={instance}
+      locked={locked}
       data={data}
       setData={(next) => {
         setData(next);
@@ -153,24 +159,25 @@ describe("+ tile", () => {
 });
 
 describe("page drag and drop", () => {
-  it("makes tiles draggable unless links are locked", () => {
+  it("makes tiles draggable unless the page is locked", () => {
     const { container, unmount } = render(<Harness />);
     expect(container.querySelectorAll(".links__drag")).toHaveLength(2);
     unmount();
 
-    const locked = render(<Harness start={{ ...base, lockLinks: true }} />);
+    const locked = render(<Harness locked />);
     expect(locked.container.querySelectorAll(".links__drag")).toHaveLength(0);
     // Links still work normally when locked
     expect(screen.getByRole("link", { name: "Alpha" })).toBeInTheDocument();
   });
 
-  it("v4 migration unlocks dragging without touching other values", () => {
-    expect(linksMigrations[4]!({ layout: "tabs" })).toEqual({
-      lockLinks: false,
+  it("hides the + tile while the page is locked", () => {
+    render(<Harness locked />);
+    expect(screen.queryByRole("button", { name: /^Add a link/ })).toBeNull();
+  });
+
+  it("v5 migration drops the old per-widget lock", () => {
+    expect(linksMigrations[5]!({ lockLinks: true, layout: "tabs" })).toEqual({
       layout: "tabs",
-    });
-    expect(linksMigrations[4]!({ lockLinks: true })).toEqual({
-      lockLinks: true,
     });
   });
 });

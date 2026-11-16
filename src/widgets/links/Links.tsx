@@ -23,7 +23,13 @@ export function openLink(link: Link, newTab: boolean) {
   else window.location.assign(url);
 }
 
-export default function Links({ data, setData }: WidgetProps<LinksData>) {
+export default function Links({
+  data,
+  setData,
+  locked = false,
+}: WidgetProps<LinksData>) {
+  // Locked pages offer no adding or dragging
+  const canAdd = data.showAddTile && !locked;
   const style = resolveStyle(data.style);
   // The open folder and the tile it is attached to
   const [open, setOpen] = useState<{
@@ -64,7 +70,7 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
     else if (item?.kind === "folder") showFolder(item.id);
   });
 
-  if (data.items.length === 0 && !data.showAddTile)
+  if (data.items.length === 0 && !canAdd)
     return <p className="links__empty">Add links in settings.</p>;
 
   const classes = styleClasses(style);
@@ -73,12 +79,13 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
     return (
       <TileDnd
         items={data.items}
-        enabled={!data.lockLinks}
+        enabled={!locked}
         onChange={(items) => setData({ ...data, items })}
         overlayClassName={classes}
         overlayStyle={styleVars(style, data.columns)}
       >
         <LinksTabs
+          canAdd={canAdd}
           data={data}
           setData={setData}
           className={classes}
@@ -101,14 +108,14 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
     );
 
   // Never reserve more columns than there are tiles, so they stay centred
-  const tileCount = data.items.length + (data.showAddTile ? 1 : 0);
+  const tileCount = data.items.length + (canAdd ? 1 : 0);
   const vars = styleVars(style, Math.min(data.columns, tileCount));
 
   return (
     <>
       <TileDnd
         items={data.items}
-        enabled={!data.lockLinks}
+        enabled={!locked}
         onChange={(items) => setData({ ...data, items })}
         overlayClassName={classes}
         overlayStyle={vars}
@@ -149,7 +156,7 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
               </DraggableTile>
             );
           })}
-          {data.showAddTile && (
+          {canAdd && (
             <AddLinkTile
               label="Add a link"
               expanded={addAnchor !== null}
@@ -186,7 +193,7 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
           openInNewTab={data.openInNewTab}
           favicons={data.favicons}
           shortcuts={data.shortcuts}
-          showAddTile={data.showAddTile}
+          showAddTile={canAdd}
           onAddLink={(link) => addLink(link, openFolder.id)}
           onClose={closeFolder}
         />

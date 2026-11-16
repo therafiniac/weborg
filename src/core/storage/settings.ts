@@ -23,12 +23,23 @@ export interface WidgetInstance {
   display: WidgetDisplay;
 }
 
+/** Page-level toggles from the corner buttons. */
+export interface PageUi {
+  /** Locked: no settings, adding, dragging or new folders. */
+  locked: boolean;
+  /** All widgets hidden; only the background shows. */
+  widgetsHidden: boolean;
+}
+
+export const defaultPageUi: PageUi = { locked: false, widgetsHidden: false };
+
 export interface Settings {
   appearance: Appearance;
+  ui: PageUi;
   widgets: WidgetInstance[];
 }
 
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 /**
  * Stored-data migrations, keyed by the version they upgrade to. They only
@@ -41,10 +52,16 @@ export const settingsMigrations: Record<number, (old: unknown) => unknown> = {
     appearance: defaultAppearance,
     ...(isRecord(old) ? old : {}),
   }),
+  // v3: lock and hide-widgets toggles
+  3: (old) => ({
+    ui: defaultPageUi,
+    ...(isRecord(old) ? old : {}),
+  }),
 };
 
 export const defaultSettings: Settings = {
   appearance: defaultAppearance,
+  ui: defaultPageUi,
   widgets: [
     {
       id: "default-clock",
@@ -94,6 +111,7 @@ export function normalizeSettings(value: unknown): Settings {
     return {
       ...defaultSettings,
       appearance: normalizeAppearance(value.appearance),
+      ui: normalizeUi(value.ui),
     };
 
   const widgets = value.widgets.flatMap((widget, index): WidgetInstance[] => {
@@ -116,5 +134,17 @@ export function normalizeSettings(value: unknown): Settings {
     ];
   });
 
-  return { appearance: normalizeAppearance(value.appearance), widgets };
+  return {
+    appearance: normalizeAppearance(value.appearance),
+    ui: normalizeUi(value.ui),
+    widgets,
+  };
+}
+
+function normalizeUi(value: unknown): PageUi {
+  if (!isRecord(value)) return defaultPageUi;
+  return {
+    locked: value.locked === true,
+    widgetsHidden: value.widgetsHidden === true,
+  };
 }

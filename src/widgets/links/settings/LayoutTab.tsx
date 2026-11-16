@@ -47,11 +47,6 @@ export default function LayoutTab({ data, setData }: Props) {
 
       <h4 className="settings-subheading">Behaviour</h4>
       <CheckboxField
-        label="Lock links (no dragging on the page)"
-        checked={data.lockLinks}
-        onChange={(lockLinks) => set({ lockLinks })}
-      />
-      <CheckboxField
         label="Show a + tile for adding links on the page"
         checked={data.showAddTile}
         onChange={(showAddTile) => set({ showAddTile })}

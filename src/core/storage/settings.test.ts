@@ -19,6 +19,7 @@ describe("normalizeSettings()", () => {
       }),
     ).toEqual({
       appearance: defaultAppearance,
+      ui: { locked: false, widgetsHidden: false },
       widgets: [
         {
           id: "a",
