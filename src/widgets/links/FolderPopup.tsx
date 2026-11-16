@@ -1,11 +1,13 @@
 import { X } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import { NamedIcon } from "./icons";
 import LinkTile from "./LinkTile";
-import type { Folder } from "./model";
-import { placePopover } from "./popover";
+import type { Folder, Link } from "./model";
+import AddLinkTile from "./AddLinkTile";
+import QuickAddForm from "./settings/QuickAddForm";
+import { useAnchoredPopover } from "./useAnchoredPopover";
 
 interface Props {
   folder: Folder;
@@ -17,6 +19,9 @@ interface Props {
   openInNewTab: boolean;
   favicons: boolean;
   shortcuts: boolean;
+  /** Show the "+" tile for adding links to this folder. */
+  showAddTile: boolean;
+  onAddLink: (link: Link) => void;
   onClose: () => void;
 }
 
@@ -33,73 +38,22 @@ export default function FolderPopup({
   openInNewTab,
   favicons,
   shortcuts,
+  showAddTile,
+  onAddLink,
   onClose,
 }: Props) {
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const onCloseRef = useRef(onClose);
+  const [adding, setAdding] = useState(false);
   const titleId = `folder-${folder.id}-title`;
 
-  useEffect(() => {
-    onCloseRef.current = onClose;
+  const {
+    popoverRef,
+    bodyRef,
+    focusRef: closeRef,
+  } = useAnchoredPopover<HTMLDivElement, HTMLButtonElement>({
+    anchor,
+    onClose,
+    layoutKey: `${folder.links.length}-${adding}`,
   });
-
-  // Position next to the tile; follow resizes and scrolling
-  useLayoutEffect(() => {
-    const popover = popoverRef.current;
-    const body = bodyRef.current;
-    if (!popover || !body || !anchor) return;
-
-    const place = () => {
-      body.style.maxHeight = "";
-      const pos = placePopover(
-        anchor.getBoundingClientRect(),
-        { width: popover.offsetWidth, height: body.scrollHeight },
-        { width: window.innerWidth, height: window.innerHeight },
-      );
-      popover.style.top = `${pos.top}px`;
-      popover.style.left = `${pos.left}px`;
-      body.style.maxHeight = `${pos.maxHeight}px`;
-      popover.style.setProperty("--arrow-left", `${pos.arrowLeft}px`);
-      popover.dataset.placement = pos.placement;
-      popover.style.visibility = "visible";
-    };
-
-    place();
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
-    return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-    };
-  }, [anchor, folder.links.length]);
-
-  // Focus the close button, close on Esc or a click outside
-  useEffect(() => {
-    closeRef.current?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCloseRef.current();
-      }
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      // The tile toggles the popover itself
-      if (popoverRef.current?.contains(target) || anchor?.contains(target))
-        return;
-      onCloseRef.current();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [anchor]);
 
   return createPortal(
     <div
@@ -127,7 +81,7 @@ export default function FolderPopup({
           </button>
         </header>
 
-        {folder.links.length === 0 ? (
+        {folder.links.length === 0 && !showAddTile ? (
           <p className="folder-popup__empty">
             This folder is empty. Add links to it in settings.
           </p>
@@ -138,7 +92,13 @@ export default function FolderPopup({
             style={
               {
                 "--links-columns": String(
-                  Math.max(1, Math.min(columns, folder.links.length)),
+                  Math.max(
+                    1,
+                    Math.min(
+                      columns,
+                      folder.links.length + (showAddTile ? 1 : 0),
+                    ),
+                  ),
                 ),
               } as CSSProperties
             }
@@ -152,7 +112,24 @@ export default function FolderPopup({
                 favicons={favicons}
               />
             ))}
+            {showAddTile && (
+              <AddLinkTile
+                label={`Add a link to ${folder.name || "this folder"}`}
+                expanded={adding}
+                onClick={() => setAdding(!adding)}
+              />
+            )}
           </nav>
+        )}
+        {adding && (
+          <div className="folder-popup__add">
+            <QuickAddForm
+              title={`Add to ${folder.name || "folder"}`}
+              folderId={folder.id}
+              autoFocus
+              onAdd={(link) => onAddLink(link)}
+            />
+          </div>
         )}
       </div>
     </div>,

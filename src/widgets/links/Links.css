@@ -446,3 +446,70 @@
     animation: none;
   }
 }
+
+/* "+" tile: quieter than real links */
+.links__add {
+  border: 0;
+  background: none;
+  font: inherit;
+  opacity: 0.6;
+}
+
+.links--tiles .links__add {
+  border: 1px dashed var(--links-border);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.links__add:hover,
+.links__add:focus-visible,
+.links__add[aria-expanded="true"] {
+  opacity: 1;
+}
+
+/* Add-link form inside popovers: match the glass look */
+.add-popover {
+  width: min(22rem, 92vw);
+}
+
+.add-popover__body,
+.folder-popup__add {
+  padding: 0.75rem;
+}
+
+.folder-popup__add {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--links-border);
+}
+
+.add-popover .quick-add,
+.folder-popup .quick-add {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.add-popover .quick-add__row input,
+.add-popover .quick-add__row select,
+.folder-popup .quick-add__row input,
+.folder-popup .quick-add__row select {
+  border-color: var(--links-border);
+  background: rgb(255 255 255 / 0.07);
+  color: var(--links-text);
+}
+
+.add-popover .quick-add__row input::placeholder,
+.folder-popup .quick-add__row input::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}
+
+.add-popover .hint,
+.folder-popup .hint {
+  color: inherit;
+  opacity: 0.7;
+}

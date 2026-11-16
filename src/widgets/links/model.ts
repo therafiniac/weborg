@@ -39,6 +39,8 @@ export interface LinksData {
   tabSwitch: TabSwitch;
   /** Last selected tab id, restored on the next new tab. */
   activeTab: string | null;
+  /** Show a "+" tile for adding links right on the page. */
+  showAddTile: boolean;
   columns: number;
   openInNewTab: boolean;
   /** Number keys 1-9 open links and folders. */
@@ -64,7 +66,7 @@ export const newFolder = (name = "New folder"): Folder => ({
   links: [],
 });
 
-export const LINKS_DATA_VERSION = 2;
+export const LINKS_DATA_VERSION = 3;
 
 /**
  * Widget data migrations, keyed by the version they upgrade to. They only
@@ -80,6 +82,11 @@ export const linksMigrations: Record<number, (old: unknown) => unknown> = {
     activeTab: null,
     ...(typeof old === "object" && old !== null ? old : {}),
   }),
+  // v3: "+" tile for adding links on the page
+  3: (old) => ({
+    showAddTile: true,
+    ...(typeof old === "object" && old !== null ? old : {}),
+  }),
 };
 
 export const defaultLinksData = (): LinksData => ({
@@ -90,6 +97,7 @@ export const defaultLinksData = (): LinksData => ({
   layout: "grid",
   tabSwitch: "click",
   activeTab: null,
+  showAddTile: true,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,

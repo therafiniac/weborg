@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 
 import type { WidgetProps } from "@/core/widgets/types";
 
+import AddLinkPopover from "./AddLinkPopover";
+import AddLinkTile from "./AddLinkTile";
 import FolderPopup from "./FolderPopup";
+import { addItem } from "./items";
 import FolderTile from "./FolderTile";
 import LinksTabs from "./LinksTabs";
 import LinkTile from "./LinkTile";
@@ -28,6 +31,11 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
   } | null>(null);
   const openFolderId = open?.id ?? null;
   const folderRefs = useRef(new Map<string, HTMLButtonElement>());
+
+  const [addAnchor, setAddAnchor] = useState<HTMLElement | null>(null);
+  const addTileRef = useRef<HTMLButtonElement>(null);
+  const addLink = (link: Link, folderId: string | null) =>
+    setData({ ...data, items: addItem(data.items, link, folderId) });
 
   const showFolder = (id: string) =>
     setOpen({ id, anchor: folderRefs.current.get(id) ?? null });
@@ -55,7 +63,7 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
     else if (item?.kind === "folder") showFolder(item.id);
   });
 
-  if (data.items.length === 0)
+  if (data.items.length === 0 && !data.showAddTile)
     return <p className="links__empty">Add links in settings.</p>;
 
   const classes = styleClasses(style);
@@ -67,6 +75,7 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
         setData={setData}
         className={classes}
         style={styleVars(style, data.columns)}
+        onAddLink={addLink}
         onOpenLink={(index, links) => {
           const link = links[index];
           if (link?.kind === "link") openLink(link, data.openInNewTab);
@@ -74,8 +83,9 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
       />
     );
 
-  // Never reserve more columns than there are items, so tiles stay centred
-  const vars = styleVars(style, Math.min(data.columns, data.items.length));
+  // Never reserve more columns than there are tiles, so they stay centred
+  const tileCount = data.items.length + (data.showAddTile ? 1 : 0);
+  const vars = styleVars(style, Math.min(data.columns, tileCount));
 
   return (
     <>
@@ -107,7 +117,26 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
             />
           );
         })}
+        {data.showAddTile && (
+          <AddLinkTile
+            label="Add a link"
+            expanded={addAnchor !== null}
+            onClick={() => setAddAnchor(addAnchor ? null : addTileRef.current)}
+            ref={addTileRef}
+          />
+        )}
       </nav>
+
+      {addAnchor && (
+        <AddLinkPopover
+          anchor={addAnchor}
+          folderId={null}
+          title="Add a link"
+          style={vars}
+          onAdd={addLink}
+          onClose={() => setAddAnchor(null)}
+        />
+      )}
 
       {openFolder && (
         <FolderPopup
@@ -119,6 +148,8 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
           openInNewTab={data.openInNewTab}
           favicons={data.favicons}
           shortcuts={data.shortcuts}
+          showAddTile={data.showAddTile}
+          onAddLink={(link) => addLink(link, openFolder.id)}
           onClose={closeFolder}
         />
       )}
