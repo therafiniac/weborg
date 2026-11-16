@@ -1,7 +1,10 @@
 import { defaultBackground } from "./background";
 import {
+  applyColourPreset,
   applyPreset,
+  COLOUR_PRESETS,
   GRADIENT_PRESETS,
+  isColourPresetActive,
   isPresetActive,
   presetSwatch,
 } from "./presets";
@@ -63,5 +66,28 @@ describe("gradient presets", () => {
     });
     expect(isPresetActive(next, preset)).toBe(true);
     expect(presetSwatch(preset)).toContain(`rgb(0 0 0 / ${preset.dim}%)`);
+  });
+});
+
+describe("colour presets", () => {
+  it.each(COLOUR_PRESETS.map((p) => [p.name, p] as const))(
+    "%s keeps white text readable (WCAG AA 4.5:1)",
+    (_name, preset) => {
+      expect(
+        whiteContrast(darken(preset.colour, preset.dim)),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it("applies a colour preset with its darken level", () => {
+    const preset = COLOUR_PRESETS[3]!;
+    const next = applyColourPreset(defaultBackground, preset);
+    expect(next).toMatchObject({
+      kind: "colour",
+      colour: preset.colour,
+      dim: preset.dim,
+    });
+    expect(isColourPresetActive(next, preset)).toBe(true);
+    expect(isColourPresetActive(defaultBackground, preset)).toBe(false);
   });
 });

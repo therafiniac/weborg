@@ -20,8 +20,9 @@ describe("Background settings", () => {
       await screen.findByRole("button", { name: "Open settings" }),
     );
 
-    await user.selectOptions(screen.getByLabelText("Type"), "colour");
-    expect(screen.getByLabelText("Colour")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Colour" }));
+    expect(screen.getByRole("button", { name: "Mauve" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Aurora" })).toBeNull();
     await waitFor(async () =>
       expect((await backgroundItem.getValue()).kind).toBe("colour"),
     );
@@ -64,7 +65,8 @@ describe("Background presets and reset", () => {
       await screen.findByRole("button", { name: "Open settings" }),
     );
 
-    await user.selectOptions(screen.getByLabelText("Type"), "image");
+    await user.click(screen.getByRole("radio", { name: "Image" }));
+    await user.click(screen.getByRole("radio", { name: "Gradient" }));
     await user.click(screen.getByRole("button", { name: "Peach Sunset" }));
 
     expect(
@@ -115,5 +117,61 @@ describe("Background presets and reset", () => {
     await user.click(screen.getByRole("button", { name: /reset background/i }));
     expect(confirm).toHaveBeenCalled();
     expect((await backgroundItem.getValue()).kind).toBe("image");
+  });
+});
+
+describe("Background type sections", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it("shows only the presets for the selected type", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "Open settings" }),
+    );
+
+    // Default is a gradient
+    expect(screen.getByRole("button", { name: "Aurora" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mauve" })).toBeNull();
+
+    await user.click(screen.getByRole("radio", { name: "Image" }));
+    expect(screen.queryByRole("button", { name: "Aurora" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /choose image/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("applies a colour preset with its darken level", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "Open settings" }),
+    );
+    await user.click(screen.getByRole("radio", { name: "Colour" }));
+    await user.click(screen.getByRole("button", { name: "Teal" }));
+    await waitFor(async () =>
+      expect(await backgroundItem.getValue()).toMatchObject({
+        kind: "colour",
+        colour: "#94e2d5",
+        dim: 45,
+      }),
+    );
+  });
+
+  it("moves between types with arrow keys", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "Open settings" }),
+    );
+    screen.getByRole("radio", { name: "Gradient" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("radio", { name: "Image" })).toHaveFocus();
+    expect(screen.getByRole("radio", { name: "Image" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
   });
 });
