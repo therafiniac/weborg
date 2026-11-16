@@ -23,16 +23,16 @@ describe("backup", () => {
 
   it("round-trips settings, background and widget data", async () => {
     await backgroundItem.setValue({ ...defaultBackground, kind: "colour" });
-    await storage.setItem(widgetDataKey("default-text"), { text: "Hi" });
+    await storage.setItem(widgetDataKey("default-greeting"), { name: "Hi" });
 
     const json = JSON.stringify(await createBackup());
     await resetAll();
-    expect(await storage.getItem(widgetDataKey("default-text"))).toBeNull();
+    expect(await storage.getItem(widgetDataKey("default-greeting"))).toBeNull();
 
     await restoreBackup(parseBackup(json));
     expect((await backgroundItem.getValue()).kind).toBe("colour");
-    expect(await storage.getItem(widgetDataKey("default-text"))).toEqual({
-      text: "Hi",
+    expect(await storage.getItem(widgetDataKey("default-greeting"))).toEqual({
+      name: "Hi",
     });
     expect(await settingsItem.getValue()).toEqual(defaultSettings);
   });
@@ -52,10 +52,10 @@ describe("backup", () => {
         format: "weborg",
         formatVersion: 1,
         settings: defaultSettings,
-        widgets: { "default-text": { text: "ok" }, orphan: { text: "x" } },
+        widgets: { "default-greeting": { name: "ok" }, orphan: { text: "x" } },
       }),
     );
-    expect(Object.keys(backup.widgets)).toEqual(["default-text"]);
+    expect(Object.keys(backup.widgets)).toEqual(["default-greeting"]);
   });
 
   it.each([

@@ -105,3 +105,26 @@
   color: var(--color-muted);
   font-size: 0.8125rem;
 }
+
+.field--checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field--checkbox label {
+  color: var(--color-text);
+}
+
+.field--checkbox input {
+  accent-color: var(--color-accent);
+}
+
+.field__error {
+  color: var(--color-danger-bg);
+  font-size: 0.8125rem;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--color-danger-bg);
+}
