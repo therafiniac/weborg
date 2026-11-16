@@ -92,6 +92,9 @@ Every item is defined with `storage.defineItem(key, { fallback, version,
 migrations })`. Rules:
 
 1. Changing a stored shape bumps `version` and adds a migration.
+   Migrations only **fill missing fields** and never overwrite existing
+   ones: WXT re-runs them on data written without a version marker (for
+   example widget data from a backup restore).
 2. Migrations are pure functions with unit tests.
 3. Readers always get a fully-defaulted value: `normalizeSettings` and
    `normalizeBackground` repair or drop invalid data, and widget data is
@@ -192,6 +195,9 @@ interface Folder {
 }
 interface LinksData {
   items: Item[];
+  layout: "grid" | "tabs";
+  tabSwitch: "click" | "hover"; // tabs layout only
+  activeTab: string | null; // last selected tab, restored next time
   columns: number;
   openInNewTab: boolean;
   shortcuts: boolean; // number keys 1-9
@@ -208,8 +214,17 @@ interface LinksData {
   icon when favicons are enabled.
 - Number-key shortcuts ignore key presses while typing in any field or
   inside the settings panel. With a folder open, they target its links.
-- The folder popup is a dialog rendered into `<body>`; Esc, the close button
-  or an outside click dismiss it and focus returns to the folder tile.
+- **Grid layout**: a folder opens as a popover attached to its tile
+  (`popover.ts` places it below, flips above when there is no room, keeps
+  it on screen and caps its height). It is rendered into `<body>` with
+  fixed coordinates so slot transforms cannot offset it. No page dimming;
+  Esc, an outside click or the tile closes it, and focus returns to the
+  tile.
+- **Tabs layout**: links outside folders form a first "Links" tab (omitted
+  when empty), then one tab per folder. Follows the WAI-ARIA tabs pattern
+  (arrow keys, Home/End, roving tabindex); switches on click or, if chosen,
+  hover after 150 ms. Number keys open links in the active tab.
+- Data history: v1 had no layout fields; v2 adds them (`linksMigrations`).
 
 ## 6. Styling and customisation (Built)
 
@@ -281,18 +296,21 @@ apply to every type; darken is an overlay so it never affects blur edges.
 
 ## 11. Decisions log
 
-| Date       | Decision                                  | Reason                                            |
-| ---------- | ----------------------------------------- | ------------------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence            |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                     |
-| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied             |
-| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite               |
-| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit                |
-| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                                |
-| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced       |
-| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it        |
-| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it            |
-| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo   |
-| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                       |
-| 2026-11-16 | Text size as a percentage, not px         | One control scales every widget consistently      |
-| 2026-11-16 | No user custom CSS                        | Every option has a control; sanitised inputs only |
+| Date       | Decision                                   | Reason                                            |
+| ---------- | ------------------------------------------ | ------------------------------------------------- |
+| 2026-11-16 | Fresh codebase instead of a Tabliss fork   | Own product, modern stack, MIT licence            |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS    | See section 2                                     |
+| 2026-11-16 | MIT licence                                | Permissive; no Tabliss code is copied             |
+| 2026-11-16 | Extensions only, no website build          | Focus; can be added later with Vite               |
+| 2026-11-16 | Widget data in `storage.local`, not sync   | Avoid the 8 KB per-item sync limit                |
+| 2026-11-16 | No telemetry or crash reporting            | Privacy by default                                |
+| 2026-11-16 | Background images in IndexedDB             | Too large for browser.storage; never synced       |
+| 2026-11-16 | Settings panel is non-modal                | Changes preview live on the page behind it        |
+| 2026-11-16 | DuckDuckGo is the default search engine    | Privacy by default; user can change it            |
+| 2026-11-16 | Website icons are opt-in                   | Loading them reveals link domains to DuckDuckGo   |
+| 2026-11-16 | Curated icon set instead of all of Lucide  | Bundle size                                       |
+| 2026-11-16 | Text size as a percentage, not px          | One control scales every widget consistently      |
+| 2026-11-16 | No user custom CSS                         | Every option has a control; sanitised inputs only |
+| 2026-11-17 | Folder popover anchored to its tile        | Keeps the visual link to the folder; no dimming   |
+| 2026-11-17 | Tabs layout for Quick Links                | Every category one click away; folders as tabs    |
+| 2026-11-17 | Migrations never overwrite existing values | WXT re-runs them on unversioned (restored) data   |
