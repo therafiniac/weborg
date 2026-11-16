@@ -72,3 +72,19 @@ describe("Page controls", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Page controls visibility", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it("stays revealed while a hint is showing", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const lock = await screen.findByRole("button", { name: "Lock page" });
+    const bar = lock.closest(".page-controls")!;
+    expect(bar).not.toHaveClass("page-controls--active");
+    await user.click(lock);
+    expect(bar).toHaveClass("page-controls--active");
+  });
+});

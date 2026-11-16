@@ -36,7 +36,7 @@ export default function PageControls({
   }, [message]);
 
   return (
-    <div className="page-controls">
+    <div className={`page-controls${message ? " page-controls--active" : ""}`}>
       <p className="page-controls__message" role="status">
         {message}
       </p>

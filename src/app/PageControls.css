@@ -1,12 +1,38 @@
+/*
+ * Hidden until the pointer reaches the corner. The padding makes the hover
+ * area bigger than the buttons. Keyboard focus and hints also reveal them.
+ */
 .page-controls {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  right: 0;
+  bottom: 0;
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  padding: 2rem 1rem 1rem 3rem;
   color: var(--dashboard-text, #ffffff);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.page-controls:hover,
+.page-controls:focus-within,
+.page-controls--active {
+  opacity: 1;
+}
+
+/* No hover on touch screens: keep them visible so they can be reached */
+@media (hover: none) {
+  .page-controls {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-controls {
+    transition: none;
+  }
 }
 
 .page-controls__button {
