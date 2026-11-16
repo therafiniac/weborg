@@ -1,6 +1,6 @@
 .text-widget {
   margin: 0;
   font-size: 2em;
-  font-weight: 500;
+  font-weight: var(--widget-weight, var(--dashboard-weight, 500));
   white-space: pre-line;
 }

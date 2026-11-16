@@ -159,3 +159,44 @@ export function ColourField({
     </div>
   );
 }
+
+/** Colour picker that can be cleared back to an inherited value. */
+export function OptionalColourField({
+  label,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  value: string | undefined;
+  /** Shown in the picker while unset. */
+  fallback: string;
+  onChange: (value: string | undefined) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="field field--inline">
+      <label htmlFor={id}>
+        {label}{" "}
+        {value ? (
+          <button
+            type="button"
+            className="link-button"
+            aria-label={`Reset ${label.toLowerCase()}`}
+            onClick={() => onChange(undefined)}
+          >
+            Reset
+          </button>
+        ) : (
+          <span className="hint">(default)</span>
+        )}
+      </label>
+      <input
+        id={id}
+        type="color"
+        value={value ?? fallback}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  );
+}

@@ -1,3 +1,5 @@
+import { defaultAppearance } from "@/core/appearance/appearance";
+
 import { defaultSettings, normalizeSettings } from "./settings";
 
 describe("normalizeSettings()", () => {
@@ -16,6 +18,7 @@ describe("normalizeSettings()", () => {
         ],
       }),
     ).toEqual({
+      appearance: defaultAppearance,
       widgets: [
         {
           id: "a",

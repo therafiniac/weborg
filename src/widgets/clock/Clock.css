@@ -1,7 +1,8 @@
 .clock__time {
   display: block;
   font-size: 5em;
-  font-weight: 600;
+  /* A chosen weight (widget, then page) replaces the default */
+  font-weight: var(--widget-weight, var(--dashboard-weight, 600));
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;

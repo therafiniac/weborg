@@ -49,12 +49,12 @@ src/
     layout/            Built: positions and grouping
     widgets/           Built: widget contract, per-instance data, actions
     background/        Built: background model, image store (IndexedDB)
-    appearance/        Planned: global appearance -> CSS variables
+    appearance/        Built: appearance model, fonts, CSS variable mapping
   widgets/
     index.ts           Built: the widget registry
-    <widget-id>/       Built: one folder per widget (text so far)
+    <widget-id>/       Built: one folder per widget (6 widgets)
   backgrounds/         Built: background registry and per-type settings
-  ui/                  Built: shared components (ErrorBoundary)
+  ui/                  Built: ErrorBoundary, form fields, FontField
   styles/              Built: global.css (tokens), ui.css (controls)
   test/                Built: test setup
 public/icon/           Built: extension icons (placeholder)
@@ -97,12 +97,12 @@ migrations })`. Rules:
    `normalizeBackground` repair or drop invalid data, and widget data is
    merged over the widget's `defaultData`.
 
-### Settings shape (initial)
+### Settings shape (v2)
 
 ```ts
 interface Settings {
+  appearance: Appearance; // section 6
   widgets: WidgetInstance[];
-  // appearance: Appearance — added in Phase 3 (section 6)
 }
 
 interface WidgetInstance {
@@ -110,9 +110,12 @@ interface WidgetInstance {
   type: string; // widget id from the registry, e.g. "links"
   position: Position; // section 7
   order: number;
-  display: Partial<WidgetDisplay>; // per-widget style overrides
+  display: WidgetDisplay; // per-widget overrides, section 6
 }
 ```
+
+History: v1 had only `widgets`; the v2 migration adds the default
+`appearance` (`settingsMigrations` in `core/storage/settings.ts`).
 
 ### State in React
 
@@ -208,29 +211,35 @@ interface LinksData {
 - The folder popup is a dialog rendered into `<body>`; Esc, the close button
   or an outside click dismiss it and focus returns to the folder tile.
 
-## 6. Styling and customisation (Planned)
+## 6. Styling and customisation (Built)
 
 Styles cascade in four layers, all through CSS custom properties:
 
 1. **Tokens**: `styles/global.css` defines base variables (`--color-text`,
-   `--font-sans`, ...) with light and dark values.
-2. **Global appearance**: settings for font, weight, text colour, text
-   shadow, edge padding and widget spacing, written as variables on the
-   dashboard root.
-3. **Per-widget overrides**: a widget's `display` settings, written as
-   `--widget-font`, `--widget-size`, `--widget-weight` and `--widget-colour`
-   on that widget's wrapper. (Built; the controls come in Phase 3.)
-4. **Widget style presets**: e.g. Quick Links _Plain_ and _Glass_, which
+   `--font-sans`, ...) with light and dark values for the settings UI.
+2. **Global appearance** (`Settings.appearance`): font, weight, text colour,
+   text shadow, text size, edge padding and widget spacing, written by
+   `appearanceVars()` as `--dashboard-*`, `--edge-padding` and
+   `--widget-spacing` on the dashboard root.
+3. **Per-widget overrides** (`WidgetInstance.display`): font, weight, size
+   (percent of the page size) and colour, written by `displayVars()` as
+   `--widget-font`, `--widget-weight`, `--widget-scale` and
+   `--widget-colour` on that widget's wrapper.
+4. **Widget style presets**: e.g. Quick Links _Glass_ and _Plain_, which
    are named bundles of setting values, not separate stylesheets.
 
 Rules:
 
-- Components style themselves only with variables and their own classes; no
-  inline colours.
 - Only options the user actually set are written, so unset options fall back
-  to the layer below.
+  to the layer below. Clearing an override deletes it.
+- Widgets that need a default weight read
+  `var(--widget-weight, var(--dashboard-weight, <default>))`.
+- Widget sizes use `em`, so the page text size scales them. Quick Links
+  tiles and form inputs keep their own sizes.
+- Font names typed by users and colours are sanitised before they reach
+  CSS (`fontFamilyCss`, hex-only colours), so settings cannot inject CSS.
 - Animations respect `prefers-reduced-motion`; interactive elements have
-  visible `:focus-visible` styles.
+  visible `:focus-visible` styles. Buttons have unique accessible names.
 
 ## 7. Layout (Built)
 
@@ -272,16 +281,18 @@ apply to every type; darken is an overlay so it never affects blur edges.
 
 ## 11. Decisions log
 
-| Date       | Decision                                  | Reason                                          |
-| ---------- | ----------------------------------------- | ----------------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence          |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                   |
-| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied           |
-| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite             |
-| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit              |
-| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                              |
-| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced     |
-| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it      |
-| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it          |
-| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo |
-| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                     |
+| Date       | Decision                                  | Reason                                            |
+| ---------- | ----------------------------------------- | ------------------------------------------------- |
+| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence            |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                     |
+| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied             |
+| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite               |
+| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit                |
+| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                                |
+| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced       |
+| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it        |
+| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it            |
+| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo   |
+| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                       |
+| 2026-11-16 | Text size as a percentage, not px         | One control scales every widget consistently      |
+| 2026-11-16 | No user custom CSS                        | Every option has a control; sanitised inputs only |

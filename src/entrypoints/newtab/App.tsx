@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 
 import Background from "@/app/Background";
 import Dashboard from "@/app/Dashboard";
+import AppearanceSettings from "@/app/settings/AppearanceSettings";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
 import SettingsPanel, { SettingsSection } from "@/app/settings/SettingsPanel";
@@ -71,6 +72,14 @@ export default function App() {
             <BackgroundSettings
               settings={background}
               onChange={saveBackground}
+            />
+          </SettingsSection>
+          <SettingsSection title="Appearance">
+            <AppearanceSettings
+              appearance={settings.appearance}
+              onChange={(appearance) =>
+                saveSettings({ ...settings, appearance })
+              }
             />
           </SettingsSection>
           <SettingsSection title="Widgets">

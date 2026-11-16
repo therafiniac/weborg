@@ -1,8 +1,10 @@
+import { defaultAppearance } from "@/core/appearance/appearance";
 import type { Settings } from "@/core/storage/settings";
 
 import { addWidget, moveWidget, removeWidget, updateWidget } from "./actions";
 
 const settings: Settings = {
+  appearance: defaultAppearance,
   widgets: [
     { id: "a", type: "text", position: "top-left", order: 0, display: {} },
     { id: "b", type: "text", position: "top-left", order: 1, display: {} },
