@@ -1,5 +1,6 @@
 import {
   addItem,
+  dropOnItem,
   findLink,
   moveItem,
   moveLinkTo,
@@ -130,5 +131,80 @@ describe("link style", () => {
       "links links--tiles links--lift links--glow links--shine",
     );
     expect(styleClasses(plainPreset)).toBe("links links--plain links--lift");
+  });
+});
+
+describe("dropOnItem() (drag and drop)", () => {
+  const items: Item[] = [
+    link("a"),
+    folder("f", [link("b"), link("c")]),
+    link("d"),
+    folder("g", [link("e")]),
+  ];
+
+  it("reorders top-level links", () => {
+    expect(ids(dropOnItem(items, "a", "d"))).toEqual([
+      "f[b,c]",
+      "d",
+      "a",
+      "g[e]",
+    ]);
+    expect(ids(dropOnItem(items, "d", "a"))).toEqual([
+      "d",
+      "a",
+      "f[b,c]",
+      "g[e]",
+    ]);
+  });
+
+  it("drops a link on a folder to move it inside", () => {
+    expect(ids(dropOnItem(items, "a", "g"))).toEqual(["f[b,c]", "d", "g[e,a]"]);
+  });
+
+  it("reorders links inside a folder", () => {
+    expect(ids(dropOnItem(items, "c", "b"))).toEqual([
+      "a",
+      "f[c,b]",
+      "d",
+      "g[e]",
+    ]);
+  });
+
+  it("moves links between folders and out to the top level", () => {
+    expect(ids(dropOnItem(items, "b", "e"))).toEqual([
+      "a",
+      "f[c]",
+      "d",
+      "g[b,e]",
+    ]);
+    expect(ids(dropOnItem(items, "b", "d"))).toEqual([
+      "a",
+      "f[c]",
+      "b",
+      "d",
+      "g[e]",
+    ]);
+    expect(ids(dropOnItem(items, "a", "c"))).toEqual(["f[b,a,c]", "d", "g[e]"]);
+  });
+
+  it("only reorders folders at the top level, never nests them", () => {
+    expect(ids(dropOnItem(items, "g", "a"))).toEqual([
+      "g[e]",
+      "a",
+      "f[b,c]",
+      "d",
+    ]);
+    // Dropping a folder on a nested link targets that link's folder
+    expect(ids(dropOnItem(items, "g", "b"))).toEqual([
+      "a",
+      "g[e]",
+      "f[b,c]",
+      "d",
+    ]);
+  });
+
+  it("ignores unknown ids and dropping on itself", () => {
+    expect(ids(dropOnItem(items, "a", "a"))).toEqual(ids(items));
+    expect(ids(dropOnItem(items, "zzz", "a"))).toEqual(ids(items));
   });
 });

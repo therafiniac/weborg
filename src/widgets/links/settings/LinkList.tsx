@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import Menu, { type MenuItem } from "@/ui/Menu";
 import { SelectField, TextField } from "@/ui/fields";
@@ -33,7 +33,40 @@ function RowIcon({ link }: { link: Link }) {
   );
 }
 
-interface LinkRowProps {
+/** Props that make a row draggable (set by the sortable wrapper). */
+export interface DragProps {
+  /** Callback ref for the row element. */
+  bindRow?: (element: HTMLElement | null) => void;
+  style?: CSSProperties;
+  handle?: ReactNode;
+  depth?: 0 | 1;
+  dropTarget?: boolean;
+  dragging?: boolean;
+  /** Insertion line while another item is dragged over this one. */
+  indicator?: "before" | "after";
+}
+
+function rowClass(
+  base: string,
+  editing: boolean,
+  depth?: 0 | 1,
+  dropTarget?: boolean,
+  dragging?: boolean,
+  indicator?: "before" | "after",
+) {
+  return [
+    base,
+    editing && "link-row--editing",
+    depth === 1 && "link-row--nested",
+    dropTarget && "link-row--drop-target",
+    dragging && "link-row--dragging",
+    indicator && `link-row--drop-${indicator}`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+interface LinkRowProps extends DragProps {
   link: Link;
   editing: boolean;
   menu: MenuItem[];
@@ -55,13 +88,32 @@ export function LinkRow({
   onDone,
   onChange,
   onMoveToFolder,
+  bindRow,
+  style,
+  handle,
+  depth,
+  dropTarget,
+  dragging,
+  indicator,
 }: LinkRowProps) {
   const label = linkLabel(link);
   const invalid = normalizeUrl(link.url) === null;
 
   return (
-    <li className={`link-row${editing ? " link-row--editing" : ""}`}>
+    <li
+      ref={bindRow}
+      style={style}
+      className={rowClass(
+        "link-row",
+        editing,
+        depth,
+        dropTarget,
+        dragging,
+        indicator,
+      )}
+    >
       <div className="link-row__main">
+        {handle}
         <RowIcon link={link} />
         <span className="link-row__text">
           <span className="link-row__name">{label}</span>
@@ -123,7 +175,7 @@ export function LinkRow({
   );
 }
 
-interface FolderRowProps {
+interface FolderRowProps extends DragProps {
   folder: Folder;
   editing: boolean;
   collapsed: boolean;
@@ -132,7 +184,6 @@ interface FolderRowProps {
   onEdit: () => void;
   onDone: () => void;
   onChange: (patch: Partial<Pick<Folder, "name" | "icon">>) => void;
-  children: ReactNode;
 }
 
 export function FolderRow({
@@ -144,15 +195,31 @@ export function FolderRow({
   onEdit,
   onDone,
   onChange,
-  children,
+  bindRow,
+  style,
+  handle,
+  depth,
+  dropTarget,
+  dragging,
+  indicator,
 }: FolderRowProps) {
   const label = folder.name || "Folder";
   const count = folder.links.length;
   return (
     <li
-      className={`link-row link-row--folder${editing ? " link-row--editing" : ""}`}
+      ref={bindRow}
+      style={style}
+      className={rowClass(
+        "link-row link-row--folder",
+        editing,
+        depth,
+        dropTarget,
+        dragging,
+        indicator,
+      )}
     >
       <div className="link-row__main">
+        {handle}
         <button
           type="button"
           className="link-row__toggle"
@@ -206,12 +273,6 @@ export function FolderRow({
           </button>
         </div>
       )}
-      {!collapsed &&
-        (count > 0 ? (
-          <ul className="link-list link-list--nested">{children}</ul>
-        ) : (
-          <p className="hint link-row__empty">Empty</p>
-        ))}
     </li>
   );
 }
