@@ -99,6 +99,55 @@ export const GRADIENT_PRESETS: readonly GradientPreset[] = [
   },
 ];
 
+export interface ColourPreset {
+  id: string;
+  name: string;
+  colour: string;
+  /** Darken (%) needed for white text to stay readable (WCAG AA 4.5:1). */
+  dim: number;
+}
+
+/** Solid colours from the Catppuccin Mocha palette, paired the same way. */
+export const COLOUR_PRESETS: readonly ColourPreset[] = [
+  { id: "base", name: "Base", colour: "#1e1e2e", dim: 0 },
+  { id: "crust", name: "Crust", colour: "#11111b", dim: 0 },
+  { id: "surface", name: "Surface", colour: "#313244", dim: 0 },
+  { id: "mauve", name: "Mauve", colour: "#cba6f7", dim: 35 },
+  { id: "red", name: "Red", colour: "#f38ba8", dim: 35 },
+  { id: "peach", name: "Peach", colour: "#fab387", dim: 40 },
+  { id: "green", name: "Green", colour: "#a6e3a1", dim: 45 },
+  { id: "teal", name: "Teal", colour: "#94e2d5", dim: 45 },
+  { id: "sapphire", name: "Sapphire", colour: "#74c7ec", dim: 40 },
+  { id: "blue", name: "Blue", colour: "#89b4fa", dim: 35 },
+];
+
+export function applyColourPreset(
+  settings: BackgroundSettings,
+  preset: ColourPreset,
+): BackgroundSettings {
+  return {
+    ...settings,
+    kind: "colour",
+    colour: preset.colour,
+    dim: preset.dim,
+  };
+}
+
+export function isColourPresetActive(
+  settings: BackgroundSettings,
+  preset: ColourPreset,
+): boolean {
+  return (
+    settings.kind === "colour" &&
+    settings.colour.toLowerCase() === preset.colour
+  );
+}
+
+export function colourSwatch(preset: ColourPreset): string {
+  const shade = `linear-gradient(rgb(0 0 0 / ${preset.dim}%), rgb(0 0 0 / ${preset.dim}%))`;
+  return `${shade}, ${preset.colour}`;
+}
+
 export function applyPreset(
   settings: BackgroundSettings,
   preset: GradientPreset,
