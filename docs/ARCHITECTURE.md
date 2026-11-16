@@ -106,6 +106,7 @@ migrations })`. Rules:
 ```ts
 interface Settings {
   appearance: Appearance; // section 6
+  ui: { locked: boolean; widgetsHidden: boolean }; // corner buttons
   widgets: WidgetInstance[];
 }
 
@@ -118,8 +119,8 @@ interface WidgetInstance {
 }
 ```
 
-History: v1 had only `widgets`; the v2 migration adds the default
-`appearance` (`settingsMigrations` in `core/storage/settings.ts`).
+History: v1 had only `widgets`; v2 adds `appearance`; v3 adds `ui`
+(`settingsMigrations` in `core/storage/settings.ts`).
 
 ### State in React
 
@@ -200,7 +201,6 @@ interface LinksData {
   tabSwitch: "click" | "hover"; // tabs layout only
   activeTab: string | null; // last selected tab, restored next time
   showAddTile: boolean; // "+" tile on the page
-  lockLinks: boolean; // turns off dragging on the page
   columns: number;
   openInNewTab: boolean;
   shortcuts: boolean; // number keys 1-9
@@ -240,8 +240,10 @@ interface LinksData {
 - **Settings**: Quick Links declares `settingsSection`, so its settings get
   their own "Links" tab with Your links / Layout / Style sub-tabs. Only one
   link or folder is edited at a time; deletes can be undone.
-- Data history: v2 adds layout fields, v3 `showAddTile`, v4 `lockLinks`
-  (`linksMigrations`, all non-destructive).
+- **Lock**: the page-wide lock (section 8b) reaches widgets as the
+  `locked` prop; Quick Links then hides "+" tiles and turns off dragging.
+- Data history: v2 adds layout fields, v3 `showAddTile`, v4 `lockLinks`,
+  v5 removes `lockLinks` again (replaced by the page lock).
 
 ## 6. Styling and customisation (Built)
 
@@ -309,6 +311,20 @@ deletes an uploaded image.
   switch, presets for the chosen type only, colour pickers under
   "Fine-tune", then Effects (blur, darken) and Reset.
 
+## 8b. Page controls (Built)
+
+Bottom-right buttons, hidden while the settings panel is open:
+
+- **Eye**: hides every widget (`ui.widgetsHidden`); only the background and
+  the buttons remain.
+- **Lock**: `ui.locked` blocks the settings panel (the gear stays
+  focusable with `aria-disabled` and explains why), "+" tiles, new folders
+  and dragging. Links and folders still open.
+- **Gear**: opens settings.
+
+Both toggles are remembered in synced settings and announced through a
+status message that clears after a few seconds.
+
 ## 9. Testing and quality
 
 - **Unit**: storage migrations, reducers, appearance-to-variables mapping.
@@ -356,3 +372,4 @@ deletes an uploaded image.
 | 2026-11-17 | Quick Links settings in their own tab           | Most-used widget; too much to nest in the Widgets list   |
 | 2026-11-17 | Add @dnd-kit for drag and drop                  | Keyboard, touch and screen reader support out of the box |
 | 2026-11-17 | Static rows with drop highlights while dragging | Shifting rows moved folder targets away from the pointer |
+| 2026-11-17 | One page-wide lock (blocks settings too)        | Simple to understand; replaces the Quick Links lock      |
