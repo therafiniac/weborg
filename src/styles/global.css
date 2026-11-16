@@ -1,13 +1,30 @@
 :root {
   --color-bg: #11111b;
   --color-text: #cdd6f4;
+  --color-surface: #1e1e2e;
+  --color-surface-2: #313244;
+  --color-border: #45475a;
+  --color-muted: #a6adc8;
+  --color-accent: #cba6f7;
+  --color-accent-text: #11111b;
+  --color-danger-bg: #f38ba8;
+  --color-danger-text: #11111b;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     --color-bg: #eff1f5;
     --color-text: #4c4f69;
+    --color-surface: #ffffff;
+    --color-surface-2: #e6e9ef;
+    --color-border: #ccd0da;
+    --color-muted: #6c6f85;
+    --color-accent: #8839ef;
+    --color-accent-text: #ffffff;
+    --color-danger-bg: #d20f39;
+    --color-danger-text: #ffffff;
   }
 }
 
@@ -32,14 +49,22 @@ body {
 }
 
 .app {
-  display: grid;
-  place-items: center;
   height: 100%;
 }
 
-.app__title {
-  margin: 0;
-  font-size: clamp(2.5rem, 8vw, 5rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
