@@ -42,17 +42,20 @@ build for now.
 src/
   entrypoints/
     newtab/            Built: the new tab page (WXT entrypoint)
-  app/                 Planned: app shell, providers, settings panel
+  app/                 Built: dashboard, widget host, background layer
+    settings/          Built: settings panel and its sections
   core/
-    storage/           Planned: storage items, migrations, React hooks
-    layout/            Planned: positions, slot rendering
+    storage/           Built: settings item, useStorageItem, backup
+    layout/            Built: positions and grouping
+    widgets/           Built: widget contract, per-instance data, actions
+    background/        Built: background model, image store (IndexedDB)
     appearance/        Planned: global appearance -> CSS variables
   widgets/
-    <widget-id>/       Planned: one folder per widget (see section 5)
-  backgrounds/
-    <background-id>/   Planned: one folder per background type
-  ui/                  Planned: shared components (Button, ColourInput, ...)
-  styles/              Built: global.css and design tokens
+    index.ts           Built: the widget registry
+    <widget-id>/       Built: one folder per widget (text so far)
+  backgrounds/         Built: background registry and per-type settings
+  ui/                  Built: shared components (ErrorBoundary)
+  styles/              Built: global.css (tokens), ui.css (controls)
   test/                Built: test setup
 public/icon/           Built: extension icons (placeholder)
 docs/                  This document
@@ -62,7 +65,7 @@ Rule: `widgets/*` and `backgrounds/*` may import from `core/` and `ui/`, never
 from each other. `core/` never imports from `widgets/` except through the
 registry.
 
-## 4. Data and storage (Planned)
+## 4. Data and storage (Built)
 
 ### Storage areas
 
@@ -70,12 +73,15 @@ registry.
 100 KB total and **8 KB per item** in Chrome. `storage.local` is per device
 and much larger. Weborg splits data by size:
 
-| Key                 | Area  | Contents                                             |
-| ------------------- | ----- | ---------------------------------------------------- |
-| `sync:settings`     | sync  | Appearance, layout, list of widget instances         |
-| `local:widget:<id>` | local | Each widget instance's data (links, folders, notes)  |
-| `local:background`  | local | Background type and its settings                     |
-| `local:cache:<id>`  | local | Disposable cached data (fetched images, API results) |
+| Key                 | Area  | Contents                                            |
+| ------------------- | ----- | --------------------------------------------------- |
+| `sync:settings`     | sync  | Appearance, layout, list of widget instances        |
+| `local:widget:<id>` | local | Each widget instance's data (links, folders, notes) |
+| `local:background`  | local | Background type and its settings                    |
+| `local:cache:<id>`  | local | Planned: disposable cached data (API results)       |
+
+Uploaded background images are stored in IndexedDB (`weborg` database,
+`files` store), not in `browser.storage`.
 
 Large or unbounded data (links, notes, uploaded images) never goes in sync.
 Syncing widget data across devices can come later as an explicit opt-in.
@@ -87,15 +93,16 @@ migrations })`. Rules:
 
 1. Changing a stored shape bumps `version` and adds a migration.
 2. Migrations are pure functions with unit tests.
-3. Readers always get a fully-defaulted value; components never handle
-   `undefined` settings.
+3. Readers always get a fully-defaulted value: `normalizeSettings` and
+   `normalizeBackground` repair or drop invalid data, and widget data is
+   merged over the widget's `defaultData`.
 
 ### Settings shape (initial)
 
 ```ts
 interface Settings {
-  appearance: Appearance; // section 6
   widgets: WidgetInstance[];
+  // appearance: Appearance — added in Phase 3 (section 6)
 }
 
 interface WidgetInstance {
@@ -113,13 +120,22 @@ A small hook layer wraps storage items with `useSyncExternalStore`:
 `useStorageItem(item)` returns `[value, setValue]` and re-renders when the
 item changes, including from another open tab. No global state library.
 
+- The value is `undefined` until the first read finishes; the app renders
+  nothing until settings and background load, so defaults never flash.
+- `setValue` updates every subscriber immediately, then persists.
+- When the last subscriber unmounts, the cached value is dropped so the next
+  reader gets fresh data.
+
 ### Import / export
 
-Export writes one JSON file containing all non-cache items plus a
-`formatVersion`. Import validates the file, runs migrations, then replaces
-local data. Importing Tabliss exports may be added later as a converter.
+Export writes one JSON file: `{ format: "weborg", formatVersion, exportedAt,
+settings, background, widgets }`, where `widgets` maps instance ids to their
+data. The background image is not included. Import validates the file,
+rejects newer `formatVersion`s, drops data for unknown widgets, resets, then
+writes. Reset clears both storage areas and the image. Importing Tabliss
+exports may be added later as a converter.
 
-## 5. Widget system (Planned)
+## 5. Widget system (Built)
 
 Each widget is a self-contained module registered in one list:
 
@@ -128,7 +144,6 @@ interface WidgetDefinition<Data> {
   type: string; // unique, stable: stored in settings
   name: string;
   description: string;
-  icon: string; // Lucide icon name
   defaultData: Data;
   dataVersion: number;
   migrations?: Record<number, (old: unknown) => unknown>;
@@ -144,10 +159,13 @@ interface WidgetDefinition<Data> {
 - Widgets that use the network must handle offline and failure states and
   show cached data when available.
 
-First widgets: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
-Notes.
+Built: Text (the reference implementation). Next (Phase 2): Clock,
+Greeting, Search, Quick Links (tiles, presets, folders), Notes.
 
-### Quick Links data
+Widget settings changes are pure functions in `core/widgets/actions.ts`
+(add, remove, update, move) so they are unit tested without React.
+
+### Quick Links data (Planned)
 
 ```ts
 type LinkItem = Link | Folder;
@@ -180,7 +198,8 @@ Styles cascade in four layers, all through CSS custom properties:
    shadow, edge padding and widget spacing, written as variables on the
    dashboard root.
 3. **Per-widget overrides**: a widget's `display` settings, written as
-   variables on that widget's wrapper.
+   `--widget-font`, `--widget-size`, `--widget-weight` and `--widget-colour`
+   on that widget's wrapper. (Built; the controls come in Phase 3.)
 4. **Widget style presets**: e.g. Quick Links _Plain_ and _Glass_, which
    are named bundles of setting values, not separate stylesheets.
 
@@ -193,19 +212,20 @@ Rules:
 - Animations respect `prefers-reduced-motion`; interactive elements have
   visible `:focus-visible` styles.
 
-## 7. Layout (Planned)
+## 7. Layout (Built)
 
 Phase 1 uses nine fixed positions (top/middle/bottom × left/centre/right).
 Widgets in the same position stack in `order`. `Position` is stored as a
 string union so a free-form grid layout can be added later as a new position
 kind without migrating existing data.
 
-## 8. Backgrounds (Planned)
+## 8. Backgrounds (Built)
 
-Same registry pattern as widgets: colour, gradient and user image first.
-Uploaded images are stored locally (IndexedDB if they exceed
-`storage.local` comfort limits), never synced. Display options (blur,
-dimming) apply to all background types.
+Same registry pattern as widgets (`backgrounds/index.ts`): colour, gradient
+and uploaded image. Each type keeps its options when the user switches, so
+switching back restores them. Uploaded images (max 15 MB, `image/*` only)
+are stored in IndexedDB on the device and never synced. Blur and darken
+apply to every type; darken is an overlay so it never affects blur edges.
 
 ## 9. Testing and quality
 
