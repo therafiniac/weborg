@@ -1,12 +1,20 @@
-import { Plus } from "lucide-react";
+import { FolderPlus, Plus } from "lucide-react";
 import { useState } from "react";
 
 import type { WidgetSettingsProps } from "@/core/widgets/types";
-import { CheckboxField, RangeField } from "@/ui/fields";
+import { CheckboxField, RangeField, SelectField } from "@/ui/fields";
 
-import { addItem, moveItem, removeItem, updateItem } from "./items";
+import FolderEditor from "./FolderEditor";
+import { addItem, moveItem, moveLinkTo, removeItem, updateItem } from "./items";
 import LinkEditor from "./LinkEditor";
-import { newLink, type Item, type Link, type LinksData } from "./model";
+import {
+  newFolder,
+  newLink,
+  type Folder,
+  type Item,
+  type Link,
+  type LinksData,
+} from "./model";
 import StyleEditor from "./StyleEditor";
 import { resolveStyle } from "./style";
 import "./LinksSettings.css";
@@ -17,16 +25,73 @@ export default function LinksSettings({
 }: WidgetSettingsProps<LinksData>) {
   const [openId, setOpenId] = useState<string | null>(null);
   const setItems = (items: Item[]) => setData({ ...data, items });
+  const toggle = (id: string) => setOpenId(openId === id ? null : id);
 
-  const add = () => {
+  const folders = data.items.filter(
+    (item): item is Folder => item.kind === "folder",
+  );
+  const folderOptions = [
+    { value: "", label: "None (top level)" },
+    ...folders.map((folder) => ({
+      value: folder.id,
+      label: folder.name || "Folder",
+    })),
+  ];
+
+  const addLink = (folderId: string | null = null) => {
     const link = newLink();
-    setItems(addItem(data.items, link));
+    setItems(addItem(data.items, link, folderId));
     setOpenId(link.id);
   };
 
-  const remove = (item: Item, label: string) => {
-    if (confirm(`Remove ${label}?`)) setItems(removeItem(data.items, item.id));
+  const addFolder = () => {
+    const folder = newFolder();
+    setItems(addItem(data.items, folder));
+    setOpenId(folder.id);
   };
+
+  const remove = (item: Item) => {
+    const message =
+      item.kind === "folder"
+        ? item.links.length > 0
+          ? `Delete the folder "${item.name}" and its ${item.links.length} links?`
+          : null
+        : `Remove ${item.name || item.url || "this link"}?`;
+    if (message === null || confirm(message))
+      setItems(removeItem(data.items, item.id));
+  };
+
+  const linkEditor = (
+    link: Link,
+    list: readonly Link[] | readonly Item[],
+    index: number,
+    folderId: string | null,
+  ) => (
+    <LinkEditor
+      key={link.id}
+      link={link}
+      open={openId === link.id}
+      isFirst={index === 0}
+      isLast={index === list.length - 1}
+      onToggle={() => toggle(link.id)}
+      onChange={(patch) =>
+        setItems(updateItem<Link>(data.items, link.id, patch))
+      }
+      onMove={(direction) => setItems(moveItem(data.items, link.id, direction))}
+      onRemove={() => remove(link)}
+    >
+      {folders.length > 0 && (
+        <SelectField
+          label="Folder"
+          value={folderId ?? ""}
+          options={folderOptions}
+          onChange={(target) =>
+            setItems(moveLinkTo(data.items, link.id, target || null))
+          }
+        />
+      )}
+    </LinkEditor>
+  );
 
   return (
     <div className="links-settings">
@@ -34,29 +99,37 @@ export default function LinksSettings({
       <ul className="item-list">
         {data.items.map((item, index) =>
           item.kind === "link" ? (
-            <LinkEditor
+            linkEditor(item, data.items, index, null)
+          ) : (
+            <FolderEditor
               key={item.id}
-              link={item}
+              folder={item}
               open={openId === item.id}
               isFirst={index === 0}
               isLast={index === data.items.length - 1}
-              onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+              onToggle={() => toggle(item.id)}
               onChange={(patch) =>
-                setItems(updateItem<Link>(data.items, item.id, patch))
+                setItems(updateItem<Folder>(data.items, item.id, patch))
               }
               onMove={(direction) =>
                 setItems(moveItem(data.items, item.id, direction))
               }
-              onRemove={() =>
-                remove(item, item.name || item.url || "this link")
-              }
-            />
-          ) : null,
+              onRemove={() => remove(item)}
+              onAddLink={() => addLink(item.id)}
+            >
+              {item.links.map((link, linkIndex) =>
+                linkEditor(link, item.links, linkIndex, item.id),
+              )}
+            </FolderEditor>
+          ),
         )}
       </ul>
       <div className="preset-buttons">
-        <button type="button" className="button" onClick={add}>
+        <button type="button" className="button" onClick={() => addLink()}>
           <Plus size={16} aria-hidden /> Add link
+        </button>
+        <button type="button" className="button" onClick={addFolder}>
+          <FolderPlus size={16} aria-hidden /> Add folder
         </button>
       </div>
 
@@ -74,7 +147,7 @@ export default function LinksSettings({
         onChange={(openInNewTab) => setData({ ...data, openInNewTab })}
       />
       <CheckboxField
-        label="Number keys 1–9 open links"
+        label="Number keys 1–9 open links and folders"
         checked={data.shortcuts}
         onChange={(shortcuts) => setData({ ...data, shortcuts })}
       />

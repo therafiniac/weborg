@@ -159,34 +159,54 @@ interface WidgetDefinition<Data> {
 - Widgets that use the network must handle offline and failure states and
   show cached data when available.
 
-Built: Text (the reference implementation). Next (Phase 2): Clock,
-Greeting, Search, Quick Links (tiles, presets, folders), Notes.
+Built: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
+Notes, and Text (the minimal reference implementation). Default layout:
+Clock, Greeting, Search and Quick Links in the centre.
+
+Shared pieces: `core/time` (aligned `useTime` hook and `Intl` formatting)
+and `ui/fields.tsx` (labelled form controls every settings screen uses).
 
 Widget settings changes are pure functions in `core/widgets/actions.ts`
 (add, remove, update, move) so they are unit tested without React.
 
-### Quick Links data (Planned)
+### Quick Links data (Built)
 
 ```ts
-type LinkItem = Link | Folder;
+type Item = Link | Folder;
 interface Link {
   kind: "link";
   id: string;
-  name?: string;
-  url: string;
-  icon?: Icon;
+  url: string; // raw user input; normalised when rendered
+  name: string; // "" = show the domain
+  icon: string; // "auto" | "none" | curated icon name
 }
 interface Folder {
   kind: "folder";
   id: string;
   name: string;
-  icon?: string;
+  icon: string; // curated icon name
   links: Link[];
+}
+interface LinksData {
+  items: Item[];
+  columns: number;
+  openInNewTab: boolean;
+  shortcuts: boolean; // number keys 1-9
+  favicons: boolean; // opt-in, see section 10
+  style: LinkStyle; // preset values, see section 6
 }
 ```
 
-Folders hold links only (one level, no nesting). Items have ids, so editing
-and drag-and-drop do not depend on array positions.
+- Folders hold links only (one level, no nesting). Items have ids, so
+  editing and future drag-and-drop do not depend on array positions.
+- Tree updates are pure functions in `widgets/links/items.ts`.
+- Icons come from a curated Lucide subset (`icons.tsx`); importing all of
+  Lucide would add over 1 MB. "auto" shows a letter badge, or the website
+  icon when favicons are enabled.
+- Number-key shortcuts ignore key presses while typing in any field or
+  inside the settings panel. With a folder open, they target its links.
+- The folder popup is a dialog rendered into `<body>`; Esc, the close button
+  or an outside click dismiss it and focus returns to the folder tile.
 
 ## 6. Styling and customisation (Planned)
 
@@ -239,21 +259,29 @@ apply to every type; darken is an overlay so it never affects blur edges.
 
 - No analytics, crash reporting or remote logging.
 - No remote code; everything ships in the extension bundle.
-- External requests are listed here as widgets add them, with what is sent.
-  Example to decide later: website favicons via a third-party service reveal
-  the visited domain to that service; an offline fallback icon is the
-  default.
-- User-entered URLs are validated (`http`/`https` only) before rendering as
-  links, so `javascript:` URLs cannot run.
+- External requests, all triggered by the user's own settings:
+
+  | Feature                   | Request                              | What is sent       |
+  | ------------------------- | ------------------------------------ | ------------------ |
+  | Quick Links website icons | `icons.duckduckgo.com` (opt-in, off) | Each link's domain |
+  | Search                    | Chosen engine, on submit only        | The search query   |
+
+- User-entered link URLs and custom search URLs are validated
+  (`http`/`https` only), so `javascript:` URLs can never run.
 - No `dangerouslySetInnerHTML` with user content.
 
 ## 11. Decisions log
 
-| Date       | Decision                                 | Reason                                 |
-| ---------- | ---------------------------------------- | -------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork | Own product, modern stack, MIT licence |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS  | See section 2                          |
-| 2026-11-16 | MIT licence                              | Permissive; no Tabliss code is copied  |
-| 2026-11-16 | Extensions only, no website build        | Focus; can be added later with Vite    |
-| 2026-11-16 | Widget data in `storage.local`, not sync | Avoid the 8 KB per-item sync limit     |
-| 2026-11-16 | No telemetry or crash reporting          | Privacy by default                     |
+| Date       | Decision                                  | Reason                                          |
+| ---------- | ----------------------------------------- | ----------------------------------------------- |
+| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence          |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                   |
+| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied           |
+| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite             |
+| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit              |
+| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                              |
+| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced     |
+| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it      |
+| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it          |
+| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo |
+| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                     |
