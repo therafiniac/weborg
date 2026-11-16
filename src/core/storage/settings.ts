@@ -30,12 +30,16 @@ export interface Settings {
 
 export const SETTINGS_VERSION = 2;
 
-/** Stored-data migrations, keyed by the version they upgrade to. */
+/**
+ * Stored-data migrations, keyed by the version they upgrade to. They only
+ * fill missing fields and never overwrite existing ones (see linksMigrations
+ * for why).
+ */
 export const settingsMigrations: Record<number, (old: unknown) => unknown> = {
   // v2: global appearance added
   2: (old) => ({
-    ...(isRecord(old) ? old : {}),
     appearance: defaultAppearance,
+    ...(isRecord(old) ? old : {}),
   }),
 };
 
