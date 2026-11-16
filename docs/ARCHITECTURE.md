@@ -42,17 +42,20 @@ build for now.
 src/
   entrypoints/
     newtab/            Built: the new tab page (WXT entrypoint)
-  app/                 Planned: app shell, providers, settings panel
+  app/                 Built: dashboard, widget host, background layer
+    settings/          Built: settings panel and its sections
   core/
-    storage/           Planned: storage items, migrations, React hooks
-    layout/            Planned: positions, slot rendering
-    appearance/        Planned: global appearance -> CSS variables
+    storage/           Built: settings item, useStorageItem, backup
+    layout/            Built: positions and grouping
+    widgets/           Built: widget contract, per-instance data, actions
+    background/        Built: background model, image store (IndexedDB)
+    appearance/        Built: appearance model, fonts, CSS variable mapping
   widgets/
-    <widget-id>/       Planned: one folder per widget (see section 5)
-  backgrounds/
-    <background-id>/   Planned: one folder per background type
-  ui/                  Planned: shared components (Button, ColourInput, ...)
-  styles/              Built: global.css and design tokens
+    index.ts           Built: the widget registry
+    <widget-id>/       Built: one folder per widget (6 widgets)
+  backgrounds/         Built: background registry and per-type settings
+  ui/                  Built: ErrorBoundary, form fields, FontField
+  styles/              Built: global.css (tokens), ui.css (controls)
   test/                Built: test setup
 public/icon/           Built: extension icons (placeholder)
 docs/                  This document
@@ -62,7 +65,7 @@ Rule: `widgets/*` and `backgrounds/*` may import from `core/` and `ui/`, never
 from each other. `core/` never imports from `widgets/` except through the
 registry.
 
-## 4. Data and storage (Planned)
+## 4. Data and storage (Built)
 
 ### Storage areas
 
@@ -70,12 +73,15 @@ registry.
 100 KB total and **8 KB per item** in Chrome. `storage.local` is per device
 and much larger. Weborg splits data by size:
 
-| Key                 | Area  | Contents                                             |
-| ------------------- | ----- | ---------------------------------------------------- |
-| `sync:settings`     | sync  | Appearance, layout, list of widget instances         |
-| `local:widget:<id>` | local | Each widget instance's data (links, folders, notes)  |
-| `local:background`  | local | Background type and its settings                     |
-| `local:cache:<id>`  | local | Disposable cached data (fetched images, API results) |
+| Key                 | Area  | Contents                                            |
+| ------------------- | ----- | --------------------------------------------------- |
+| `sync:settings`     | sync  | Appearance, layout, list of widget instances        |
+| `local:widget:<id>` | local | Each widget instance's data (links, folders, notes) |
+| `local:background`  | local | Background type and its settings                    |
+| `local:cache:<id>`  | local | Planned: disposable cached data (API results)       |
+
+Uploaded background images are stored in IndexedDB (`weborg` database,
+`files` store), not in `browser.storage`.
 
 Large or unbounded data (links, notes, uploaded images) never goes in sync.
 Syncing widget data across devices can come later as an explicit opt-in.
@@ -87,10 +93,11 @@ migrations })`. Rules:
 
 1. Changing a stored shape bumps `version` and adds a migration.
 2. Migrations are pure functions with unit tests.
-3. Readers always get a fully-defaulted value; components never handle
-   `undefined` settings.
+3. Readers always get a fully-defaulted value: `normalizeSettings` and
+   `normalizeBackground` repair or drop invalid data, and widget data is
+   merged over the widget's `defaultData`.
 
-### Settings shape (initial)
+### Settings shape (v2)
 
 ```ts
 interface Settings {
@@ -103,9 +110,12 @@ interface WidgetInstance {
   type: string; // widget id from the registry, e.g. "links"
   position: Position; // section 7
   order: number;
-  display: Partial<WidgetDisplay>; // per-widget style overrides
+  display: WidgetDisplay; // per-widget overrides, section 6
 }
 ```
+
+History: v1 had only `widgets`; the v2 migration adds the default
+`appearance` (`settingsMigrations` in `core/storage/settings.ts`).
 
 ### State in React
 
@@ -113,13 +123,22 @@ A small hook layer wraps storage items with `useSyncExternalStore`:
 `useStorageItem(item)` returns `[value, setValue]` and re-renders when the
 item changes, including from another open tab. No global state library.
 
+- The value is `undefined` until the first read finishes; the app renders
+  nothing until settings and background load, so defaults never flash.
+- `setValue` updates every subscriber immediately, then persists.
+- When the last subscriber unmounts, the cached value is dropped so the next
+  reader gets fresh data.
+
 ### Import / export
 
-Export writes one JSON file containing all non-cache items plus a
-`formatVersion`. Import validates the file, runs migrations, then replaces
-local data. Importing Tabliss exports may be added later as a converter.
+Export writes one JSON file: `{ format: "weborg", formatVersion, exportedAt,
+settings, background, widgets }`, where `widgets` maps instance ids to their
+data. The background image is not included. Import validates the file,
+rejects newer `formatVersion`s, drops data for unknown widgets, resets, then
+writes. Reset clears both storage areas and the image. Importing Tabliss
+exports may be added later as a converter.
 
-## 5. Widget system (Planned)
+## 5. Widget system (Built)
 
 Each widget is a self-contained module registered in one list:
 
@@ -128,7 +147,6 @@ interface WidgetDefinition<Data> {
   type: string; // unique, stable: stored in settings
   name: string;
   description: string;
-  icon: string; // Lucide icon name
   defaultData: Data;
   dataVersion: number;
   migrations?: Record<number, (old: unknown) => unknown>;
@@ -144,68 +162,99 @@ interface WidgetDefinition<Data> {
 - Widgets that use the network must handle offline and failure states and
   show cached data when available.
 
-First widgets: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
-Notes.
+Built: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
+Notes, and Text (the minimal reference implementation). Default layout:
+Clock, Greeting, Search and Quick Links in the centre.
 
-### Quick Links data
+Shared pieces: `core/time` (aligned `useTime` hook and `Intl` formatting)
+and `ui/fields.tsx` (labelled form controls every settings screen uses).
+
+Widget settings changes are pure functions in `core/widgets/actions.ts`
+(add, remove, update, move) so they are unit tested without React.
+
+### Quick Links data (Built)
 
 ```ts
-type LinkItem = Link | Folder;
+type Item = Link | Folder;
 interface Link {
   kind: "link";
   id: string;
-  name?: string;
-  url: string;
-  icon?: Icon;
+  url: string; // raw user input; normalised when rendered
+  name: string; // "" = show the domain
+  icon: string; // "auto" | "none" | curated icon name
 }
 interface Folder {
   kind: "folder";
   id: string;
   name: string;
-  icon?: string;
+  icon: string; // curated icon name
   links: Link[];
+}
+interface LinksData {
+  items: Item[];
+  columns: number;
+  openInNewTab: boolean;
+  shortcuts: boolean; // number keys 1-9
+  favicons: boolean; // opt-in, see section 10
+  style: LinkStyle; // preset values, see section 6
 }
 ```
 
-Folders hold links only (one level, no nesting). Items have ids, so editing
-and drag-and-drop do not depend on array positions.
+- Folders hold links only (one level, no nesting). Items have ids, so
+  editing and future drag-and-drop do not depend on array positions.
+- Tree updates are pure functions in `widgets/links/items.ts`.
+- Icons come from a curated Lucide subset (`icons.tsx`); importing all of
+  Lucide would add over 1 MB. "auto" shows a letter badge, or the website
+  icon when favicons are enabled.
+- Number-key shortcuts ignore key presses while typing in any field or
+  inside the settings panel. With a folder open, they target its links.
+- The folder popup is a dialog rendered into `<body>`; Esc, the close button
+  or an outside click dismiss it and focus returns to the folder tile.
 
-## 6. Styling and customisation (Planned)
+## 6. Styling and customisation (Built)
 
 Styles cascade in four layers, all through CSS custom properties:
 
 1. **Tokens**: `styles/global.css` defines base variables (`--color-text`,
-   `--font-sans`, ...) with light and dark values.
-2. **Global appearance**: settings for font, weight, text colour, text
-   shadow, edge padding and widget spacing, written as variables on the
-   dashboard root.
-3. **Per-widget overrides**: a widget's `display` settings, written as
-   variables on that widget's wrapper.
-4. **Widget style presets**: e.g. Quick Links _Plain_ and _Glass_, which
+   `--font-sans`, ...) with light and dark values for the settings UI.
+2. **Global appearance** (`Settings.appearance`): font, weight, text colour,
+   text shadow, text size, edge padding and widget spacing, written by
+   `appearanceVars()` as `--dashboard-*`, `--edge-padding` and
+   `--widget-spacing` on the dashboard root.
+3. **Per-widget overrides** (`WidgetInstance.display`): font, weight, size
+   (percent of the page size) and colour, written by `displayVars()` as
+   `--widget-font`, `--widget-weight`, `--widget-scale` and
+   `--widget-colour` on that widget's wrapper.
+4. **Widget style presets**: e.g. Quick Links _Glass_ and _Plain_, which
    are named bundles of setting values, not separate stylesheets.
 
 Rules:
 
-- Components style themselves only with variables and their own classes; no
-  inline colours.
 - Only options the user actually set are written, so unset options fall back
-  to the layer below.
+  to the layer below. Clearing an override deletes it.
+- Widgets that need a default weight read
+  `var(--widget-weight, var(--dashboard-weight, <default>))`.
+- Widget sizes use `em`, so the page text size scales them. Quick Links
+  tiles and form inputs keep their own sizes.
+- Font names typed by users and colours are sanitised before they reach
+  CSS (`fontFamilyCss`, hex-only colours), so settings cannot inject CSS.
 - Animations respect `prefers-reduced-motion`; interactive elements have
-  visible `:focus-visible` styles.
+  visible `:focus-visible` styles. Buttons have unique accessible names.
 
-## 7. Layout (Planned)
+## 7. Layout (Built)
 
 Phase 1 uses nine fixed positions (top/middle/bottom × left/centre/right).
 Widgets in the same position stack in `order`. `Position` is stored as a
 string union so a free-form grid layout can be added later as a new position
 kind without migrating existing data.
 
-## 8. Backgrounds (Planned)
+## 8. Backgrounds (Built)
 
-Same registry pattern as widgets: colour, gradient and user image first.
-Uploaded images are stored locally (IndexedDB if they exceed
-`storage.local` comfort limits), never synced. Display options (blur,
-dimming) apply to all background types.
+Same registry pattern as widgets (`backgrounds/index.ts`): colour, gradient
+and uploaded image. Each type keeps its options when the user switches, so
+switching back restores them. Uploaded images (max 15 MB, `image/*` only)
+are stored in IndexedDB on the device and never synced. Blur and darken
+apply to every type; darken is an overlay so it never affects blur edges.
 
 ## 9. Testing and quality
 
@@ -219,21 +268,31 @@ dimming) apply to all background types.
 
 - No analytics, crash reporting or remote logging.
 - No remote code; everything ships in the extension bundle.
-- External requests are listed here as widgets add them, with what is sent.
-  Example to decide later: website favicons via a third-party service reveal
-  the visited domain to that service; an offline fallback icon is the
-  default.
-- User-entered URLs are validated (`http`/`https` only) before rendering as
-  links, so `javascript:` URLs cannot run.
+- External requests, all triggered by the user's own settings:
+
+  | Feature                   | Request                              | What is sent       |
+  | ------------------------- | ------------------------------------ | ------------------ |
+  | Quick Links website icons | `icons.duckduckgo.com` (opt-in, off) | Each link's domain |
+  | Search                    | Chosen engine, on submit only        | The search query   |
+
+- User-entered link URLs and custom search URLs are validated
+  (`http`/`https` only), so `javascript:` URLs can never run.
 - No `dangerouslySetInnerHTML` with user content.
 
 ## 11. Decisions log
 
-| Date       | Decision                                 | Reason                                 |
-| ---------- | ---------------------------------------- | -------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork | Own product, modern stack, MIT licence |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS  | See section 2                          |
-| 2026-11-16 | MIT licence                              | Permissive; no Tabliss code is copied  |
-| 2026-11-16 | Extensions only, no website build        | Focus; can be added later with Vite    |
-| 2026-11-16 | Widget data in `storage.local`, not sync | Avoid the 8 KB per-item sync limit     |
-| 2026-11-16 | No telemetry or crash reporting          | Privacy by default                     |
+| Date       | Decision                                  | Reason                                            |
+| ---------- | ----------------------------------------- | ------------------------------------------------- |
+| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence            |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                     |
+| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied             |
+| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite               |
+| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit                |
+| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                                |
+| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced       |
+| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it        |
+| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it            |
+| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo   |
+| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                       |
+| 2026-11-16 | Text size as a percentage, not px         | One control scales every widget consistently      |
+| 2026-11-16 | No user custom CSS                        | Every option has a control; sanitised inputs only |
