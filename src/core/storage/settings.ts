@@ -28,10 +28,17 @@ export const SETTINGS_VERSION = 1;
 export const defaultSettings: Settings = {
   widgets: [
     {
-      id: "default-text",
-      type: "text",
+      id: "default-clock",
+      type: "clock",
       position: "middle-centre",
       order: 0,
+      display: {},
+    },
+    {
+      id: "default-greeting",
+      type: "greeting",
+      position: "middle-centre",
+      order: 1,
       display: {},
     },
   ],

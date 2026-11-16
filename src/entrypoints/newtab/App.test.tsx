@@ -10,9 +10,12 @@ describe("App", () => {
     fakeBrowser.reset();
   });
 
-  it("renders the default Text widget once settings load", async () => {
+  it("renders the default clock and greeting once settings load", async () => {
     render(<App />);
-    expect(await screen.findByText("Welcome to Weborg")).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^Good (morning|afternoon|evening|night)$/),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".clock__time")).not.toBeNull();
   });
 
   it("skips unknown widget types without breaking the page", async () => {

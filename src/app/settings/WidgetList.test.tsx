@@ -37,29 +37,30 @@ describe("Widget management", () => {
     const user = await openSettings();
     await user.click(screen.getByRole("button", { name: /add widget/i }));
     await waitFor(async () =>
-      expect((await settingsItem.getValue()).widgets).toHaveLength(2),
+      expect((await settingsItem.getValue()).widgets).toHaveLength(3),
     );
   });
 
-  it("edits a widget's text live on the page", async () => {
+  it("edits widget settings live on the page", async () => {
     const user = await openSettings();
     const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: "Text" }));
-    const textarea = within(dialog).getByLabelText("Text");
-    await user.clear(textarea);
-    await user.type(textarea, "Hello");
+    await user.click(within(dialog).getByRole("button", { name: "Greeting" }));
+    await user.type(
+      await within(dialog).findByLabelText("Your name (optional)"),
+      "Rafi",
+    );
     expect(
-      await screen.findByText("Hello", { selector: ".text-widget" }),
+      await screen.findByText(/^Good (morning|afternoon|evening|night), Rafi$/),
     ).toBeInTheDocument();
   });
 
   it("removes a widget after confirmation", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     const user = await openSettings();
-    await user.click(screen.getByRole("button", { name: "Remove Text" }));
+    await user.click(screen.getByRole("button", { name: "Remove Greeting" }));
     await waitFor(async () =>
-      expect((await settingsItem.getValue()).widgets).toHaveLength(0),
+      expect((await settingsItem.getValue()).widgets).toHaveLength(1),
     );
-    expect(screen.queryByText("Welcome to Weborg")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Good /)).not.toBeInTheDocument();
   });
 });
