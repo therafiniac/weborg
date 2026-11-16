@@ -1,5 +1,4 @@
-import type { CSSProperties } from "react";
-
+import { displayVars } from "@/core/appearance/appearance";
 import type { WidgetInstance } from "@/core/storage/settings";
 import { useWidgetData } from "@/core/widgets/data";
 import type { WidgetDefinition } from "@/core/widgets/types";
@@ -34,13 +33,4 @@ export default function WidgetHost({ instance, definition }: Props) {
       </ErrorBoundary>
     </div>
   );
-}
-
-function displayVars(display: WidgetInstance["display"]): CSSProperties {
-  const vars: Record<string, string> = {};
-  if (display.fontFamily) vars["--widget-font"] = display.fontFamily;
-  if (display.fontSize) vars["--widget-size"] = `${display.fontSize}px`;
-  if (display.fontWeight) vars["--widget-weight"] = String(display.fontWeight);
-  if (display.colour) vars["--widget-colour"] = display.colour;
-  return vars as CSSProperties;
 }

@@ -3,6 +3,10 @@
   inset: 0;
   padding: var(--edge-padding, 0);
   color: var(--dashboard-text, #ffffff);
+  font-family: var(--dashboard-font, inherit);
+  font-weight: var(--dashboard-weight, normal);
+  font-size: calc(var(--dashboard-scale, 1) * 1rem);
+  text-shadow: var(--dashboard-shadow, none);
   pointer-events: none;
 }
 
@@ -67,9 +71,10 @@
   translate: -50% -50%;
 }
 
+/* Layer 3: per-widget overrides; unset variables inherit the page look */
 .widget {
   font-family: var(--widget-font, inherit);
-  font-size: var(--widget-size, 1rem);
+  font-size: calc(var(--widget-scale, 1) * 1em);
   font-weight: var(--widget-weight, inherit);
   color: var(--widget-colour, inherit);
 }

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
+import { defaultAppearance } from "@/core/appearance/appearance";
 import { settingsItem } from "@/core/storage/settings";
 
 import App from "./App";
@@ -20,6 +21,7 @@ describe("App", () => {
 
   it("skips unknown widget types without breaking the page", async () => {
     await settingsItem.setValue({
+      appearance: defaultAppearance,
       widgets: [
         {
           id: "future",

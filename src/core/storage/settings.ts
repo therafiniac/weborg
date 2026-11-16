@@ -1,14 +1,18 @@
 import { storage } from "wxt/utils/storage";
 
+import {
+  defaultAppearance,
+  normalizeAppearance,
+  normalizeDisplay,
+  type Appearance,
+  type WidgetDisplay,
+} from "@/core/appearance/appearance";
 import { isPosition, type Position } from "@/core/layout/positions";
 
-/** Per-widget style overrides (controls arrive in Phase 3). */
-export interface WidgetDisplay {
-  fontFamily?: string;
-  fontSize?: number;
-  fontWeight?: number;
-  colour?: string;
-}
+import { isRecord } from "./guards";
+
+export type { WidgetDisplay };
+export { isRecord };
 
 export interface WidgetInstance {
   id: string;
@@ -20,12 +24,23 @@ export interface WidgetInstance {
 }
 
 export interface Settings {
+  appearance: Appearance;
   widgets: WidgetInstance[];
 }
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
+
+/** Stored-data migrations, keyed by the version they upgrade to. */
+export const settingsMigrations: Record<number, (old: unknown) => unknown> = {
+  // v2: global appearance added
+  2: (old) => ({
+    ...(isRecord(old) ? old : {}),
+    appearance: defaultAppearance,
+  }),
+};
 
 export const defaultSettings: Settings = {
+  appearance: defaultAppearance,
   widgets: [
     {
       id: "default-clock",
@@ -62,6 +77,7 @@ export const defaultSettings: Settings = {
 export const settingsItem = storage.defineItem<Settings>("sync:settings", {
   fallback: defaultSettings,
   version: SETTINGS_VERSION,
+  migrations: settingsMigrations,
 });
 
 /**
@@ -69,7 +85,12 @@ export const settingsItem = storage.defineItem<Settings>("sync:settings", {
  * Invalid widget entries are dropped rather than crashing the page.
  */
 export function normalizeSettings(value: unknown): Settings {
-  if (!isRecord(value) || !Array.isArray(value.widgets)) return defaultSettings;
+  if (!isRecord(value)) return defaultSettings;
+  if (!Array.isArray(value.widgets))
+    return {
+      ...defaultSettings,
+      appearance: normalizeAppearance(value.appearance),
+    };
 
   const widgets = value.widgets.flatMap((widget, index): WidgetInstance[] => {
     if (
@@ -86,16 +107,10 @@ export function normalizeSettings(value: unknown): Settings {
           ? widget.position
           : "middle-centre",
         order: typeof widget.order === "number" ? widget.order : index,
-        display: isRecord(widget.display)
-          ? (widget.display as WidgetDisplay)
-          : {},
+        display: normalizeDisplay(widget.display),
       },
     ];
   });
 
-  return { widgets };
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return { appearance: normalizeAppearance(value.appearance), widgets };
 }

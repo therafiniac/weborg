@@ -128,3 +128,42 @@
 .field input[aria-invalid="true"] {
   border-color: var(--color-danger-bg);
 }
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.settings-subheading {
+  margin: 1rem 0 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.settings-subheading:first-child {
+  margin-top: 0;
+}
+
+.settings-details {
+  margin-bottom: 0.85rem;
+}
+
+.settings-details summary {
+  margin-bottom: 0.6rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.settings-details h5 {
+  margin: 0.85rem 0 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

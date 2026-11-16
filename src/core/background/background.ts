@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { storage } from "wxt/utils/storage";
 
-import { isRecord } from "@/core/storage/settings";
+import { isRecord } from "@/core/storage/guards";
 
 export const BACKGROUND_KINDS = ["colour", "gradient", "image"] as const;
 export type BackgroundKind = (typeof BACKGROUND_KINDS)[number];

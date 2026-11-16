@@ -1,3 +1,4 @@
+import { appearanceVars } from "@/core/appearance/appearance";
 import { groupByPosition } from "@/core/layout/positions";
 import type { Settings } from "@/core/storage/settings";
 import { getWidget } from "@/widgets";
@@ -13,7 +14,7 @@ export default function Dashboard({ settings }: Props) {
   const groups = groupByPosition(settings.widgets);
 
   return (
-    <div className="dashboard">
+    <div className="dashboard" style={appearanceVars(settings.appearance)}>
       {[...groups].map(([position, instances]) => (
         <section
           key={position}

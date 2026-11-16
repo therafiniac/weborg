@@ -18,6 +18,8 @@ import { removeWidgetData, useWidgetData } from "@/core/widgets/data";
 import type { WidgetDefinition } from "@/core/widgets/types";
 import { getWidget, widgets } from "@/widgets";
 
+import WidgetStyleSettings from "./WidgetStyleSettings";
+
 import "./WidgetList.css";
 
 interface Props {
@@ -61,6 +63,10 @@ export default function WidgetList({ settings, onChange }: Props) {
                   }
                   onPosition={(position) =>
                     onChange(updateWidget(settings, instance.id, { position }))
+                  }
+                  pageColour={settings.appearance.textColour}
+                  onDisplay={(display) =>
+                    onChange(updateWidget(settings, instance.id, { display }))
                   }
                   onRemove={() => handleRemove(instance, definition.name)}
                 />
@@ -116,6 +122,8 @@ interface ItemProps {
   isLast: boolean;
   onMove: (direction: -1 | 1) => void;
   onPosition: (position: Position) => void;
+  pageColour: string;
+  onDisplay: (display: WidgetInstance["display"]) => void;
   onRemove: () => void;
 }
 
@@ -126,6 +134,8 @@ function WidgetItem({
   isLast,
   onMove,
   onPosition,
+  pageColour,
+  onDisplay,
   onRemove,
 }: ItemProps) {
   const positionId = useId();
@@ -191,6 +201,11 @@ function WidgetItem({
           {definition.Settings && (
             <WidgetSettings instance={instance} definition={definition} />
           )}
+          <WidgetStyleSettings
+            display={instance.display}
+            pageColour={pageColour}
+            onChange={onDisplay}
+          />
         </div>
       )}
     </>
