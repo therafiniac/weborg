@@ -21,7 +21,8 @@ npm run dev:firefox    # Firefox
 | `npm run zip` / `zip:firefox`     | Store-ready zip                         |
 | `npm run check`                   | Typecheck, lint, format check and tests |
 
-Built with [WXT](https://wxt.dev), React, TypeScript and Vitest.
+Built with [WXT](https://wxt.dev), React, TypeScript and Vitest. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together.
 
 ## License
 
