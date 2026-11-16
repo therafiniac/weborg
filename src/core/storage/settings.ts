@@ -48,6 +48,13 @@ export const defaultSettings: Settings = {
       order: 2,
       display: {},
     },
+    {
+      id: "default-links",
+      type: "links",
+      position: "middle-centre",
+      order: 3,
+      display: {},
+    },
   ],
 };
 
