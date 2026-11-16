@@ -42,7 +42,6 @@ const initial: LinksData = {
   tabSwitch: "click",
   activeTab: null,
   showAddTile: false,
-  lockLinks: false,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,

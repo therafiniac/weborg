@@ -41,8 +41,6 @@ export interface LinksData {
   activeTab: string | null;
   /** Show a "+" tile for adding links right on the page. */
   showAddTile: boolean;
-  /** Turn off drag and drop on the page. */
-  lockLinks: boolean;
   columns: number;
   openInNewTab: boolean;
   /** Number keys 1-9 open links and folders. */
@@ -68,7 +66,7 @@ export const newFolder = (name = "New folder"): Folder => ({
   links: [],
 });
 
-export const LINKS_DATA_VERSION = 4;
+export const LINKS_DATA_VERSION = 5;
 
 /**
  * Widget data migrations, keyed by the version they upgrade to. They only
@@ -94,6 +92,13 @@ export const linksMigrations: Record<number, (old: unknown) => unknown> = {
     lockLinks: false,
     ...(typeof old === "object" && old !== null ? old : {}),
   }),
+  // v5: the page-wide lock replaces lockLinks; drop the old field
+  5: (old) => {
+    if (typeof old !== "object" || old === null) return old;
+    const rest = { ...(old as Record<string, unknown>) };
+    delete rest.lockLinks;
+    return rest;
+  },
 };
 
 export const defaultLinksData = (): LinksData => ({
@@ -105,7 +110,6 @@ export const defaultLinksData = (): LinksData => ({
   tabSwitch: "click",
   activeTab: null,
   showAddTile: true,
-  lockLinks: false,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,

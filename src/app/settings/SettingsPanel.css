@@ -158,27 +158,6 @@
   white-space: nowrap;
 }
 
-.settings-toggle {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 5;
-  display: inline-flex;
-  padding: 0.5rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--dashboard-text, #ffffff);
-  opacity: 0.55;
-  cursor: pointer;
-}
-
-.settings-toggle:hover,
-.settings-toggle:focus-visible {
-  opacity: 1;
-  background: rgb(127 127 127 / 0.2);
-}
-
 @keyframes settings-in {
   from {
     opacity: 0;

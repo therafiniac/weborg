@@ -7,10 +7,11 @@ import ErrorBoundary from "@/ui/ErrorBoundary";
 interface Props {
   instance: WidgetInstance;
   definition: WidgetDefinition;
+  locked?: boolean;
 }
 
 /** Loads a widget's data and isolates it behind an error boundary. */
-export default function WidgetHost({ instance, definition }: Props) {
+export default function WidgetHost({ instance, definition, locked }: Props) {
   const [data, setData] = useWidgetData(instance.id, definition);
   const { Component } = definition;
 
@@ -28,7 +29,12 @@ export default function WidgetHost({ instance, definition }: Props) {
         )}
       >
         {data !== undefined && (
-          <Component instance={instance} data={data} setData={setData} />
+          <Component
+            instance={instance}
+            data={data}
+            setData={setData}
+            locked={locked}
+          />
         )}
       </ErrorBoundary>
     </div>

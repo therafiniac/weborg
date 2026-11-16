@@ -12,6 +12,8 @@ interface Props {
 
 export default function Dashboard({ settings }: Props) {
   const groups = groupByPosition(settings.widgets);
+  // The eye button hides every widget; only the background shows
+  if (settings.ui.widgetsHidden) return null;
 
   return (
     <div className="dashboard" style={appearanceVars(settings.appearance)}>
@@ -30,6 +32,7 @@ export default function Dashboard({ settings }: Props) {
                 key={instance.id}
                 instance={instance}
                 definition={definition}
+                locked={settings.ui.locked}
               />
             );
           })}

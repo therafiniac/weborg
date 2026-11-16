@@ -7,6 +7,8 @@ export interface WidgetProps<Data> {
   instance: WidgetInstance;
   data: Data;
   setData: (data: Data) => void;
+  /** Page is locked: widgets should not offer adding, dragging or editing. */
+  locked?: boolean;
 }
 
 export type WidgetSettingsProps<Data> = WidgetProps<Data>;

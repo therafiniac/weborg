@@ -72,6 +72,7 @@ describe("settings v2 migration", () => {
     const migrated = settingsMigrations[2]!(v1);
     expect(normalizeSettings(migrated)).toEqual({
       appearance: defaultAppearance,
+      ui: { locked: false, widgetsHidden: false },
       widgets: [],
     });
   });

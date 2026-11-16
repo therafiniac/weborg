@@ -1,0 +1,45 @@
+.page-controls {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--dashboard-text, #ffffff);
+}
+
+.page-controls__button {
+  display: inline-flex;
+  padding: 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.page-controls__button:hover,
+.page-controls__button:focus-visible {
+  opacity: 1;
+  background: rgb(127 127 127 / 0.2);
+}
+
+/* Active toggles stay visible so the state is obvious at a glance */
+.page-controls__button[aria-pressed="true"] {
+  opacity: 0.9;
+}
+
+.page-controls__button[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-controls__message {
+  margin: 0 0.25rem 0 0;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+}
