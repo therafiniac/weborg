@@ -76,3 +76,11 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
+.item-editor--folder {
+  background: var(--color-surface-2);
+}
+
+.item-editor__children {
+  padding: 0 0.6rem 0.6rem;
+}
