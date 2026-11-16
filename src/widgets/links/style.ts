@@ -86,6 +86,8 @@ export function styleVars(style: LinkStyle, columns: number): CSSProperties {
     "--links-tile-width": `${style.tileWidth}px`,
     "--links-tile-height": `${style.tileHeight}px`,
     "--links-gap": `${style.gap}px`,
+    // Tabs layout: tabs and panel share a lighter glass so tiles stand out
+    "--links-panel-bg": hexToRgba(style.background, bg * 0.55),
     "--links-bg": `linear-gradient(145deg, ${hexToRgba(style.background, bg)}, ${hexToRgba(style.background, bg * 0.75)})`,
     "--links-blur": `${style.blur}px`,
     "--links-radius": `${style.radius}px`,

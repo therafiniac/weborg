@@ -68,3 +68,48 @@ describe("backup", () => {
     expect(() => parseBackup(text)).toThrow(message);
   });
 });
+
+describe("backup restore with versioned widget data", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it("keeps restored values even though migrations run again", async () => {
+    const { linksWidget } = await import("@/widgets/links");
+    const { widgetDataItem } = await import("@/core/widgets/data");
+    const { defaultAppearance } = await import("@/core/appearance/appearance");
+
+    const backup = parseBackup(
+      JSON.stringify({
+        format: "weborg",
+        formatVersion: 1,
+        settings: {
+          appearance: { ...defaultAppearance, textScale: 150 },
+          widgets: [
+            {
+              id: "l1",
+              type: "links",
+              position: "middle-centre",
+              order: 0,
+              display: {},
+            },
+          ],
+        },
+        widgets: { l1: { items: [], layout: "tabs", activeTab: "x" } },
+      }),
+    );
+    await restoreBackup(backup);
+
+    // Defining the item runs WXT migrations on unversioned data
+    const item = widgetDataItem(
+      "l1",
+      linksWidget as unknown as Parameters<typeof widgetDataItem>[1],
+    );
+    await item.migrate();
+    expect(await item.getValue()).toMatchObject({
+      layout: "tabs",
+      activeTab: "x",
+    });
+    expect((await settingsItem.getValue()).appearance.textScale).toBe(150);
+  });
+});
