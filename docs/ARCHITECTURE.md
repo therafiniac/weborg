@@ -43,7 +43,7 @@ src/
   entrypoints/
     newtab/            Built: the new tab page (WXT entrypoint)
   app/                 Built: dashboard, widget host, background layer
-    settings/          Built: settings panel and its sections
+    settings/          Built: tabbed settings panel (normal, maximised, minimised)
   core/
     storage/           Built: settings item, useStorageItem, backup
     layout/            Built: positions and grouping
@@ -277,6 +277,21 @@ white text at WCAG AA contrast (4.5:1); `presets.test.ts` fails if a preset
 breaks that. Reset restores the default background and, after asking,
 deletes an uploaded image.
 
+## 8a. Settings panel (Built)
+
+- Non-modal, so changes preview live. One section at a time from a tab bar
+  (Background, Appearance, Widgets, Backup), using the WAI-ARIA tabs
+  pattern; the last section is remembered.
+- Three sizes: normal (side drawer, icon-over-label tabs), maximised (wide,
+  tabs become a vertical sidebar) and minimised (a corner bar that restores
+  to the same section). Normal/maximised is remembered; minimised is not.
+- Panel preferences are per-viewer conveniences in `localStorage`, wrapped
+  in try/catch (`app/settings/panelPrefs.ts`); settings data never goes
+  there.
+- Background settings are organised by type: a Colour/Gradient/Image
+  switch, presets for the chosen type only, colour pickers under
+  "Fine-tune", then Effects (blur, darken) and Reset.
+
 ## 9. Testing and quality
 
 - **Unit**: storage migrations, reducers, appearance-to-variables mapping.
@@ -302,22 +317,23 @@ deletes an uploaded image.
 
 ## 11. Decisions log
 
-| Date       | Decision                                   | Reason                                            |
-| ---------- | ------------------------------------------ | ------------------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork   | Own product, modern stack, MIT licence            |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS    | See section 2                                     |
-| 2026-11-16 | MIT licence                                | Permissive; no Tabliss code is copied             |
-| 2026-11-16 | Extensions only, no website build          | Focus; can be added later with Vite               |
-| 2026-11-16 | Widget data in `storage.local`, not sync   | Avoid the 8 KB per-item sync limit                |
-| 2026-11-16 | No telemetry or crash reporting            | Privacy by default                                |
-| 2026-11-16 | Background images in IndexedDB             | Too large for browser.storage; never synced       |
-| 2026-11-16 | Settings panel is non-modal                | Changes preview live on the page behind it        |
-| 2026-11-16 | DuckDuckGo is the default search engine    | Privacy by default; user can change it            |
-| 2026-11-16 | Website icons are opt-in                   | Loading them reveals link domains to DuckDuckGo   |
-| 2026-11-16 | Curated icon set instead of all of Lucide  | Bundle size                                       |
-| 2026-11-16 | Text size as a percentage, not px          | One control scales every widget consistently      |
-| 2026-11-16 | No user custom CSS                         | Every option has a control; sanitised inputs only |
-| 2026-11-17 | Folder popover anchored to its tile        | Keeps the visual link to the folder; no dimming   |
-| 2026-11-17 | Tabs layout for Quick Links                | Every category one click away; folders as tabs    |
-| 2026-11-17 | Migrations never overwrite existing values | WXT re-runs them on unversioned (restored) data   |
-| 2026-11-17 | Presets carry their own darken level       | Colourful pastels stay readable with white text   |
+| Date       | Decision                                   | Reason                                                   |
+| ---------- | ------------------------------------------ | -------------------------------------------------------- |
+| 2026-11-16 | Fresh codebase instead of a Tabliss fork   | Own product, modern stack, MIT licence                   |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS    | See section 2                                            |
+| 2026-11-16 | MIT licence                                | Permissive; no Tabliss code is copied                    |
+| 2026-11-16 | Extensions only, no website build          | Focus; can be added later with Vite                      |
+| 2026-11-16 | Widget data in `storage.local`, not sync   | Avoid the 8 KB per-item sync limit                       |
+| 2026-11-16 | No telemetry or crash reporting            | Privacy by default                                       |
+| 2026-11-16 | Background images in IndexedDB             | Too large for browser.storage; never synced              |
+| 2026-11-16 | Settings panel is non-modal                | Changes preview live on the page behind it               |
+| 2026-11-16 | DuckDuckGo is the default search engine    | Privacy by default; user can change it                   |
+| 2026-11-16 | Website icons are opt-in                   | Loading them reveals link domains to DuckDuckGo          |
+| 2026-11-16 | Curated icon set instead of all of Lucide  | Bundle size                                              |
+| 2026-11-16 | Text size as a percentage, not px          | One control scales every widget consistently             |
+| 2026-11-16 | No user custom CSS                         | Every option has a control; sanitised inputs only        |
+| 2026-11-17 | Folder popover anchored to its tile        | Keeps the visual link to the folder; no dimming          |
+| 2026-11-17 | Tabs layout for Quick Links                | Every category one click away; folders as tabs           |
+| 2026-11-17 | Migrations never overwrite existing values | WXT re-runs them on unversioned (restored) data          |
+| 2026-11-17 | Presets carry their own darken level       | Colourful pastels stay readable with white text          |
+| 2026-11-17 | Settings in tabs; maximise/minimise        | One section at a time; whole page visible when minimised |
