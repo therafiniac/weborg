@@ -94,3 +94,17 @@ describe("Quick Links", () => {
     expect((setData.mock.calls[0]![0] as LinksData).style.mode).toBe("plain");
   });
 });
+
+describe("Quick Links layout", () => {
+  it("uses no more columns than there are items, so tiles stay centred", () => {
+    render(
+      <Links
+        instance={instance}
+        data={{ ...base, columns: 6 }}
+        setData={() => {}}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Quick links" });
+    expect(nav.style.getPropertyValue("--links-columns")).toBe("2");
+  });
+});

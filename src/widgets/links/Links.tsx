@@ -49,7 +49,8 @@ export default function Links({ data }: WidgetProps<LinksData>) {
     return <p className="links__empty">Add links in settings.</p>;
 
   const classes = styleClasses(style);
-  const vars = styleVars(style, data.columns);
+  // Never reserve more columns than there are items, so tiles stay centred
+  const vars = styleVars(style, Math.min(data.columns, data.items.length));
 
   return (
     <>
