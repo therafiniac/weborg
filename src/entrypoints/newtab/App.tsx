@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import Background from "@/app/Background";
 import Dashboard from "@/app/Dashboard";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
+import DataSettings from "@/app/settings/DataSettings";
 import SettingsPanel, { SettingsSection } from "@/app/settings/SettingsPanel";
 import WidgetList from "@/app/settings/WidgetList";
 import {
@@ -74,6 +75,9 @@ export default function App() {
           </SettingsSection>
           <SettingsSection title="Widgets">
             <WidgetList settings={settings} onChange={saveSettings} />
+          </SettingsSection>
+          <SettingsSection title="Backup">
+            <DataSettings />
           </SettingsSection>
         </SettingsPanel>
       )}
