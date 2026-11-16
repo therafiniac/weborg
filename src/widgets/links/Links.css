@@ -335,22 +335,22 @@
   text-align: left;
 }
 
+/* Many folders wrap onto more rows instead of hiding off the edge */
 .links-tabs__list {
   position: relative;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   margin-bottom: -1px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .links-tabs__tab {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
+  gap: 0.45rem;
+  padding: 0.6rem 0.85rem;
   border: 1px solid var(--links-border);
   border-bottom-color: transparent;
   border-radius: var(--links-radius) var(--links-radius) 0 0;
