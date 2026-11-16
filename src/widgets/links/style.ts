@@ -29,7 +29,7 @@ export interface LinkStyle {
 
 export const glassPreset: LinkStyle = {
   mode: "tiles",
-  tileWidth: 112,
+  tileWidth: 128,
   tileHeight: 48,
   gap: 16,
   background: "#1e1e2e",
