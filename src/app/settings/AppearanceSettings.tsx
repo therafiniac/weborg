@@ -31,6 +31,7 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         Applies to every widget. Each widget can override these in its own
         settings.
       </p>
+      <h4 className="settings-subheading">Text</h4>
       <FontField
         value={appearance.fontFamily}
         defaultLabel="System default"
@@ -66,6 +67,7 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         value={appearance.textScale}
         onChange={(textScale) => set({ textScale })}
       />
+      <h4 className="settings-subheading">Spacing</h4>
       <RangeField
         label="Space from screen edge"
         unit="px"

@@ -11,12 +11,13 @@ import { fakeBrowser } from "wxt/testing/fake-browser";
 import { settingsItem } from "@/core/storage/settings";
 import App from "@/entrypoints/newtab/App";
 
-async function openSettings() {
+async function openSettings(section: string) {
   const user = userEvent.setup();
   render(<App />);
   await user.click(
     await screen.findByRole("button", { name: "Open settings" }),
   );
+  await user.click(screen.getByRole("tab", { name: section }));
   return user;
 }
 
@@ -26,10 +27,8 @@ describe("Appearance", () => {
   });
 
   it("applies the global font to the dashboard and saves it", async () => {
-    const user = await openSettings();
-    const section = screen.getByRole("heading", {
-      name: "Appearance",
-    }).parentElement!;
+    const user = await openSettings("Appearance");
+    const section = screen.getByRole("tabpanel");
     await user.selectOptions(within(section).getByLabelText("Font"), "serif");
 
     const dashboard = document.querySelector<HTMLElement>(".dashboard")!;
@@ -44,7 +43,7 @@ describe("Appearance", () => {
   });
 
   it("overrides one widget's colour and resets it", async () => {
-    const user = await openSettings();
+    const user = await openSettings("Widgets");
     const dialog = screen.getByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Greeting" }));
     await user.click(within(dialog).getByText(/^Style/));

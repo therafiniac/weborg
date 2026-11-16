@@ -3,55 +3,163 @@
   top: 0;
   right: 0;
   z-index: 10;
-  width: min(380px, 100vw);
+  display: flex;
+  flex-direction: column;
+  width: min(400px, 100vw);
   height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 1rem 1.25rem 2rem;
   border-left: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: -12px 0 32px rgb(0 0 0 / 0.25);
+  animation: settings-in 0.18s ease-out;
+}
+
+.settings-panel--maximised {
+  width: min(960px, 100vw);
 }
 
 .settings-panel__header {
-  position: sticky;
-  top: -1rem;
-  z-index: 1;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  margin: -1rem -1.25rem 0.5rem;
-  padding: 1rem 1.25rem 0.5rem;
-  background: var(--color-surface);
+  padding: 0.85rem 0.75rem 0.6rem 1.25rem;
 }
 
 .settings-panel__header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .settings-panel__header h2:focus {
   outline: none;
 }
 
-.settings-section {
-  padding: 1rem 0;
+.settings-panel__actions {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.settings-panel__layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.settings-panel--maximised .settings-panel__layout {
+  flex-direction: row;
   border-top: 1px solid var(--color-border);
 }
 
-.settings-section h3 {
-  margin: 0 0 0.85rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+/* Section tabs: a row in the drawer, a sidebar when maximised */
+.settings-tabs {
+  display: grid;
+  flex-shrink: 0;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-panel--maximised .settings-tabs {
+  display: flex;
+  flex-direction: column;
+  width: 210px;
+  padding: 0.75rem;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 0;
+}
+
+/* Drawer: icon above label so all sections fit in one row */
+.settings-tabs__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.45rem 0.25rem 0.5rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
   color: var(--color-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.settings-tabs__tab span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-tabs__tab:hover {
+  color: var(--color-text);
+}
+
+.settings-tabs__tab[aria-selected="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.settings-panel--maximised .settings-tabs__tab {
+  flex-direction: row;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 0;
+  border-radius: var(--radius);
+}
+
+.settings-panel--maximised .settings-tabs__tab[aria-selected="true"] {
+  background: var(--color-surface-2);
+}
+
+.settings-panel__content {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1rem 1.25rem 2rem;
+}
+
+.settings-panel--maximised .settings-panel__content {
+  padding: 1.5rem 2rem 2.5rem;
+}
+
+.settings-panel--maximised .settings-panel__content > * {
+  max-width: 560px;
+}
+
+/* Minimised: a small bar in the corner */
+.settings-mini {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.35rem 0.35rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  font-size: 0.875rem;
+  animation: settings-in 0.18s ease-out;
+}
+
+.settings-mini__label {
+  margin-right: 0.25rem;
+  white-space: nowrap;
 }
 
 .settings-toggle {
   position: fixed;
-  color: var(--dashboard-text, #ffffff);
   right: 1rem;
   bottom: 1rem;
   z-index: 5;
@@ -60,6 +168,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
+  color: var(--dashboard-text, #ffffff);
   opacity: 0.55;
   cursor: pointer;
 }
@@ -68,4 +177,18 @@
 .settings-toggle:focus-visible {
   opacity: 1;
   background: rgb(127 127 127 / 0.2);
+}
+
+@keyframes settings-in {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-panel,
+  .settings-mini {
+    animation: none;
+  }
 }
