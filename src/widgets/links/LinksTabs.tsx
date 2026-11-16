@@ -1,9 +1,11 @@
-import { useEffect, useId, useRef, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
 import { NamedIcon } from "./icons";
 import LinkTile from "./LinkTile";
-import type { LinksData } from "./model";
-import { activeTabOf, buildTabs, tabIndexForKey } from "./tabs";
+import AddLinkPopover from "./AddLinkPopover";
+import AddLinkTile from "./AddLinkTile";
+import type { Link, LinksData } from "./model";
+import { activeTabOf, buildTabs, LOOSE_TAB_ID, tabIndexForKey } from "./tabs";
 import { useNumberShortcuts } from "./useNumberShortcuts";
 
 const HOVER_DELAY_MS = 150;
@@ -15,6 +17,7 @@ interface Props {
   className: string;
   style: CSSProperties;
   onOpenLink: (index: number, links: LinksData["items"]) => void;
+  onAddLink: (link: Link, folderId: string | null) => void;
 }
 
 /** Folders as tabs; the active tab's links fill the panel below. */
@@ -24,12 +27,15 @@ export default function LinksTabs({
   className,
   style,
   onOpenLink,
+  onAddLink,
 }: Props) {
   const baseId = useId();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const [addAnchor, setAddAnchor] = useState<HTMLElement | null>(null);
+  const addTileRef = useRef<HTMLButtonElement>(null);
   const tabs = buildTabs(data.items);
   const active = activeTabOf(tabs, data.activeTab);
 
@@ -43,10 +49,43 @@ export default function LinksTabs({
     if (id !== active?.id) setData({ ...data, activeTab: id });
   };
 
-  if (tabs.length === 0 || !active)
-    return <p className="links__empty">Add links in settings.</p>;
+  const addTile = (label: string) =>
+    data.showAddTile && (
+      <AddLinkTile
+        ref={addTileRef}
+        label={label}
+        expanded={addAnchor !== null}
+        onClick={() => setAddAnchor(addAnchor ? null : addTileRef.current)}
+      />
+    );
+  const addPopover = (folderId: string | null, title: string) =>
+    addAnchor && (
+      <AddLinkPopover
+        anchor={addAnchor}
+        folderId={folderId}
+        title={title}
+        style={style}
+        onAdd={onAddLink}
+        onClose={() => setAddAnchor(null)}
+      />
+    );
 
-  const columns = Math.max(1, Math.min(data.columns, active.links.length));
+  if (tabs.length === 0 || !active)
+    return data.showAddTile ? (
+      <div className={className} style={style}>
+        {addTile("Add a link")}
+        {addPopover(null, "Add a link")}
+      </div>
+    ) : (
+      <p className="links__empty">Add links in settings.</p>
+    );
+
+  // Links in the "Links" tab live at the top level
+  const targetFolder = active.id === LOOSE_TAB_ID ? null : active.id;
+  const addLabel =
+    targetFolder === null ? "Add a link" : `Add a link to ${active.name}`;
+  const tileCount = active.links.length + (data.showAddTile ? 1 : 0);
+  const columns = Math.max(1, Math.min(data.columns, tileCount));
   const panelId = `${baseId}-panel`;
   const tabId = (id: string) => `${baseId}-tab-${id}`;
   const plain = className.includes("links--plain");
@@ -110,7 +149,7 @@ export default function LinksTabs({
         aria-labelledby={tabId(active.id)}
         tabIndex={0}
       >
-        {active.links.length === 0 ? (
+        {tileCount === 0 ? (
           <p className="links-tabs__empty">
             {active.name} is empty. Add links to it in settings.
           </p>
@@ -130,8 +169,10 @@ export default function LinksTabs({
                 favicons={data.favicons}
               />
             ))}
+            {addTile(addLabel)}
           </nav>
         )}
+        {addPopover(targetFolder, addLabel)}
       </div>
     </div>
   );

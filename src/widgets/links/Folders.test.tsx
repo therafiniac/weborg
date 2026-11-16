@@ -29,6 +29,7 @@ const data: LinksData = {
   layout: "grid",
   tabSwitch: "click",
   activeTab: null,
+  showAddTile: false,
   columns: 4,
   openInNewTab: true,
   shortcuts: true,

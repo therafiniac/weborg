@@ -47,6 +47,11 @@ export default function LayoutTab({ data, setData }: Props) {
 
       <h4 className="settings-subheading">Behaviour</h4>
       <CheckboxField
+        label="Show a + tile for adding links on the page"
+        checked={data.showAddTile}
+        onChange={(showAddTile) => set({ showAddTile })}
+      />
+      <CheckboxField
         label="Open links in a new tab"
         checked={data.openInNewTab}
         onChange={(openInNewTab) => set({ openInNewTab })}
