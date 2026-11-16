@@ -1,12 +1,18 @@
-import { Settings as SettingsIcon } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import {
+  Archive,
+  Image,
+  LayoutGrid,
+  Settings as SettingsIcon,
+  Type,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Background from "@/app/Background";
 import Dashboard from "@/app/Dashboard";
 import AppearanceSettings from "@/app/settings/AppearanceSettings";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
-import SettingsPanel, { SettingsSection } from "@/app/settings/SettingsPanel";
+import SettingsPanel from "@/app/settings/SettingsPanel";
 import WidgetList from "@/app/settings/WidgetList";
 import {
   backgroundItem,
@@ -27,10 +33,14 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
-  const closeSettings = useCallback(() => {
-    setSettingsOpen(false);
-    toggleRef.current?.focus();
-  }, []);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+
+  // Return focus to the gear button once it is back on screen
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !settingsOpen) toggleRef.current?.focus();
+    wasOpen.current = settingsOpen;
+  }, [settingsOpen]);
 
   // Render nothing until settings load, to avoid flashing defaults
   if (stored === undefined || storedBackground === undefined) return null;
@@ -55,40 +65,62 @@ export default function App() {
       <h1 className="visually-hidden">Weborg</h1>
       <Dashboard settings={settings} />
 
-      <button
-        ref={toggleRef}
-        type="button"
-        className="settings-toggle"
-        aria-label="Open settings"
-        aria-expanded={settingsOpen}
-        onClick={() => (settingsOpen ? closeSettings() : setSettingsOpen(true))}
-      >
-        <SettingsIcon size={20} aria-hidden />
-      </button>
+      {!settingsOpen && (
+        <button
+          ref={toggleRef}
+          type="button"
+          className="settings-toggle"
+          aria-label="Open settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <SettingsIcon size={20} aria-hidden />
+        </button>
+      )}
 
       {settingsOpen && (
-        <SettingsPanel onClose={closeSettings}>
-          <SettingsSection title="Background">
-            <BackgroundSettings
-              settings={background}
-              onChange={saveBackground}
-            />
-          </SettingsSection>
-          <SettingsSection title="Appearance">
-            <AppearanceSettings
-              appearance={settings.appearance}
-              onChange={(appearance) =>
-                saveSettings({ ...settings, appearance })
-              }
-            />
-          </SettingsSection>
-          <SettingsSection title="Widgets">
-            <WidgetList settings={settings} onChange={saveSettings} />
-          </SettingsSection>
-          <SettingsSection title="Backup">
-            <DataSettings />
-          </SettingsSection>
-        </SettingsPanel>
+        <SettingsPanel
+          onClose={closeSettings}
+          sections={[
+            {
+              id: "background",
+              label: "Background",
+              icon: Image,
+              content: (
+                <BackgroundSettings
+                  settings={background}
+                  onChange={saveBackground}
+                />
+              ),
+            },
+            {
+              id: "appearance",
+              label: "Appearance",
+              icon: Type,
+              content: (
+                <AppearanceSettings
+                  appearance={settings.appearance}
+                  onChange={(appearance) =>
+                    saveSettings({ ...settings, appearance })
+                  }
+                />
+              ),
+            },
+            {
+              id: "widgets",
+              label: "Widgets",
+              icon: LayoutGrid,
+              content: (
+                <WidgetList settings={settings} onChange={saveSettings} />
+              ),
+            },
+            {
+              id: "backup",
+              label: "Backup",
+              icon: Archive,
+              content: <DataSettings />,
+            },
+          ]}
+        />
       )}
     </main>
   );

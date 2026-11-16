@@ -43,23 +43,4 @@ export function activeTabOf(
   return tabs.find((tab) => tab.id === activeId) ?? tabs[0];
 }
 
-/** Index to move to for a tablist key press, or null for other keys. */
-export function tabIndexForKey(
-  key: string,
-  current: number,
-  count: number,
-): number | null {
-  if (count === 0) return null;
-  switch (key) {
-    case "ArrowRight":
-      return (current + 1) % count;
-    case "ArrowLeft":
-      return (current - 1 + count) % count;
-    case "Home":
-      return 0;
-    case "End":
-      return count - 1;
-    default:
-      return null;
-  }
-}
+export { listIndexForKey as tabIndexForKey } from "@/ui/keyboard";
