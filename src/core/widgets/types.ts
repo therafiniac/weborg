@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 import type { WidgetInstance } from "@/core/storage/settings";
@@ -22,6 +23,11 @@ export interface WidgetDefinition<Data extends object = object> {
   migrations?: Record<number, (old: unknown) => unknown>;
   Component: ComponentType<WidgetProps<Data>>;
   Settings?: ComponentType<WidgetSettingsProps<Data>>;
+  /**
+   * Give the widget's settings their own tab in the settings panel instead
+   * of nesting them in the Widgets list. For widgets with lots of options.
+   */
+  settingsSection?: { label: string; icon: LucideIcon };
 }
 
 /** Helper that keeps Data typed while registering widgets in one list. */

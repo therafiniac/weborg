@@ -6,7 +6,15 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { listIndexForKey } from "@/ui/keyboard";
 
@@ -30,6 +38,10 @@ interface Props {
   sections: readonly SettingsSectionDef[];
   onClose: () => void;
 }
+
+/** Lets a section send the user to another section (e.g. "Edit links"). */
+const SettingsNavContext = createContext<(id: string) => void>(() => {});
+export const useSettingsNav = () => useContext(SettingsNavContext);
 
 /**
  * Non-modal settings panel, so changes preview live on the page behind it.
@@ -204,7 +216,9 @@ export default function SettingsPanel({ sections, onClose }: Props) {
           aria-labelledby={tabId(active.id)}
           data-section={active.id}
         >
-          {active.content}
+          <SettingsNavContext.Provider value={selectSection}>
+            {active.content}
+          </SettingsNavContext.Provider>
         </div>
       </div>
     </aside>

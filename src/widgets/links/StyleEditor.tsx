@@ -51,9 +51,7 @@ export default function StyleEditor({ style, onChange }: Props) {
       />
 
       <details className="settings-details">
-        <summary>Customise style</summary>
-
-        <h5>Text and icons</h5>
+        <summary>Text and icons</summary>
         <ColourField
           label="Text colour"
           value={style.textColour}
@@ -91,10 +89,12 @@ export default function StyleEditor({ style, onChange }: Props) {
           value={style.gap}
           onChange={(gap) => set({ gap })}
         />
+      </details>
 
-        {style.mode === "tiles" && (
+      {style.mode === "tiles" && (
+        <details className="settings-details">
+          <summary>Tiles</summary>
           <>
-            <h5>Tiles</h5>
             <RangeField
               label="Tile width"
               unit="px"
@@ -162,9 +162,11 @@ export default function StyleEditor({ style, onChange }: Props) {
               onChange={(shadow) => set({ shadow })}
             />
           </>
-        )}
+        </details>
+      )}
 
-        <h5>Hover</h5>
+      <details className="settings-details">
+        <summary>Hover effects</summary>
         <ColourField
           label="Accent colour"
           value={style.accent}

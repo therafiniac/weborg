@@ -236,3 +236,79 @@
   color: var(--color-text);
   font-weight: 600;
 }
+
+/* Secondary tabs inside a section */
+.subtabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.subtabs__tab {
+  padding: 0.45rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.subtabs__tab:hover {
+  color: var(--color-text);
+}
+
+.subtabs__tab[aria-selected="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Action menu */
+.menu {
+  position: relative;
+}
+
+.menu__list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  min-width: 11rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+}
+
+.menu__item {
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu__item:hover:not(:disabled),
+.menu__item:focus-visible {
+  background: var(--color-surface-2);
+  outline: none;
+}
+
+.menu__item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu__item--danger {
+  color: var(--color-danger-bg);
+}

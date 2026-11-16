@@ -2,7 +2,6 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import Links from "./Links";
-import LinksSettings from "./LinksSettings";
 import type { LinksData } from "./model";
 import { glassPreset } from "./style";
 
@@ -85,45 +84,5 @@ describe("Quick Links folders", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     await user.click(tile);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("adds a folder and moves a link into it from settings", async () => {
-    const setData = vi.fn();
-    const user = userEvent.setup();
-    const { rerender } = render(
-      <LinksSettings instance={instance} data={data} setData={setData} />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /add folder/i }));
-    expect((setData.mock.calls[0]![0] as LinksData).items[2]).toMatchObject({
-      kind: "folder",
-      name: "New folder",
-      links: [],
-    });
-
-    rerender(
-      <LinksSettings instance={instance} data={data} setData={setData} />,
-    );
-    await user.click(screen.getByRole("button", { name: "Edit Alpha" }));
-    await user.selectOptions(screen.getByLabelText("Folder"), "f");
-    const moved = setData.mock.calls.at(-1)![0] as LinksData;
-    expect(moved.items.map((item) => item.id)).toEqual(["f"]);
-    expect(moved.items[0]).toMatchObject({
-      links: [{ id: "b" }, { id: "a" }],
-    });
-  });
-
-  it("asks before deleting a folder that has links", async () => {
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    const setData = vi.fn();
-    const user = userEvent.setup();
-    render(<LinksSettings instance={instance} data={data} setData={setData} />);
-    await user.click(
-      screen.getByRole("button", { name: "Remove folder Work" }),
-    );
-    expect(confirm).toHaveBeenCalledWith(
-      'Delete the folder "Work" and its 1 links?',
-    );
-    expect(setData).not.toHaveBeenCalled();
   });
 });

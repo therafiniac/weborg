@@ -55,3 +55,7 @@
   color: var(--color-text);
   font: inherit;
 }
+
+.edit-in-section {
+  margin-bottom: 0.85rem;
+}

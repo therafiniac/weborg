@@ -1,3 +1,5 @@
+import { Link2 } from "lucide-react";
+
 import { defineWidget } from "@/core/widgets/types";
 
 import Links from "./Links";
@@ -18,4 +20,5 @@ export const linksWidget = defineWidget<LinksData>({
   migrations: linksMigrations,
   Component: Links,
   Settings: LinksSettings,
+  settingsSection: { label: "Links", icon: Link2 },
 });

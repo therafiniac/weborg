@@ -25,7 +25,13 @@ describe("Settings panel layout", () => {
     )
       .getAllByRole("tab")
       .map((tab) => tab.textContent);
-    expect(tabs).toEqual(["Background", "Appearance", "Widgets", "Backup"]);
+    expect(tabs).toEqual([
+      "Background",
+      "Appearance",
+      "Links",
+      "Widgets",
+      "Backup",
+    ]);
     expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Background");
     expect(screen.queryByRole("button", { name: /add widget/i })).toBeNull();
 
