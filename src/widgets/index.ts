@@ -2,6 +2,7 @@ import type { WidgetDefinition } from "@/core/widgets/types";
 
 import { clockWidget } from "./clock";
 import { greetingWidget } from "./greeting";
+import { notesWidget } from "./notes";
 import { searchWidget } from "./search";
 import { textWidget } from "./text";
 
@@ -13,6 +14,7 @@ export const widgets = [
   clockWidget,
   greetingWidget,
   searchWidget,
+  notesWidget,
   textWidget,
 ].map((widget) => widget as unknown as WidgetDefinition);
 
