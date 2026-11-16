@@ -174,3 +174,51 @@ describe("page drag and drop", () => {
     });
   });
 });
+
+describe("+ tile: new folders", () => {
+  beforeEach(() => {
+    updates.mockClear();
+  });
+
+  it("creates a folder from the page", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Add a link" }));
+    await user.click(screen.getByRole("radio", { name: "Folder" }));
+    const name = screen.getByLabelText("Folder name");
+    expect(name).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
+
+    await user.type(name, "Reading{Enter}");
+    expect(latest().items.at(-1)).toMatchObject({
+      kind: "folder",
+      name: "Reading",
+      links: [],
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not offer folders inside a folder", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Work folder/ }));
+    await user.click(
+      screen.getByRole("button", { name: "Add a link to Work" }),
+    );
+    expect(screen.queryByRole("radio", { name: "Folder" })).toBeNull();
+  });
+
+  it("opens a new folder as the active tab in the tabs layout", async () => {
+    const user = userEvent.setup();
+    render(<Harness start={{ ...base, layout: "tabs" }} />);
+    await user.click(screen.getByRole("button", { name: "Add a link" }));
+    await user.click(screen.getByRole("radio", { name: "Folder" }));
+    await user.type(screen.getByLabelText("Folder name"), "Fun{Enter}");
+    const folder = latest().items.at(-1)!;
+    expect(latest().activeTab).toBe(folder.id);
+    expect(screen.getByRole("tab", { name: /Fun/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});

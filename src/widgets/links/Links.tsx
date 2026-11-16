@@ -84,6 +84,14 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
           className={classes}
           style={styleVars(style, data.columns)}
           onAddLink={addLink}
+          onAddFolder={(folder) =>
+            // A new folder becomes a new tab; switch to it
+            setData({
+              ...data,
+              items: addItem(data.items, folder),
+              activeTab: folder.id,
+            })
+          }
           onOpenLink={(index, links) => {
             const link = links[index];
             if (link?.kind === "link") openLink(link, data.openInNewTab);
@@ -161,6 +169,9 @@ export default function Links({ data, setData }: WidgetProps<LinksData>) {
           title="Add a link"
           style={vars}
           onAdd={addLink}
+          onAddFolder={(folder) =>
+            setData({ ...data, items: addItem(data.items, folder) })
+          }
           onClose={() => setAddAnchor(null)}
         />
       )}

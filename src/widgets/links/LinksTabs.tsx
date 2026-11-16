@@ -4,7 +4,7 @@ import { NamedIcon } from "./icons";
 import LinkTile from "./LinkTile";
 import AddLinkPopover from "./AddLinkPopover";
 import AddLinkTile from "./AddLinkTile";
-import type { Link, LinksData } from "./model";
+import type { Folder, Link, LinksData } from "./model";
 import { activeTabOf, buildTabs, LOOSE_TAB_ID, tabIndexForKey } from "./tabs";
 import { DraggableTile, DroppableTab } from "./TileDnd";
 import { useNumberShortcuts } from "./useNumberShortcuts";
@@ -19,6 +19,7 @@ interface Props {
   style: CSSProperties;
   onOpenLink: (index: number, links: LinksData["items"]) => void;
   onAddLink: (link: Link, folderId: string | null) => void;
+  onAddFolder: (folder: Folder) => void;
 }
 
 /** Folders as tabs; the active tab's links fill the panel below. */
@@ -29,6 +30,7 @@ export default function LinksTabs({
   style,
   onOpenLink,
   onAddLink,
+  onAddFolder,
 }: Props) {
   const baseId = useId();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -67,6 +69,7 @@ export default function LinksTabs({
         title={title}
         style={style}
         onAdd={onAddLink}
+        onAddFolder={onAddFolder}
         onClose={() => setAddAnchor(null)}
       />
     );
