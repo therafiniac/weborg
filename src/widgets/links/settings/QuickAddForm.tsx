@@ -34,19 +34,19 @@ export default function QuickAddForm({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
 
+  const canAdd = url.trim() !== "";
+  const message = error ?? status;
+
   return (
     <form
       className="quick-add"
       aria-labelledby={`${id}-title`}
       onSubmit={(event) => {
         event.preventDefault();
+        if (!canAdd) return;
         const normalized = normalizeUrl(url);
         if (!normalized) {
-          setError(
-            url.trim()
-              ? "That doesn't look like a web address. Try example.com"
-              : "Enter a web address first.",
-          );
+          setError("That doesn't look like a web address. Try example.com");
           return;
         }
         const link = newLink(normalized, name.trim());
@@ -68,61 +68,66 @@ export default function QuickAddForm({
         <input
           ref={urlRef}
           id={`${id}-url`}
+          className="quick-add__url"
           type="text"
           inputMode="url"
           autoComplete="off"
-          placeholder="Paste a link"
+          placeholder="Paste a link, then press Enter"
           value={url}
           autoFocus={autoFocus}
           aria-invalid={error ? true : undefined}
-          aria-describedby={`${id}-msg`}
+          aria-describedby={message ? `${id}-msg` : undefined}
           onChange={(event) => {
             setUrl(event.target.value);
             setError(null);
+            setStatus("");
           }}
         />
-        <label className="visually-hidden" htmlFor={`${id}-name`}>
-          Name (optional)
-        </label>
-        <input
-          id={`${id}-name`}
-          type="text"
-          placeholder="Name (optional)"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
+        <button
+          type="submit"
+          className="button button--primary"
+          disabled={!canAdd}
+        >
+          <Plus size={16} aria-hidden /> Add
+        </button>
       </div>
-      <div className="quick-add__row">
+      <div className="quick-add__row quick-add__row--secondary">
+        <label className="quick-add__field">
+          <span>Name</span>
+          <input
+            type="text"
+            placeholder="Optional"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
         {folders && folders.length > 0 && onFolderChange && (
-          <>
-            <label className="visually-hidden" htmlFor={`${id}-folder`}>
-              Folder
-            </label>
+          <label className="quick-add__field">
+            <span>Add to</span>
             <select
-              id={`${id}-folder`}
               value={folderId ?? ""}
               onChange={(event) => onFolderChange(event.target.value || null)}
             >
-              <option value="">No folder</option>
+              <option value="">Top level</option>
               {folders.map((folder) => (
                 <option key={folder.id} value={folder.id}>
                   {folder.name || "Folder"}
                 </option>
               ))}
             </select>
-          </>
+          </label>
         )}
-        <button type="submit" className="button button--primary">
-          <Plus size={16} aria-hidden /> Add
-        </button>
       </div>
-      <p
-        id={`${id}-msg`}
-        className={error ? "field__error" : "hint"}
-        role={error ? "alert" : "status"}
-      >
-        {error ?? status}
-      </p>
+      {/* Only rendered when there is something to say, so no empty gap */}
+      {message && (
+        <p
+          id={`${id}-msg`}
+          className={error ? "field__error" : "hint"}
+          role={error ? "alert" : "status"}
+        >
+          {message}
+        </p>
+      )}
     </form>
   );
 }

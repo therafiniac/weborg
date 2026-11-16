@@ -103,13 +103,23 @@ describe("Quick Links settings", () => {
       expect(latest().items).toHaveLength(3);
     });
 
-    it("adds straight into a folder from the folder's + button", async () => {
+    it("does nothing on an empty submit instead of showing an error", async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+      expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
+      await user.type(screen.getByLabelText("Web address"), "{Enter}");
+      expect(screen.queryByRole("alert")).toBeNull();
+      expect(updates).not.toHaveBeenCalled();
+    });
+
+    it("adds straight into a folder from its menu", async () => {
       const user = userEvent.setup();
       render(<Harness />);
       await user.click(
-        screen.getByRole("button", { name: "Add a link to Work" }),
+        screen.getByRole("button", { name: "More actions for folder Work" }),
       );
-      expect(screen.getByLabelText("Folder")).toHaveValue("w");
+      await user.click(screen.getByRole("menuitem", { name: "Add link here" }));
+      expect(screen.getByLabelText("Add to")).toHaveValue("w");
       expect(screen.getByLabelText("Web address")).toHaveFocus();
 
       await user.keyboard("docs.test{Enter}");
