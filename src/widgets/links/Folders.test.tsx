@@ -70,11 +70,17 @@ describe("Quick Links folders", () => {
     expect(open).toHaveBeenCalledWith("https://b.test/", "_blank", "noopener");
   });
 
-  it("closes when clicking outside the popup", async () => {
+  it("closes on an outside click, or when the tile is clicked again", async () => {
     const user = userEvent.setup();
     render(<Links instance={instance} data={data} setData={() => {}} />);
     await user.click(screen.getByRole("button", { name: /Work folder/ }));
-    await user.click(document.querySelector(".folder-popup__backdrop")!);
+    await user.click(document.body);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    const tile = screen.getByRole("button", { name: /Work folder/ });
+    await user.click(tile);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(tile);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

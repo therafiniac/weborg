@@ -20,8 +20,16 @@ export function openLink(link: Link, newTab: boolean) {
 
 export default function Links({ data }: WidgetProps<LinksData>) {
   const style = resolveStyle(data.style);
-  const [openFolderId, setOpenFolderId] = useState<string | null>(null);
+  // The open folder and the tile it is attached to
+  const [open, setOpen] = useState<{
+    id: string;
+    anchor: HTMLElement | null;
+  } | null>(null);
+  const openFolderId = open?.id ?? null;
   const folderRefs = useRef(new Map<string, HTMLButtonElement>());
+
+  const showFolder = (id: string) =>
+    setOpen({ id, anchor: folderRefs.current.get(id) ?? null });
 
   const openFolder = data.items.find(
     (item): item is Folder =>
@@ -29,9 +37,9 @@ export default function Links({ data }: WidgetProps<LinksData>) {
   );
 
   const closeFolder = () => {
-    setOpenFolderId(null);
-    // Return focus to the tile that opened the popup
-    if (openFolderId) folderRefs.current.get(openFolderId)?.focus();
+    setOpen(null);
+    // Return focus to the tile that opened the popover
+    open?.anchor?.focus();
   };
 
   useNumberShortcuts(data.shortcuts, (index) => {
@@ -42,7 +50,7 @@ export default function Links({ data }: WidgetProps<LinksData>) {
     }
     const item = data.items[index];
     if (item?.kind === "link") openLink(item, data.openInNewTab);
-    else if (item?.kind === "folder") setOpenFolderId(item.id);
+    else if (item?.kind === "folder") showFolder(item.id);
   });
 
   if (data.items.length === 0)
@@ -75,7 +83,10 @@ export default function Links({ data }: WidgetProps<LinksData>) {
               folder={item}
               number={number}
               open={openFolderId === item.id}
-              onOpen={() => setOpenFolderId(item.id)}
+              onOpen={() =>
+                // Clicking the open folder's tile again closes it
+                openFolderId === item.id ? setOpen(null) : showFolder(item.id)
+              }
             />
           );
         })}
@@ -84,6 +95,7 @@ export default function Links({ data }: WidgetProps<LinksData>) {
       {openFolder && (
         <FolderPopup
           folder={openFolder}
+          anchor={open?.anchor ?? null}
           className={classes}
           style={vars}
           columns={data.columns}
