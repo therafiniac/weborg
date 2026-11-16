@@ -41,6 +41,13 @@ export const defaultSettings: Settings = {
       order: 1,
       display: {},
     },
+    {
+      id: "default-search",
+      type: "search",
+      position: "middle-centre",
+      order: 2,
+      display: {},
+    },
   ],
 };
 

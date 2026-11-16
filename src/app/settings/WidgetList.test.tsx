@@ -37,7 +37,7 @@ describe("Widget management", () => {
     const user = await openSettings();
     await user.click(screen.getByRole("button", { name: /add widget/i }));
     await waitFor(async () =>
-      expect((await settingsItem.getValue()).widgets).toHaveLength(3),
+      expect((await settingsItem.getValue()).widgets).toHaveLength(4),
     );
   });
 
@@ -59,7 +59,7 @@ describe("Widget management", () => {
     const user = await openSettings();
     await user.click(screen.getByRole("button", { name: "Remove Greeting" }));
     await waitFor(async () =>
-      expect((await settingsItem.getValue()).widgets).toHaveLength(1),
+      expect((await settingsItem.getValue()).widgets).toHaveLength(2),
     );
     expect(screen.queryByText(/^Good /)).not.toBeInTheDocument();
   });
