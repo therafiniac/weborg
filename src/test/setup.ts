@@ -4,4 +4,6 @@ import { afterEach } from "vitest";
 
 afterEach(() => {
   cleanup();
+  // Panel preferences live in localStorage; keep tests independent
+  localStorage.clear();
 });

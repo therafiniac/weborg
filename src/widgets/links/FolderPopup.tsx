@@ -1,67 +1,70 @@
 import { X } from "lucide-react";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import { NamedIcon } from "./icons";
 import LinkTile from "./LinkTile";
-import type { Folder } from "./model";
+import type { Folder, Link } from "./model";
+import AddLinkTile from "./AddLinkTile";
+import QuickAddForm from "./settings/QuickAddForm";
+import { useAnchoredPopover } from "./useAnchoredPopover";
 
 interface Props {
   folder: Folder;
+  /** The folder tile the popover points at. */
+  anchor: HTMLElement | null;
   className: string;
   style: CSSProperties;
   columns: number;
   openInNewTab: boolean;
   favicons: boolean;
   shortcuts: boolean;
+  /** Show the "+" tile for adding links to this folder. */
+  showAddTile: boolean;
+  onAddLink: (link: Link) => void;
   onClose: () => void;
 }
 
 /**
- * Dialog listing a folder's links. Rendered into <body> so it is not
- * clipped or offset by the widget's slot.
+ * Popover listing a folder's links, attached to its tile. Rendered into
+ * <body> so slot transforms cannot offset it; positioned with fixed coords.
  */
 export default function FolderPopup({
   folder,
+  anchor,
   className,
   style,
   columns,
   openInNewTab,
   favicons,
   shortcuts,
+  showAddTile,
+  onAddLink,
   onClose,
 }: Props) {
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const onCloseRef = useRef(onClose);
+  const [adding, setAdding] = useState(false);
   const titleId = `folder-${folder.id}-title`;
 
-  useEffect(() => {
-    onCloseRef.current = onClose;
+  const {
+    popoverRef,
+    bodyRef,
+    focusRef: closeRef,
+  } = useAnchoredPopover<HTMLDivElement, HTMLButtonElement>({
+    anchor,
+    onClose,
+    layoutKey: `${folder.links.length}-${adding}`,
   });
 
-  // Runs once per open: focus the close button and listen for Esc
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCloseRef.current();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   return createPortal(
-    <div className="folder-popup__backdrop" onClick={onClose}>
-      <div
-        className="folder-popup"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        style={style}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div
+      ref={popoverRef}
+      className="folder-popup"
+      role="dialog"
+      aria-labelledby={titleId}
+      style={{ ...style, visibility: "hidden" }}
+    >
+      <span className="folder-popup__arrow" aria-hidden />
+      <div ref={bodyRef} className="folder-popup__body">
         <header className="folder-popup__header">
           <h2 id={titleId}>
             <NamedIcon name={folder.icon} size={18} />
@@ -78,7 +81,7 @@ export default function FolderPopup({
           </button>
         </header>
 
-        {folder.links.length === 0 ? (
+        {folder.links.length === 0 && !showAddTile ? (
           <p className="folder-popup__empty">
             This folder is empty. Add links to it in settings.
           </p>
@@ -89,7 +92,13 @@ export default function FolderPopup({
             style={
               {
                 "--links-columns": String(
-                  Math.max(1, Math.min(columns, folder.links.length)),
+                  Math.max(
+                    1,
+                    Math.min(
+                      columns,
+                      folder.links.length + (showAddTile ? 1 : 0),
+                    ),
+                  ),
                 ),
               } as CSSProperties
             }
@@ -103,7 +112,24 @@ export default function FolderPopup({
                 favicons={favicons}
               />
             ))}
+            {showAddTile && (
+              <AddLinkTile
+                label={`Add a link to ${folder.name || "this folder"}`}
+                expanded={adding}
+                onClick={() => setAdding(!adding)}
+              />
+            )}
           </nav>
+        )}
+        {adding && (
+          <div className="folder-popup__add">
+            <QuickAddForm
+              title={`Add to ${folder.name || "folder"}`}
+              folderId={folder.id}
+              autoFocus
+              onAdd={(link) => onAddLink(link)}
+            />
+          </div>
         )}
       </div>
     </div>,

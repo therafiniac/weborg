@@ -22,6 +22,7 @@ describe("App", () => {
   it("skips unknown widget types without breaking the page", async () => {
     await settingsItem.setValue({
       appearance: defaultAppearance,
+      ui: { locked: false, widgetsHidden: false },
       widgets: [
         {
           id: "future",

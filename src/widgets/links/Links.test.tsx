@@ -1,8 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 import Links from "./Links";
-import LinksSettings from "./LinksSettings";
 import type { LinksData } from "./model";
 import { glassPreset } from "./style";
 
@@ -31,6 +29,10 @@ const base: LinksData = {
       icon: "auto",
     },
   ],
+  layout: "grid",
+  tabSwitch: "click",
+  activeTab: null,
+  showAddTile: false,
   columns: 4,
   openInNewTab: true,
   shortcuts: true,
@@ -74,24 +76,6 @@ describe("Quick Links", () => {
     // Invalid link at position 2 does nothing
     fireEvent.keyDown(document.body, { key: "2" });
     expect(open).toHaveBeenCalledTimes(1);
-  });
-
-  it("adds a link from settings and opens it for editing", async () => {
-    const setData = vi.fn();
-    const user = userEvent.setup();
-    render(<LinksSettings instance={instance} data={base} setData={setData} />);
-    await user.click(screen.getByRole("button", { name: /add link/i }));
-    const saved = setData.mock.calls[0]![0] as LinksData;
-    expect(saved.items).toHaveLength(3);
-    expect(saved.items[2]).toMatchObject({ kind: "link", url: "" });
-  });
-
-  it("applies a style preset", async () => {
-    const setData = vi.fn();
-    const user = userEvent.setup();
-    render(<LinksSettings instance={instance} data={base} setData={setData} />);
-    await user.click(screen.getByRole("button", { name: "Plain" }));
-    expect((setData.mock.calls[0]![0] as LinksData).style.mode).toBe("plain");
   });
 });
 

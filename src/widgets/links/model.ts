@@ -28,8 +28,19 @@ export interface Folder {
 
 export type Item = Link | Folder;
 
+export type LinksLayout = "grid" | "tabs";
+export type TabSwitch = "click" | "hover";
+
 export interface LinksData {
   items: Item[];
+  /** "grid": tiles, folders open as popovers. "tabs": folders are tabs. */
+  layout: LinksLayout;
+  /** How tabs switch in the tabs layout. */
+  tabSwitch: TabSwitch;
+  /** Last selected tab id, restored on the next new tab. */
+  activeTab: string | null;
+  /** Show a "+" tile for adding links right on the page. */
+  showAddTile: boolean;
   columns: number;
   openInNewTab: boolean;
   /** Number keys 1-9 open links and folders. */
@@ -55,11 +66,50 @@ export const newFolder = (name = "New folder"): Folder => ({
   links: [],
 });
 
+export const LINKS_DATA_VERSION = 5;
+
+/**
+ * Widget data migrations, keyed by the version they upgrade to. They only
+ * fill missing fields: data written without a version marker (e.g. by a
+ * backup restore) is treated as old and migrated again, so a migration must
+ * never overwrite values that are already there.
+ */
+export const linksMigrations: Record<number, (old: unknown) => unknown> = {
+  // v2: tabs layout
+  2: (old) => ({
+    layout: "grid",
+    tabSwitch: "click",
+    activeTab: null,
+    ...(typeof old === "object" && old !== null ? old : {}),
+  }),
+  // v3: "+" tile for adding links on the page
+  3: (old) => ({
+    showAddTile: true,
+    ...(typeof old === "object" && old !== null ? old : {}),
+  }),
+  // v4: drag and drop on the page, with a lock
+  4: (old) => ({
+    lockLinks: false,
+    ...(typeof old === "object" && old !== null ? old : {}),
+  }),
+  // v5: the page-wide lock replaces lockLinks; drop the old field
+  5: (old) => {
+    if (typeof old !== "object" || old === null) return old;
+    const rest = { ...(old as Record<string, unknown>) };
+    delete rest.lockLinks;
+    return rest;
+  },
+};
+
 export const defaultLinksData = (): LinksData => ({
   items: [
     newLink("https://www.wikipedia.org", "Wikipedia"),
     newLink("https://github.com", "GitHub"),
   ],
+  layout: "grid",
+  tabSwitch: "click",
+  activeTab: null,
+  showAddTile: true,
   columns: 6,
   openInNewTab: false,
   shortcuts: true,

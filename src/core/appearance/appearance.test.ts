@@ -58,11 +58,21 @@ describe("appearance", () => {
 });
 
 describe("settings v2 migration", () => {
+  it("keeps an existing appearance (e.g. from a restored backup)", () => {
+    const custom = { ...defaultAppearance, textScale: 150 };
+    expect(
+      normalizeSettings(
+        settingsMigrations[2]!({ appearance: custom, widgets: [] }),
+      ).appearance,
+    ).toEqual(custom);
+  });
+
   it("adds the default appearance to v1 settings", () => {
     const v1 = { widgets: [] };
     const migrated = settingsMigrations[2]!(v1);
     expect(normalizeSettings(migrated)).toEqual({
       appearance: defaultAppearance,
+      ui: { locked: false, widgetsHidden: false },
       widgets: [],
     });
   });

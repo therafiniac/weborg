@@ -29,7 +29,8 @@ for upcoming phases.
 | UI        | React 19 + TypeScript (strict)               | Ecosystem, familiarity, settings-heavy UI                |
 | Styling   | Plain CSS + CSS custom properties            | Customisation is just variables; no preprocessor         |
 | Storage   | WXT `storage` (`browser.storage` wrapper)    | Typed items, built-in versioning and migrations          |
-| Icons     | Lucide (planned)                             | Maintained, tree-shakeable                               |
+| Icons     | Lucide (curated subset)                      | Maintained, tree-shakeable                               |
+| Drag/drop | @dnd-kit (core, sortable, utilities)         | Pointer, touch and keyboard; screen reader announcements |
 | Tests     | Vitest + Testing Library + WXT `fakeBrowser` | Fast, same config as Vite                                |
 | Quality   | ESLint, Prettier, `tsc --noEmit`, CI         | `npm run check` runs all of them                         |
 
@@ -43,7 +44,7 @@ src/
   entrypoints/
     newtab/            Built: the new tab page (WXT entrypoint)
   app/                 Built: dashboard, widget host, background layer
-    settings/          Built: settings panel and its sections
+    settings/          Built: tabbed settings panel (normal, maximised, minimised)
   core/
     storage/           Built: settings item, useStorageItem, backup
     layout/            Built: positions and grouping
@@ -92,6 +93,9 @@ Every item is defined with `storage.defineItem(key, { fallback, version,
 migrations })`. Rules:
 
 1. Changing a stored shape bumps `version` and adds a migration.
+   Migrations only **fill missing fields** and never overwrite existing
+   ones: WXT re-runs them on data written without a version marker (for
+   example widget data from a backup restore).
 2. Migrations are pure functions with unit tests.
 3. Readers always get a fully-defaulted value: `normalizeSettings` and
    `normalizeBackground` repair or drop invalid data, and widget data is
@@ -102,6 +106,7 @@ migrations })`. Rules:
 ```ts
 interface Settings {
   appearance: Appearance; // section 6
+  ui: { locked: boolean; widgetsHidden: boolean }; // corner buttons
   widgets: WidgetInstance[];
 }
 
@@ -114,8 +119,8 @@ interface WidgetInstance {
 }
 ```
 
-History: v1 had only `widgets`; the v2 migration adds the default
-`appearance` (`settingsMigrations` in `core/storage/settings.ts`).
+History: v1 had only `widgets`; v2 adds `appearance`; v3 adds `ui`
+(`settingsMigrations` in `core/storage/settings.ts`).
 
 ### State in React
 
@@ -135,8 +140,7 @@ Export writes one JSON file: `{ format: "weborg", formatVersion, exportedAt,
 settings, background, widgets }`, where `widgets` maps instance ids to their
 data. The background image is not included. Import validates the file,
 rejects newer `formatVersion`s, drops data for unknown widgets, resets, then
-writes. Reset clears both storage areas and the image. Importing Tabliss
-exports may be added later as a converter.
+writes. Reset clears both storage areas and the image.
 
 ## 5. Widget system (Built)
 
@@ -152,6 +156,7 @@ interface WidgetDefinition<Data> {
   migrations?: Record<number, (old: unknown) => unknown>;
   Component: React.ComponentType<WidgetProps<Data>>;
   Settings?: React.ComponentType<WidgetSettingsProps<Data>>;
+  settingsSection?: { label: string; icon: LucideIcon }; // own settings tab
 }
 ```
 
@@ -192,6 +197,10 @@ interface Folder {
 }
 interface LinksData {
   items: Item[];
+  layout: "grid" | "tabs";
+  tabSwitch: "click" | "hover"; // tabs layout only
+  activeTab: string | null; // last selected tab, restored next time
+  showAddTile: boolean; // "+" tile on the page
   columns: number;
   openInNewTab: boolean;
   shortcuts: boolean; // number keys 1-9
@@ -208,8 +217,33 @@ interface LinksData {
   icon when favicons are enabled.
 - Number-key shortcuts ignore key presses while typing in any field or
   inside the settings panel. With a folder open, they target its links.
-- The folder popup is a dialog rendered into `<body>`; Esc, the close button
-  or an outside click dismiss it and focus returns to the folder tile.
+- **Grid layout**: a folder opens as a popover attached to its tile
+  (`popover.ts` places it below, flips above when there is no room, keeps
+  it on screen and caps its height). It is rendered into `<body>` with
+  fixed coordinates so slot transforms cannot offset it. No page dimming;
+  Esc, an outside click or the tile closes it, and focus returns to the
+  tile.
+- **Tabs layout**: links outside folders form a first "Links" tab (omitted
+  when empty), then one tab per folder. Follows the WAI-ARIA tabs pattern
+  (arrow keys, Home/End, roving tabindex); switches on click or, if chosen,
+  hover after 150 ms. Number keys open links in the active tab.
+- **Adding links**: a quick-add form (paste, Enter, repeat) in settings and
+  a "+" tile on the page (grid, folder popovers, tab panels) that opens the
+  same form in a popover attached to the tile.
+- **Drag and drop** (`@dnd-kit`): in settings every row has a handle
+  (pointer, touch, keyboard, screen reader announcements); on the page
+  tiles drag with pointer or touch after an 8px threshold, and the click
+  that ends a drag is swallowed. Rows and tiles do not shift while
+  dragging; the target is highlighted (folder) or marked with an insertion
+  line, so it never slides away. Releasing outside a target changes
+  nothing. Drop rules live in one pure function, `dropOnItem()`.
+- **Settings**: Quick Links declares `settingsSection`, so its settings get
+  their own "Links" tab with Your links / Layout / Style sub-tabs. Only one
+  link or folder is edited at a time; deletes can be undone.
+- **Lock**: the page-wide lock (section 8b) reaches widgets as the
+  `locked` prop; Quick Links then hides "+" tiles and turns off dragging.
+- Data history: v2 adds layout fields, v3 `showAddTile`, v4 `lockLinks`,
+  v5 removes `lockLinks` again (replaced by the page lock).
 
 ## 6. Styling and customisation (Built)
 
@@ -256,6 +290,43 @@ switching back restores them. Uploaded images (max 15 MB, `image/*` only)
 are stored in IndexedDB on the device and never synced. Blur and darken
 apply to every type; darken is an overlay so it never affects blur edges.
 
+Gradient presets (`core/background/presets.ts`) are built from the
+Catppuccin Mocha palette. Each preset carries the darken level that keeps
+white text at WCAG AA contrast (4.5:1); `presets.test.ts` fails if a preset
+breaks that. Reset restores the default background and, after asking,
+deletes an uploaded image.
+
+## 8a. Settings panel (Built)
+
+- Non-modal, so changes preview live. One section at a time from a tab bar
+  (Background, Appearance, Widgets, Backup), using the WAI-ARIA tabs
+  pattern; the last section is remembered.
+- Three sizes: normal (side drawer, icon-over-label tabs), maximised (wide,
+  tabs become a vertical sidebar) and minimised (a corner bar that restores
+  to the same section). Normal/maximised is remembered; minimised is not.
+- Panel preferences are per-viewer conveniences in `localStorage`, wrapped
+  in try/catch (`app/settings/panelPrefs.ts`); settings data never goes
+  there.
+- Background settings are organised by type: a Colour/Gradient/Image
+  switch, presets for the chosen type only, colour pickers under
+  "Fine-tune", then Effects (blur, darken) and Reset.
+
+## 8b. Page controls (Built)
+
+Bottom-right buttons, hidden while the settings panel is open. They fade
+in only when the pointer reaches that corner, while one has keyboard focus,
+or while a hint shows; on touch screens (no hover) they are always visible.
+
+- **Eye**: hides every widget (`ui.widgetsHidden`); only the background and
+  the buttons remain.
+- **Lock**: `ui.locked` blocks the settings panel (the gear stays
+  focusable with `aria-disabled` and explains why), "+" tiles, new folders
+  and dragging. Links and folders still open.
+- **Gear**: opens settings.
+
+Both toggles are remembered in synced settings and announced through a
+status message that clears after a few seconds.
+
 ## 9. Testing and quality
 
 - **Unit**: storage migrations, reducers, appearance-to-variables mapping.
@@ -281,18 +352,26 @@ apply to every type; darken is an overlay so it never affects blur edges.
 
 ## 11. Decisions log
 
-| Date       | Decision                                  | Reason                                            |
-| ---------- | ----------------------------------------- | ------------------------------------------------- |
-| 2026-11-16 | Fresh codebase instead of a Tabliss fork  | Own product, modern stack, MIT licence            |
-| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS   | See section 2                                     |
-| 2026-11-16 | MIT licence                               | Permissive; no Tabliss code is copied             |
-| 2026-11-16 | Extensions only, no website build         | Focus; can be added later with Vite               |
-| 2026-11-16 | Widget data in `storage.local`, not sync  | Avoid the 8 KB per-item sync limit                |
-| 2026-11-16 | No telemetry or crash reporting           | Privacy by default                                |
-| 2026-11-16 | Background images in IndexedDB            | Too large for browser.storage; never synced       |
-| 2026-11-16 | Settings panel is non-modal               | Changes preview live on the page behind it        |
-| 2026-11-16 | DuckDuckGo is the default search engine   | Privacy by default; user can change it            |
-| 2026-11-16 | Website icons are opt-in                  | Loading them reveals link domains to DuckDuckGo   |
-| 2026-11-16 | Curated icon set instead of all of Lucide | Bundle size                                       |
-| 2026-11-16 | Text size as a percentage, not px         | One control scales every widget consistently      |
-| 2026-11-16 | No user custom CSS                        | Every option has a control; sanitised inputs only |
+| Date       | Decision                                        | Reason                                                   |
+| ---------- | ----------------------------------------------- | -------------------------------------------------------- |
+| 2026-11-16 | WXT + React 19 + TypeScript + plain CSS         | See section 2                                            |
+| 2026-11-16 | MIT licence                                     | Permissive open source licence                           |
+| 2026-11-16 | Extensions only, no website build               | Focus; can be added later with Vite                      |
+| 2026-11-16 | Widget data in `storage.local`, not sync        | Avoid the 8 KB per-item sync limit                       |
+| 2026-11-16 | No telemetry or crash reporting                 | Privacy by default                                       |
+| 2026-11-16 | Background images in IndexedDB                  | Too large for browser.storage; never synced              |
+| 2026-11-16 | Settings panel is non-modal                     | Changes preview live on the page behind it               |
+| 2026-11-16 | DuckDuckGo is the default search engine         | Privacy by default; user can change it                   |
+| 2026-11-16 | Website icons are opt-in                        | Loading them reveals link domains to DuckDuckGo          |
+| 2026-11-16 | Curated icon set instead of all of Lucide       | Bundle size                                              |
+| 2026-11-16 | Text size as a percentage, not px               | One control scales every widget consistently             |
+| 2026-11-16 | No user custom CSS                              | Every option has a control; sanitised inputs only        |
+| 2026-11-17 | Folder popover anchored to its tile             | Keeps the visual link to the folder; no dimming          |
+| 2026-11-17 | Tabs layout for Quick Links                     | Every category one click away; folders as tabs           |
+| 2026-11-17 | Migrations never overwrite existing values      | WXT re-runs them on unversioned (restored) data          |
+| 2026-11-17 | Presets carry their own darken level            | Colourful pastels stay readable with white text          |
+| 2026-11-17 | Settings in tabs; maximise/minimise             | One section at a time; whole page visible when minimised |
+| 2026-11-17 | Quick Links settings in their own tab           | Most-used widget; too much to nest in the Widgets list   |
+| 2026-11-17 | Add @dnd-kit for drag and drop                  | Keyboard, touch and screen reader support out of the box |
+| 2026-11-17 | Static rows with drop highlights while dragging | Shifting rows moved folder targets away from the pointer |
+| 2026-11-17 | One page-wide lock (blocks settings too)        | Simple to understand; replaces the Quick Links lock      |

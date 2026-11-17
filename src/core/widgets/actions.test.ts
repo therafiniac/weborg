@@ -5,6 +5,7 @@ import { addWidget, moveWidget, removeWidget, updateWidget } from "./actions";
 
 const settings: Settings = {
   appearance: defaultAppearance,
+  ui: { locked: false, widgetsHidden: false },
   widgets: [
     { id: "a", type: "text", position: "top-left", order: 0, display: {} },
     { id: "b", type: "text", position: "top-left", order: 1, display: {} },

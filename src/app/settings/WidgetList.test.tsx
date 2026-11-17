@@ -5,12 +5,13 @@ import { fakeBrowser } from "wxt/testing/fake-browser";
 import { settingsItem } from "@/core/storage/settings";
 import App from "@/entrypoints/newtab/App";
 
-async function openSettings() {
+async function openSettings(section = "Widgets") {
   const user = userEvent.setup();
   render(<App />);
   await user.click(
     await screen.findByRole("button", { name: "Open settings" }),
   );
+  await user.click(screen.getByRole("tab", { name: section }));
   return user;
 }
 

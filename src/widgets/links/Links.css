@@ -110,7 +110,8 @@
 }
 
 .links--tiles .links__item:hover,
-.links--tiles .links__item:focus-visible {
+.links--tiles .links__item:focus-visible,
+.links--tiles .links__folder[aria-expanded="true"] {
   background: var(--links-hover-bg);
   box-shadow:
     var(--links-hover-shadow),
@@ -218,31 +219,57 @@
   background: var(--links-bg);
 }
 
-/* Folder popup */
-.folder-popup__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgb(0 0 0 / 0.4);
-  animation: folder-fade 0.15s ease;
-}
-
+/* Folder popover: attached to its tile, no page dimming */
 .folder-popup {
+  position: fixed;
+  z-index: 20;
   max-width: min(92vw, 1100px);
-  max-height: 85vh;
-  overflow: auto;
-  padding: 1rem 1.25rem 1.25rem;
   border: 1px solid var(--links-border);
   border-radius: calc(var(--links-radius) + 4px);
-  background: rgb(17 17 27 / 0.85);
+  background: rgb(17 17 27 / 0.88);
   color: var(--links-text);
-  box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.45);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   font-size: var(--links-font-size);
+  animation: folder-pop 0.16s ease-out;
+}
+
+.folder-popup__body {
+  overflow: auto;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+/* Arrow pointing at the tile */
+.folder-popup__arrow {
+  position: absolute;
+  left: var(--arrow-left, 50%);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border: 1px solid var(--links-border);
+  background: rgb(17 17 27 / 0.95);
+  rotate: 45deg;
+}
+
+.folder-popup[data-placement="below"] {
+  transform-origin: top center;
+}
+
+.folder-popup[data-placement="below"] .folder-popup__arrow {
+  top: -7px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.folder-popup[data-placement="above"] {
+  transform-origin: bottom center;
+}
+
+.folder-popup[data-placement="above"] .folder-popup__arrow {
+  bottom: -7px;
+  border-top: 0;
+  border-left: 0;
 }
 
 .folder-popup__header {
@@ -284,14 +311,274 @@
   opacity: 0.7;
 }
 
-@keyframes folder-fade {
+@keyframes folder-pop {
   from {
     opacity: 0;
+    scale: 0.97;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .folder-popup__backdrop {
+  .folder-popup {
     animation: none;
   }
+}
+
+/* Tabs layout: folders as tabs joined to a panel */
+.links-tabs {
+  display: flex;
+  flex-direction: column;
+  width: min(48rem, 92vw);
+  color: var(--links-text);
+  font-size: var(--links-font-size);
+  font-weight: var(--links-font-weight);
+  text-align: left;
+}
+
+/* Many folders wrap onto more rows instead of hiding off the edge */
+.links-tabs__list {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: -1px;
+}
+
+.links-tabs__tab {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--links-border);
+  border-bottom-color: transparent;
+  border-radius: var(--links-radius) var(--links-radius) 0 0;
+  background: var(--links-panel-bg);
+  color: inherit;
+  font: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+  backdrop-filter: blur(var(--links-blur));
+  -webkit-backdrop-filter: blur(var(--links-blur));
+  transition:
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.links-tabs__tab:hover {
+  opacity: 0.9;
+}
+
+.links-tabs__tab[aria-selected="true"] {
+  opacity: 1;
+  box-shadow: inset 0 2px 0 var(--links-accent);
+}
+
+.links-tabs__tab:focus-visible {
+  outline: 2px solid var(--links-accent);
+  outline-offset: -2px;
+}
+
+.links-tabs__count {
+  min-width: 1.5em;
+  padding: 0.05em 0.45em;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  font-size: 0.8em;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.links-tabs__panel {
+  min-height: calc(var(--links-tile-height) + 2.5rem);
+  padding: 1.25rem;
+  border: 1px solid var(--links-border);
+  border-radius: 0 var(--links-radius) var(--links-radius) var(--links-radius);
+  background: var(--links-panel-bg);
+  box-shadow: var(--links-shadow);
+  backdrop-filter: blur(var(--links-blur));
+  -webkit-backdrop-filter: blur(var(--links-blur));
+}
+
+.links-tabs__panel:focus-visible {
+  outline: 2px solid var(--links-accent);
+  outline-offset: 2px;
+}
+
+.links-tabs__grid {
+  justify-content: start;
+  animation: links-tab-in 0.18s ease-out;
+}
+
+.links-tabs__empty {
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* Plain style: underlined text tabs, no boxes */
+.links-tabs--plain .links-tabs__tab,
+.links-tabs--plain .links-tabs__panel {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.links-tabs--plain .links-tabs__tab[aria-selected="true"] {
+  box-shadow: inset 0 -2px 0 var(--links-accent);
+}
+
+.links-tabs--plain .links-tabs__panel {
+  padding: 1rem 0 0;
+}
+
+@keyframes links-tab-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .links-tabs__grid {
+    animation: none;
+  }
+}
+
+/* "+" tile: quieter than real links */
+.links__add {
+  border: 0;
+  background: none;
+  font: inherit;
+  opacity: 0.6;
+}
+
+.links--tiles .links__add {
+  border: 1px dashed var(--links-border);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.links__add:hover,
+.links__add:focus-visible,
+.links__add[aria-expanded="true"] {
+  opacity: 1;
+}
+
+/* Add-link form inside popovers: match the glass look */
+.add-popover {
+  width: min(22rem, 92vw);
+}
+
+.add-popover__body,
+.folder-popup__add {
+  padding: 0.75rem;
+}
+
+.folder-popup__add {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--links-border);
+}
+
+.add-popover .quick-add,
+.folder-popup .quick-add {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.add-popover .quick-add__row input,
+.add-popover .quick-add__row select,
+.folder-popup .quick-add__row input,
+.folder-popup .quick-add__row select {
+  border-color: var(--links-border);
+  background: rgb(255 255 255 / 0.07);
+  color: var(--links-text);
+}
+
+.add-popover .quick-add__row input::placeholder,
+.folder-popup .quick-add__row input::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}
+
+.add-popover .hint,
+.folder-popup .hint {
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* Drag and drop on the page */
+.links__drag {
+  position: relative;
+  display: flex;
+  touch-action: none;
+}
+
+.links__drag--dragging {
+  opacity: 0.35;
+}
+
+/* A link hovering a folder: drop inside */
+.links__drag--into > .links__item {
+  outline: 2px dashed var(--links-accent);
+  outline-offset: 3px;
+}
+
+/* A tile hovering another: it will take this place */
+.links__drag--before::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  left: calc(var(--links-gap) / -2 - 1px);
+  width: 3px;
+  border-radius: 3px;
+  background: var(--links-accent);
+}
+
+.links__overlay {
+  display: block;
+  cursor: grabbing;
+}
+
+/* Solid, so it stays readable over the tile underneath. Includes :hover
+   because the pointer is always over the dragged chip. */
+.links.links__overlay .links__item,
+.links.links__overlay .links__item:hover {
+  border: 1px solid var(--links-accent);
+  background: rgb(17 17 27 / 0.96);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.45);
+}
+
+.links-tabs__drop {
+  display: flex;
+}
+
+.links-tabs__tab--drop {
+  opacity: 1;
+  outline: 2px dashed var(--links-accent);
+  outline-offset: -2px;
+}
+
+.add-popover .segmented {
+  border-color: var(--links-border);
+  background: rgb(255 255 255 / 0.05);
+}
+
+.add-popover .segmented__option {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.add-popover .segmented__option[aria-checked="true"] {
+  background: rgb(255 255 255 / 0.12);
+  color: inherit;
+  opacity: 1;
 }
