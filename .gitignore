@@ -29,3 +29,6 @@ coverage
 .env
 .env.*
 !.env.example
+
+# Signed Firefox builds
+web-ext-artifacts
