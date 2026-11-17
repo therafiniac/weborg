@@ -14,8 +14,9 @@ export default defineConfig({
     ...(browser === "firefox" && {
       browser_specific_settings: {
         gecko: {
-          // Placeholder: replace with your own ID before publishing to Firefox Add-ons
-          id: "weborg@example.com",
+          // Permanent add-on ID: never change it, or Firefox treats the
+          // add-on as a different one and settings do not carry over
+          id: "weborg@therafiniac.dev",
           // data_collection_permissions needs Firefox 140+ (also the current ESR)
           strict_min_version: "140.0",
           // Weborg sends no user data anywhere
