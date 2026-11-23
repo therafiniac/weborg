@@ -203,3 +203,17 @@
   gap: 0.3rem;
   color: var(--color-accent);
 }
+
+/* The Ko-fi link stands out as a button */
+.settings-about__links a.settings-about__support {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.settings-about__links a.settings-about__support:hover {
+  filter: brightness(1.08);
+}

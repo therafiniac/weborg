@@ -32,7 +32,12 @@ export default function AboutFooter() {
             </a>
           )}
           {ABOUT.supportUrl && (
-            <a href={ABOUT.supportUrl} target="_blank" rel="noreferrer">
+            <a
+              className="settings-about__support"
+              href={ABOUT.supportUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
               <Coffee size={14} aria-hidden /> Support Weborg on Ko-fi
             </a>
           )}

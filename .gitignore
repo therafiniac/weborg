@@ -32,3 +32,6 @@ coverage
 
 # Signed Firefox builds
 web-ext-artifacts
+
+# The project uses npm (package-lock.json); keep stray pnpm lockfiles out
+pnpm-lock.yaml
