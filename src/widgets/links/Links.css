@@ -514,6 +514,12 @@
   opacity: 0.7;
 }
 
+.add-popover__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
 /* Drag and drop on the page */
 .links__drag {
   position: relative;
