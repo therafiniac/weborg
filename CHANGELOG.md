@@ -3,6 +3,16 @@
 All notable changes to Weborg. Versions follow
 [Semantic Versioning](https://semver.org).
 
+## 0.2.2
+
+### Changed
+
+- Softer, more natural shadows in both themes: link tiles, the Quick
+  Links tabs panel, popovers and the Todoist view menu use faint layered
+  shadows, tinted for light and dark.
+- The tabs panel's shadow now falls only below it, so folder tabs and
+  the open panel read as one shape.
+
 ## 0.2.1
 
 ### Changed

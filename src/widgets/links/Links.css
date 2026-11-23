@@ -228,7 +228,7 @@
   border-radius: calc(var(--links-radius) + 4px);
   background: rgb(17 17 27 / 0.88);
   color: var(--links-text);
-  box-shadow: 0 18px 48px rgb(0 0 0 / 0.45);
+  box-shadow: var(--shadow-popover);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   font-size: var(--links-font-size);
@@ -405,7 +405,7 @@
   border: 1px solid var(--links-border);
   border-radius: 0 var(--links-radius) var(--links-radius) var(--links-radius);
   background: var(--links-panel-bg);
-  box-shadow: var(--links-shadow);
+  box-shadow: var(--links-panel-shadow);
   backdrop-filter: blur(var(--links-blur));
   -webkit-backdrop-filter: blur(var(--links-blur));
 }
@@ -570,7 +570,7 @@
 .links.links__overlay .links__item:hover {
   border: 1px solid var(--links-accent);
   background: rgb(17 17 27 / 0.96);
-  box-shadow: 0 12px 28px rgb(0 0 0 / 0.45);
+  box-shadow: var(--shadow-popover);
 }
 
 .links-tabs__drop {

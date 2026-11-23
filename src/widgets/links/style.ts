@@ -88,6 +88,15 @@ function tint(hex: string, alpha: number, preset: string, token: string) {
     : hexToRgba(hex, alpha);
 }
 
+/**
+ * One shadow layer. Colour and strength come from the theme
+ * (--shadow-rgb, --shadow-strength): a soft purple-grey in light, a deeper
+ * blue-black in dark, where shadows need more weight to show at all.
+ */
+function shadowLayer(geometry: string, alpha: number): string {
+  return `${geometry} rgb(var(--shadow-rgb) / calc(${round(alpha)} * var(--shadow-strength)))`;
+}
+
 /** CSS variables read by Links.css. */
 export function styleVars(style: LinkStyle, columns: number): CSSProperties {
   const bg = style.backgroundOpacity / 100;
@@ -113,7 +122,19 @@ export function styleVars(style: LinkStyle, columns: number): CSSProperties {
       glassPreset.borderColour,
       "--tile-border-rgb",
     ),
-    "--links-shadow": `0 4px 12px rgba(0, 0, 0, ${round(0.35 * shadow)}), 0 10px 24px rgba(0, 0, 0, ${round(0.25 * shadow)})`,
+    // Layered and faint: a tight contact shadow plus a soft ambient one,
+    // tinted and scaled per theme (see shadowLayer)
+    "--links-shadow": [
+      shadowLayer("0 1px 2px", 0.06 * shadow),
+      shadowLayer("0 2px 6px", 0.05 * shadow),
+      shadowLayer("0 8px 20px -6px", 0.08 * shadow),
+    ].join(", "),
+    // Tabs panel: only below. Negative spread keeps the blur from rising
+    // above the top edge, where it would draw a seam under the tabs.
+    "--links-panel-shadow": [
+      shadowLayer("0 16px 28px -12px", 0.1 * shadow),
+      shadowLayer("0 32px 48px -20px", 0.08 * shadow),
+    ].join(", "),
     "--links-text": defaultText
       ? style.mode === "plain"
         ? "var(--dashboard-text, var(--backdrop-text))"
@@ -124,7 +145,7 @@ export function styleVars(style: LinkStyle, columns: number): CSSProperties {
     "--links-icon-size": `${style.iconSize}px`,
     "--links-accent": style.accent,
     "--links-hover-bg": `linear-gradient(145deg, ${hexToRgba(style.accent, 0.22)}, ${hexToRgba(style.accent, 0.1)})`,
-    "--links-hover-shadow": `0 10px 28px ${hexToRgba(style.accent, 0.3)}`,
+    "--links-hover-shadow": `0 2px 6px ${hexToRgba(style.accent, 0.12)}, 0 10px 24px -6px ${hexToRgba(style.accent, 0.28)}`,
   } as CSSProperties;
 }
 
