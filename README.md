@@ -10,7 +10,7 @@ Free and open source. No accounts, no analytics, no tracking.
 
 [![MIT licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 
-> **Status:** v0.2.1, an early public release. Install it locally from
+> **Status:** v0.2.2, an early public release. Install it locally from
 > the [latest release](https://github.com/therafiniac/weborg/releases/latest).
 > Chrome Web Store and Firefox Add-ons listings are coming soon.
 
