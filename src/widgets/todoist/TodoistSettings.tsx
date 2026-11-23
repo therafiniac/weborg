@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
 import type { WidgetSettingsProps } from "@/core/widgets/types";
-import { CheckboxField, RangeField, TextField } from "@/ui/fields";
+import { CheckboxField, RangeField, SelectField, TextField } from "@/ui/fields";
 
 import type { TodoistData } from ".";
 import {
@@ -13,6 +13,9 @@ import {
   TOKEN_SETTINGS_URL,
 } from "./api";
 import { ShowPasswordSettings } from "./privacy";
+import { useLabels, useProjects } from "./useProjects";
+import { viewChoices } from "./ViewMenu";
+import { decodeView, encodeView, viewName } from "./views";
 import { clearTodoistCache, tokenItem } from "./storage";
 
 type Status = { kind: "idle" | "busy" | "error"; message?: string };
@@ -35,18 +38,7 @@ export default function TodoistSettings({
       ) : (
         <Connect onConnect={setToken} />
       )}
-      <TextField
-        label="Title"
-        value={data.title}
-        onChange={(title) => setData({ ...data, title })}
-      />
-      <TextField
-        label="Filter"
-        value={data.filter}
-        placeholder="today | overdue"
-        hint="A Todoist filter, like “today | overdue” or “#Work”. Leave empty for all tasks."
-        onChange={(filter) => setData({ ...data, filter })}
-      />
+      {token && <ViewFields token={token} data={data} setData={setData} />}
       <TextField
         label="Default date for new tasks"
         value={data.defaultDue}
@@ -102,7 +94,7 @@ function Connect({
         });
         return;
       }
-      await fetchTasks(token, "");
+      await fetchTasks(token, { kind: "all" });
       await onConnect(token);
     } catch (error) {
       setStatus({
@@ -202,5 +194,74 @@ function Connected({ onDisconnect }: { onDisconnect: () => Promise<void> }) {
         </button>
       </div>
     </div>
+  );
+}
+
+/** Which view the widget lists, its title, and the custom filter. */
+function ViewFields({
+  token,
+  data,
+  setData,
+}: {
+  token: string;
+  data: TodoistData;
+  setData: (data: TodoistData) => void;
+}) {
+  const projects = useProjects(token);
+  const labels = useLabels(token);
+  const choices = viewChoices(data.view, projects, labels)
+    .filter((choice) => choice.view.kind !== "filter")
+    .map((choice) => ({
+      value: encodeView(choice.view),
+      label:
+        choice.view.kind === "project"
+          ? `Project: ${choice.label}`
+          : choice.view.kind === "label"
+            ? `Label: ${choice.label}`
+            : choice.label,
+    }));
+  const options = [...choices, { value: "filter", label: "Custom filter" }];
+  const value = encodeView(data.view);
+
+  return (
+    <>
+      <SelectField
+        label="View"
+        // A project or label not loaded yet still shows as selected
+        value={value}
+        options={
+          options.some((option) => option.value === value)
+            ? options
+            : [...options, { value, label: viewName(data.view, projects) }]
+        }
+        onChange={(next) =>
+          setData({
+            ...data,
+            view: decodeView(
+              next,
+              data.view.kind === "filter" ? data.view.query : "",
+            ),
+          })
+        }
+      />
+      {data.view.kind === "filter" && (
+        <TextField
+          label="Filter"
+          value={data.view.query}
+          placeholder="#Work & !@waiting"
+          hint="A Todoist filter query. Leave empty for all tasks."
+          onChange={(query) =>
+            setData({ ...data, view: { kind: "filter", query } })
+          }
+        />
+      )}
+      <TextField
+        label="Title"
+        value={data.title}
+        placeholder={viewName(data.view, projects)}
+        hint="Leave empty to use the view's name."
+        onChange={(title) => setData({ ...data, title })}
+      />
+    </>
   );
 }

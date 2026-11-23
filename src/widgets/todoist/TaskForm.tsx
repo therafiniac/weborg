@@ -2,7 +2,10 @@ import { useState, type FormEvent } from "react";
 
 import SegmentedControl from "@/ui/SegmentedControl";
 
+import { Plus } from "lucide-react";
+
 import {
+  createLabel,
   createTask,
   moveTask,
   updateTask,
@@ -13,6 +16,7 @@ import {
 } from "./api";
 import DateButton from "./DateButton";
 import DeleteButton from "./DeleteButton";
+import { labelsItem } from "./storage";
 
 // The app's P1 is the API's 4
 const PRIORITIES = [
@@ -93,6 +97,7 @@ export default function TaskForm({
     task ? (task.projectId ?? "") : inbox,
   );
   const [labels, setLabels] = useState<string[]>(task?.labels ?? []);
+  const [newLabel, setNewLabel] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Labels on the task that the cached list does not know yet still show
@@ -101,6 +106,16 @@ export default function TaskForm({
     ...labels.filter((label) => !allLabels.includes(label)),
   ];
   const name = task ? `Edit "${task.content}"` : "New task";
+
+  const addNewLabel = () => {
+    // Todoist label names cannot contain spaces
+    const name = newLabel.trim().replace(/^@/, "").replace(/\s+/g, "_");
+    if (!name) return;
+    setLabels((current) =>
+      current.includes(name) ? current : [...current, name],
+    );
+    setNewLabel("");
+  };
 
   const toggleLabel = (label: string) =>
     setLabels((current) =>
@@ -122,6 +137,11 @@ export default function TaskForm({
 
     setSaving(true);
     try {
+      // Labels typed in the form do not exist in Todoist yet
+      const created = labels.filter((label) => !allLabels.includes(label));
+      for (const label of created) await createLabel(token, label);
+      if (created.length) await labelsItem.setValue(null); // refetch the list
+
       if (!task) {
         const created = await createTask(token, {
           ...fields,
@@ -211,22 +231,47 @@ export default function TaskForm({
           ))}
         </select>
       )}
-      {labelChoices.length > 0 && (
-        <div className="todoist__labels" role="group" aria-label="Labels">
-          {labelChoices.map((label) => (
-            <button
-              key={label}
-              type="button"
-              className="todoist__label-toggle"
-              aria-pressed={labels.includes(label)}
-              disabled={saving}
-              onClick={() => toggleLabel(label)}
-            >
-              @{label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="todoist__labels" role="group" aria-label="Labels">
+        {labelChoices.map((label) => (
+          <button
+            key={label}
+            type="button"
+            className="todoist__label-toggle"
+            aria-pressed={labels.includes(label)}
+            disabled={saving}
+            onClick={() => toggleLabel(label)}
+          >
+            @{label}
+          </button>
+        ))}
+        <span className="todoist__new-label">
+          <input
+            className="todoist__input"
+            aria-label="New label"
+            placeholder="New label"
+            maxLength={60}
+            value={newLabel}
+            disabled={saving}
+            onChange={(event) => setNewLabel(event.target.value)}
+            onKeyDown={(event) => {
+              // Enter adds the label instead of saving the whole form
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addNewLabel();
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="todoist__icon-button"
+            aria-label="Add label"
+            disabled={saving || !newLabel.trim()}
+            onClick={addNewLabel}
+          >
+            <Plus size={14} />
+          </button>
+        </span>
+      </div>
       <SegmentedControl
         label="Priority"
         value={String(priority) as (typeof PRIORITIES)[number]["value"]}

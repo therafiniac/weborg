@@ -1,7 +1,8 @@
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
+import { useTime } from "@/core/time/useTime";
 import { PasswordPrompt } from "@/ui/PasswordFields";
 import type { WidgetProps } from "@/core/widgets/types";
 
@@ -14,6 +15,15 @@ import TaskForm from "./TaskForm";
 import TaskRow from "./TaskRow";
 import { useLabels, useProjects } from "./useProjects";
 import { useTasks } from "./useTasks";
+import ViewMenu from "./ViewMenu";
+import {
+  dueText,
+  groupTasks,
+  isOverdue,
+  localDate,
+  showsProject,
+  viewName,
+} from "./views";
 import "./Todoist.css";
 
 export default function Todoist(props: WidgetProps<TodoistData>) {
@@ -60,16 +70,13 @@ function TaskList({
     restoreTask,
     replaceTask,
     setError,
-  } = useTasks(token, data.filter);
+  } = useTasks(token, data.view);
+  const today = localDate(useTime("minute"));
   const projects = useProjects(token);
   const labels = useLabels(token);
   const [mode, setMode] = useState<Mode>({ kind: "list" });
   const [expanded, setExpanded] = useState<string | null>(null);
   const [notice, setNotice] = useState<AddedNotice | null>(null);
-  const clearNotice = useCallback(
-    (next: AddedNotice | null) => setNotice(next),
-    [],
-  );
 
   /** Remove at once; put it back if Todoist refuses. */
   const removeWith = async (
@@ -118,13 +125,31 @@ function TaskList({
   };
 
   const shown = tasks?.slice(0, data.maxTasks) ?? [];
+  const groups = groupTasks(shown, data.view, today);
+  const title = data.title || viewName(data.view, projects);
   const projectOf = (task: TodoistTask) =>
     projects.find((project) => project.id === task.projectId);
 
   return (
     <>
       <header className="todoist__header">
-        <h2 className="todoist__title">{data.title || "Tasks"}</h2>
+        {hidden ? (
+          // No project or label names on show while hidden
+          <h2 className="todoist__title">{title}</h2>
+        ) : (
+          <ViewMenu
+            title={title}
+            view={data.view}
+            projects={projects}
+            labels={labels}
+            onChange={(view) => {
+              setMode({ kind: "list" });
+              setExpanded(null);
+              setNotice(null);
+              setData({ ...data, view });
+            }}
+          />
+        )}
         <span className="todoist__header-actions">
           <button
             type="button"
@@ -179,46 +204,66 @@ function TaskList({
       ) : shown.length === 0 ? (
         <p className="todoist__message">Nothing to do.</p>
       ) : (
-        <ul className="todoist__list">
-          {shown.map((task) =>
-            mode.kind === "edit" && mode.id === task.id ? (
-              <li key={task.id}>
-                <TaskForm
-                  token={token}
-                  task={task}
-                  projects={projects}
-                  labels={labels}
-                  onDone={(result) => {
-                    setMode({ kind: "list" });
-                    // A new project may take it out of this widget's filter
-                    if (result.kind === "saved" && !result.moved)
-                      replaceTask(result.task);
-                    else void reload();
-                  }}
-                  onCancel={() => setMode({ kind: "list" })}
-                  onDelete={() => void removeWith(task, deleteTask)}
-                  onError={setError}
-                />
-              </li>
-            ) : (
-              <TaskRow
-                key={task.id}
-                task={task}
-                project={projectOf(task)}
-                expanded={expanded === task.id}
-                onToggle={() =>
-                  setExpanded((id) => (id === task.id ? null : task.id))
-                }
-                onComplete={() => void removeWith(task, closeTask)}
-                onEdit={() => {
-                  setExpanded(null);
-                  setMode({ kind: "edit", id: task.id });
-                }}
-                onDelete={() => void removeWith(task, deleteTask)}
-              />
-            ),
-          )}
-        </ul>
+        <div className="todoist__groups">
+          {groups.map((group, index) => (
+            <section
+              key={`${group.title ?? "tasks"}-${index}`}
+              className="todoist__group"
+              aria-label={group.title ?? undefined}
+            >
+              {group.title && (
+                <h3
+                  className={`todoist__group-title${group.overdue ? " todoist__group-title--overdue" : ""}`}
+                >
+                  {group.title}
+                </h3>
+              )}
+              <ul className="todoist__list">
+                {group.tasks.map((task) =>
+                  mode.kind === "edit" && mode.id === task.id ? (
+                    <li key={task.id}>
+                      <TaskForm
+                        token={token}
+                        task={task}
+                        projects={projects}
+                        labels={labels}
+                        onDone={(result) => {
+                          setMode({ kind: "list" });
+                          // A new project may take it out of this widget's filter
+                          if (result.kind === "saved" && !result.moved)
+                            replaceTask(result.task);
+                          else void reload();
+                        }}
+                        onCancel={() => setMode({ kind: "list" })}
+                        onDelete={() => void removeWith(task, deleteTask)}
+                        onError={setError}
+                      />
+                    </li>
+                  ) : (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      project={projectOf(task)}
+                      showProject={showsProject(data.view)}
+                      due={dueText(task, data.view, today)}
+                      overdue={isOverdue(task, today)}
+                      expanded={expanded === task.id}
+                      onToggle={() =>
+                        setExpanded((id) => (id === task.id ? null : task.id))
+                      }
+                      onComplete={() => void removeWith(task, closeTask)}
+                      onEdit={() => {
+                        setExpanded(null);
+                        setMode({ kind: "edit", id: task.id });
+                      }}
+                      onDelete={() => void removeWith(task, deleteTask)}
+                    />
+                  ),
+                )}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
 
       {/* Adding and editing are everyday use, so they stay on when locked.
@@ -249,7 +294,7 @@ function TaskList({
             projects={projects}
             defaultDue={data.defaultDue}
             notice={notice}
-            onNotice={clearNotice}
+            onNotice={setNotice}
             onAdded={showsAfterReload}
             onOpenForm={() => {
               setExpanded(null);

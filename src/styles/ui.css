@@ -392,3 +392,21 @@
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* Password field with a show/hide button inside its right edge */
+.password-input {
+  position: relative;
+  display: block;
+}
+
+.password-input input {
+  width: 100%;
+  padding-right: 2.5rem !important;
+}
+
+.password-input__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.2rem;
+  translate: 0 -50%;
+}

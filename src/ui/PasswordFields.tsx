@@ -1,4 +1,10 @@
-import { useId, useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import {
+  useId,
+  useState,
+  type FormEvent,
+  type InputHTMLAttributes,
+} from "react";
 
 import {
   MIN_PASSWORD_LENGTH,
@@ -17,6 +23,39 @@ const buttonClass = (variant: Variant, primary = false) =>
   variant === "panel"
     ? `button${primary ? " button--primary" : ""}`
     : `password-glass__button${primary ? " password-glass__button--primary" : ""}`;
+
+/**
+ * Password input with an optional show/hide button. It always starts
+ * hidden; the choice is never remembered.
+ */
+function PasswordInput({
+  revealable,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  revealable: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  if (!revealable) return <input {...props} type="password" />;
+  return (
+    <span className="password-input">
+      <input {...props} type={visible ? "text" : "password"} />
+      <button
+        type="button"
+        className="icon-button password-input__toggle"
+        aria-label={visible ? "Hide password" : "Show password"}
+        aria-pressed={visible}
+        title={visible ? "Hide password" : "Show password"}
+        onClick={() => setVisible(!visible)}
+      >
+        {visible ? (
+          <EyeOff size={16} aria-hidden />
+        ) : (
+          <Eye size={16} aria-hidden />
+        )}
+      </button>
+    </span>
+  );
+}
 
 /** Asks for a password and calls onSuccess once it matches. */
 export function PasswordPrompt({
@@ -84,9 +123,10 @@ export function PasswordPrompt({
     >
       <div className={variant === "panel" ? "field" : "password-glass__field"}>
         <label htmlFor={id}>{label}</label>
-        <input
+        <PasswordInput
+          // Only in settings: on the page, someone may be looking
+          revealable={variant === "panel"}
           id={id}
-          type="password"
           autoComplete="current-password"
           value={attempt}
           autoFocus
@@ -158,9 +198,9 @@ export function NewPasswordForm({
     >
       <div className="field">
         <label htmlFor={`${id}-new`}>New password</label>
-        <input
+        <PasswordInput
+          revealable
           id={`${id}-new`}
-          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -168,9 +208,9 @@ export function NewPasswordForm({
       </div>
       <div className="field">
         <label htmlFor={`${id}-confirm`}>Repeat the password</label>
-        <input
+        <PasswordInput
+          revealable
           id={`${id}-confirm`}
-          type="password"
           autoComplete="new-password"
           value={confirm}
           aria-invalid={error ? true : undefined}

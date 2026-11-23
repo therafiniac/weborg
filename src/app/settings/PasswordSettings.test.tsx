@@ -137,3 +137,38 @@ describe("Unlocking with a password", () => {
     );
   });
 });
+
+describe("Showing a typed password", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it("offers a show button in settings that starts hidden", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<PasswordSettings />);
+    const field = await screen.findByLabelText("New password");
+    expect(field).toHaveAttribute("type", "password");
+
+    const [show] = screen.getAllByRole("button", { name: "Show password" });
+    await user.click(show!);
+    expect(field).toHaveAttribute("type", "text");
+
+    // Never remembered: it is hidden again next time
+    unmount();
+    render(<PasswordSettings />);
+    expect(await screen.findByLabelText("New password")).toHaveAttribute(
+      "type",
+      "password",
+    );
+  });
+
+  it("has no show button on the page's unlock prompt", async () => {
+    const user = userEvent.setup();
+    await withPassword(true);
+    render(<App />);
+    await user.click(await screen.findByRole("button", { name: "Lock page" }));
+    await user.click(screen.getByRole("button", { name: "Unlock page" }));
+    await screen.findByLabelText("Password to unlock");
+    expect(screen.queryByRole("button", { name: "Show password" })).toBeNull();
+  });
+});

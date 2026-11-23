@@ -17,6 +17,7 @@ import {
   tokenItem,
 } from "./storage";
 import Todoist from "./Todoist";
+import { localDate } from "./views";
 import TodoistSettings from "./TodoistSettings";
 
 vi.mock("./api", async (importOriginal) => ({
@@ -49,7 +50,7 @@ interface FakeTask {
   labels?: string[];
 }
 
-/** A tiny in-memory Todoist. Filtered lists show only tasks due "today". */
+/** A tiny in-memory Todoist. Filtered lists show tasks due today or yesterday. */
 function fakeTodoist(initial: FakeTask[] = []) {
   const tasks = [...initial];
   const requests: { method: string; path: string; body: unknown }[] = [];
@@ -102,8 +103,27 @@ function fakeTodoist(initial: FakeTask[] = []) {
       tasks.push(task);
       return json(task);
     }
+    if (path === "/tasks" && method === "GET") {
+      const projectId = url.searchParams.get("project_id");
+      const label = url.searchParams.get("label");
+      return json({
+        results: tasks.filter(
+          (t) =>
+            (!projectId || t.project_id === projectId) &&
+            (!label || (t.labels ?? []).includes(label)),
+        ),
+      });
+    }
+    if (path === "/labels" && method === "POST") {
+      return json({ id: "new", name: (body as { name: string }).name });
+    }
     if (path === "/tasks/filter")
-      return json({ results: tasks.filter((t) => t.due?.string === "today") });
+      // Stands in for "today | overdue"
+      return json({
+        results: tasks.filter(
+          (t) => t.due?.string === "today" || t.due?.string === "yesterday",
+        ),
+      });
     if (path === "/tasks/quick") {
       const text = (body as { text: string }).text;
       const task: FakeTask = {
@@ -224,7 +244,9 @@ describe("Todoist widget", () => {
   it("lists tasks and completes one", async () => {
     await start([task("1", "Write tests"), task("2", "Ship")]);
     expect(await screen.findByText("Write tests")).toBeInTheDocument();
-    expect(await cacheItem.getValue()).toHaveProperty(["today | overdue"]);
+    expect(await cacheItem.getValue()).toHaveProperty([
+      JSON.stringify({ kind: "today" }),
+    ]);
 
     await userEvent.click(
       screen.getByRole("button", { name: 'Complete "Write tests"' }),
@@ -250,7 +272,7 @@ describe("Todoist widget", () => {
   it("shows cached tasks when offline", async () => {
     await tokenItem.setValue("tok");
     await cacheItem.setValue({
-      "today | overdue": {
+      [JSON.stringify({ kind: "today" })]: {
         tasks: [{ id: "1", content: "Cached", priority: 1, due: null }],
         fetchedAt: 1,
       },
@@ -671,6 +693,102 @@ describe("Todoist widget", () => {
       "tasks!{Enter}",
     );
     expect(await findTask("Private")).toBeInTheDocument();
+  });
+
+  it("switches views from the title and hides the project in a project view", async () => {
+    server = fakeTodoist([
+      { ...task("1", "In project"), project_id: "p1" },
+      task("2", "Elsewhere"),
+    ]);
+    fetchMock.mockImplementation(server.handler);
+    await tokenItem.setValue("tok");
+    const setData = vi.fn();
+    const { rerender } = render(
+      <Todoist instance={instance} data={data} setData={setData} />,
+    );
+    await findTask("In project");
+    await waitFor(async () =>
+      expect(await projectsItem.getValue()).not.toBeNull(),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Today: change view" }),
+    );
+    await userEvent.click(
+      screen.getByRole("menuitemradio", { name: "My Project" }),
+    );
+    const projectView = { kind: "project", id: "p1" } as const;
+    expect(setData).toHaveBeenLastCalledWith({ ...data, view: projectView });
+
+    rerender(
+      <Todoist
+        instance={instance}
+        data={{ ...data, view: projectView }}
+        setData={setData}
+      />,
+    );
+    expect(
+      await screen.findByRole("button", { name: "My Project: change view" }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Elsewhere")).toBeNull());
+    const row = screen.getByRole("button", { name: /^In project/ });
+    expect(row).not.toHaveTextContent("My Project");
+    expect(
+      server.requests.some((r) => r.path === "/tasks" && r.method === "GET"),
+    ).toBe(true);
+  });
+
+  it("puts overdue tasks in their own section in Today", async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    await start([
+      {
+        ...task("1", "Late one"),
+        due: { date: localDate(yesterday), string: "yesterday" },
+      },
+      {
+        ...task("2", "On time"),
+        due: { date: localDate(new Date()), string: "today" },
+      },
+    ]);
+    await findTask("Late one");
+    const overdue = screen.getByRole("region", { name: "Overdue" });
+    expect(within(overdue).getByText("Late one")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Today" })).getByText(
+        "On time",
+      ),
+    ).toBeInTheDocument();
+    // Today's task does not repeat the date the view already shows
+    expect(
+      screen.getByRole("button", { name: /^On time/ }),
+    ).not.toHaveTextContent("Today");
+  });
+
+  it("creates a new label from the task form", async () => {
+    await start([task("1", "Call")]);
+    await userEvent.click(
+      await screen.findByRole("button", { name: 'Edit "Call"' }),
+    );
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "New label" }),
+      "@deep work{Enter}",
+    );
+    expect(screen.getByRole("button", { name: "@deep_work" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(screen.queryByRole("form")).toBeNull());
+    expect(server.writes()).toEqual([
+      { method: "POST", path: "/labels", body: { name: "deep_work" } },
+      {
+        method: "POST",
+        path: "/tasks/1",
+        body: { labels: ["deep_work"] },
+      },
+    ]);
   });
 
   it("clears the added notice after a while", async () => {

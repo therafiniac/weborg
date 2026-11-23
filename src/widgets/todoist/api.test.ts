@@ -46,26 +46,28 @@ describe("Todoist API client", () => {
 
   it("uses the filter endpoint with a bearer token", async () => {
     fetchMock.mockResolvedValue(json({ results: [], next_cursor: null }));
-    await fetchTasks("tok", " today | overdue ");
+    await fetchTasks("tok", { kind: "filter", query: "today | overdue" });
 
     const [url, init] = call(0);
     expect(url).toBe(
-      "https://api.todoist.com/api/v1/tasks/filter?limit=50&query=today+%7C+overdue",
+      "https://api.todoist.com/api/v1/tasks/filter?limit=200&query=today+%7C+overdue",
     );
     expect(init?.headers).toEqual({ Authorization: "Bearer tok" });
   });
 
   it("lists every task when the filter is empty", async () => {
     fetchMock.mockResolvedValue(json({ results: [] }));
-    await fetchTasks("tok", "  ");
-    expect(call(0)[0]).toBe("https://api.todoist.com/api/v1/tasks?limit=50");
+    await fetchTasks("tok", { kind: "all" });
+    expect(call(0)[0]).toBe("https://api.todoist.com/api/v1/tasks?limit=200");
   });
 
   it("maps status codes to error kinds", async () => {
     const kindFor = async (response: Response | Error) => {
       if (response instanceof Error) fetchMock.mockRejectedValueOnce(response);
       else fetchMock.mockResolvedValueOnce(response);
-      const error = await fetchTasks("tok", "").catch((e: unknown) => e);
+      const error = await fetchTasks("tok", { kind: "all" }).catch(
+        (e: unknown) => e,
+      );
       return error instanceof TodoistError ? error.kind : error;
     };
 

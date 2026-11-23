@@ -1,13 +1,16 @@
+import { isRecord } from "@/core/storage/guards";
 import { defineWidget } from "@/core/widgets/types";
 
 import Todoist from "./Todoist";
 import TodoistSettings from "./TodoistSettings";
+import type { TodoistView } from "./views";
 
 /** The API token is stored separately (see storage.ts), never in here. */
 export interface TodoistData {
+  /** "" uses the view's name. */
   title: string;
-  /** Todoist filter query; empty lists every active task. */
-  filter: string;
+  /** What is listed: Today, Inbox, a project, a label, a filter… */
+  view: TodoistView;
   maxTasks: number;
   /** Given to new tasks typed without a date; "" leaves them undated. */
   defaultDue: string;
@@ -28,8 +31,8 @@ export const todoistWidget = defineWidget<TodoistData>({
   name: "Todoist",
   description: "Your Todoist tasks: check them off or add new ones.",
   defaultData: {
-    title: "Today",
-    filter: "today | overdue",
+    title: "",
+    view: { kind: "today" },
     maxTasks: 8,
     defaultDue: "today",
     width: 340,
@@ -37,7 +40,24 @@ export const todoistWidget = defineWidget<TodoistData>({
     hideOnOpen: false,
     showPassword: "none",
   },
-  dataVersion: 1,
+  dataVersion: 2,
+  migrations: {
+    // v2: a filter string became a view; the old default is the Today view
+    2: (old) => {
+      if (!isRecord(old)) return old;
+      const { filter, title, ...rest } = old;
+      const query = typeof filter === "string" ? filter.trim() : "";
+      const view: TodoistView =
+        query.toLowerCase() === "today | overdue"
+          ? { kind: "today" }
+          : { kind: "filter", query };
+      return {
+        ...rest,
+        view,
+        title: title === "Today" && view.kind === "today" ? "" : title,
+      };
+    },
+  },
   Component: Todoist,
   Settings: TodoistSettings,
 });
