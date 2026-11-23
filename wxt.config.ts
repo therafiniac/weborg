@@ -11,6 +11,8 @@ export default defineConfig({
     description:
       "A simple, feature-rich new tab page you can customise without code.",
     permissions: ["storage"],
+    // Asked for only when someone connects the Todoist widget
+    optional_host_permissions: ["https://api.todoist.com/*"],
     ...(browser === "firefox" && {
       browser_specific_settings: {
         gecko: {
@@ -19,8 +21,13 @@ export default defineConfig({
           id: "weborg@therafiniac.dev",
           // data_collection_permissions needs Firefox 140+ (also the current ESR)
           strict_min_version: "140.0",
-          // Weborg sends no user data anywhere
-          data_collection_permissions: { required: ["none"] },
+          // Nothing is sent by default. Connecting the Todoist widget sends
+          // the user's API token to Todoist, so it is asked for at that point
+          // (keep in sync with TODOIST_DATA_COLLECTION)
+          data_collection_permissions: {
+            required: ["none"],
+            optional: ["authenticationInfo"],
+          },
         },
       },
     }),

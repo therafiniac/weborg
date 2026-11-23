@@ -1,0 +1,152 @@
+.todoist {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.75rem;
+  background: rgb(0 0 0 / 0.3);
+  text-align: left;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.todoist__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.todoist__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.todoist__icon-button,
+.todoist__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.todoist__icon-button {
+  opacity: 0.7;
+}
+
+.todoist__icon-button:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.todoist__icon-button:disabled {
+  cursor: default;
+}
+
+.todoist__spin {
+  animation: todoist-spin 1s linear infinite;
+}
+
+@keyframes todoist-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todoist__spin {
+    animation: none;
+  }
+}
+
+.todoist__message {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.todoist__message--error {
+  opacity: 1;
+  color: var(--color-danger-bg);
+}
+
+.todoist__list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todoist__task {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Todoist's priority colours: 4 is urgent */
+.todoist__check--p4 {
+  color: #d1453b;
+}
+
+.todoist__check--p3 {
+  color: #eb8909;
+}
+
+.todoist__check--p2 {
+  color: #246fe0;
+}
+
+.todoist__check:hover svg {
+  fill: currentColor;
+  fill-opacity: 0.3;
+}
+
+.todoist__content {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  padding-top: 0.1rem;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.todoist__content:hover {
+  text-decoration: underline;
+}
+
+.todoist__due {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.todoist__icon-button:focus-visible,
+.todoist__check:focus-visible,
+.todoist__content:focus-visible,
+.todoist__input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.todoist__input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.5rem;
+  background: rgb(0 0 0 / 0.2);
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.todoist__input::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}

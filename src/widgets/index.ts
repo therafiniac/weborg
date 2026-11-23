@@ -6,6 +6,7 @@ import { linksWidget } from "./links";
 import { notesWidget } from "./notes";
 import { searchWidget } from "./search";
 import { textWidget } from "./text";
+import { todoistWidget } from "./todoist";
 
 /**
  * The only list of available widgets. Add new widgets here.
@@ -18,6 +19,7 @@ export const widgets = [
   linksWidget,
   notesWidget,
   textWidget,
+  todoistWidget,
 ].map((widget) => widget as unknown as WidgetDefinition);
 
 export function getWidget(type: string): WidgetDefinition | undefined {
