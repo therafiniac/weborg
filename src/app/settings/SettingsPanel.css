@@ -171,3 +171,35 @@
     animation: none;
   }
 }
+
+/* About: at the end of every section, below its settings */
+.settings-about {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.settings-about p {
+  margin: 0;
+}
+
+.settings-about strong {
+  color: var(--color-text);
+}
+
+.settings-about__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.settings-about__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-accent);
+}
