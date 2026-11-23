@@ -92,7 +92,13 @@ Copy for the AMO submission form. Keep in sync with the README.
 >
 > - The two innerHTML warnings come from React DOM (bundled); Weborg's
 >   own code does not use innerHTML or dangerouslySetInnerHTML.
+> - The Firefox for Android warning does not apply: the add-on is
+>   submitted for desktop Firefox only (Android cannot override the new
+>   tab page).
 > - No remote code: everything is bundled.
+> - `chrome_settings_overrides.homepage` offers the bundled new tab page as
+>   the homepage; Firefox asks the user once and it can be undone in
+>   Settings → Home.
 > - api.todoist.com is an optional host permission, requested together
 >   with the optional `authenticationInfo` data-collection consent only
 >   when the user connects the Todoist widget (Settings → Widgets →

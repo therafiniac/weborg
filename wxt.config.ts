@@ -23,6 +23,10 @@ export default defineConfig({
     // Asked for only when someone connects the Todoist widget
     optional_host_permissions: ["https://api.todoist.com/*"],
     ...(browser === "firefox" && {
+      // Offer Weborg as the homepage too. Firefox asks the user once
+      // ("Keep Changes" / "Restore Settings") and remembers the answer;
+      // it can be undone any time in Settings → Home.
+      chrome_settings_overrides: { homepage: "newtab.html" },
       browser_specific_settings: {
         gecko: {
           // Permanent add-on ID: never change it, or Firefox treats the
