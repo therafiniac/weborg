@@ -17,7 +17,11 @@ export interface TodoistData {
   hidden: boolean;
   /** Every new tab starts hidden; showing lasts for that tab only. */
   hideOnOpen: boolean;
+  /** Which password, if any, showing hidden tasks asks for. */
+  showPassword: ShowPassword;
 }
+
+export type ShowPassword = "none" | "weborg" | "separate";
 
 export const todoistWidget = defineWidget<TodoistData>({
   type: "todoist",
@@ -31,6 +35,7 @@ export const todoistWidget = defineWidget<TodoistData>({
     width: 340,
     hidden: false,
     hideOnOpen: false,
+    showPassword: "none",
   },
   dataVersion: 1,
   Component: Todoist,

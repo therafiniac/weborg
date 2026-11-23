@@ -2,11 +2,13 @@ import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
+import { PasswordPrompt } from "@/ui/PasswordFields";
 import type { WidgetProps } from "@/core/widgets/types";
 
 import type { TodoistData } from ".";
 import AddTask, { AddedMessage, whereAdded, type AddedNotice } from "./AddTask";
 import { closeTask, deleteTask, type TodoistTask } from "./api";
+import { useShowPassword } from "./privacy";
 import { tokenItem } from "./storage";
 import TaskForm from "./TaskForm";
 import TaskRow from "./TaskRow";
@@ -46,6 +48,8 @@ function TaskList({
   // With hideOnOpen, each new tab starts hidden and showing is not saved
   const [tabHidden, setTabHidden] = useState(true);
   const hidden = data.hideOnOpen ? tabHidden : data.hidden;
+  const showPassword = useShowPassword(data.showPassword);
+  const [askingPassword, setAskingPassword] = useState(false);
 
   const {
     tasks,
@@ -91,15 +95,26 @@ function TaskList({
     );
   };
 
+  const reveal = () => {
+    setAskingPassword(false);
+    if (data.hideOnOpen) setTabHidden(false);
+    else setData({ ...data, hidden: false });
+  };
+
   const toggleHidden = () => {
-    if (!hidden) {
-      // Nothing private stays open behind the curtain
-      setMode({ kind: "list" });
-      setExpanded(null);
-      setNotice(null);
+    if (hidden) {
+      // Hiding is always free; showing may need a password
+      if (showPassword === undefined) return; // still loading
+      if (showPassword) setAskingPassword((open) => !open);
+      else reveal();
+      return;
     }
-    if (data.hideOnOpen) setTabHidden(!hidden);
-    else setData({ ...data, hidden: !hidden });
+    // Nothing private stays open behind the curtain
+    setMode({ kind: "list" });
+    setExpanded(null);
+    setNotice(null);
+    if (data.hideOnOpen) setTabHidden(true);
+    else setData({ ...data, hidden: true });
   };
 
   const shown = tasks?.slice(0, data.maxTasks) ?? [];
@@ -143,7 +158,22 @@ function TaskList({
       )}
 
       {hidden ? (
-        <HiddenTasks count={tasks?.length ?? null} />
+        askingPassword && showPassword ? (
+          <PasswordPrompt
+            record={showPassword}
+            label={
+              data.showPassword === "weborg"
+                ? "Weborg password"
+                : "Todoist password"
+            }
+            submitLabel="Show tasks"
+            variant="glass"
+            onSuccess={reveal}
+            onCancel={() => setAskingPassword(false)}
+          />
+        ) : (
+          <HiddenTasks count={tasks?.length ?? null} />
+        )
       ) : tasks === null ? (
         loading && <p className="todoist__message">Loading…</p>
       ) : shown.length === 0 ? (

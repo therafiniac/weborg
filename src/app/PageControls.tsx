@@ -7,7 +7,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type Ref } from "react";
 
+import { securityItem } from "@/core/security/password";
 import type { PageUi } from "@/core/storage/settings";
+import { useStorageItem } from "@/core/storage/useStorageItem";
+import { PasswordPrompt } from "@/ui/PasswordFields";
 
 import "./PageControls.css";
 
@@ -27,6 +30,9 @@ export default function PageControls({
 }: Props) {
   // Spoken (and shown as a hint) after a toggle or a blocked action
   const [message, setMessage] = useState("");
+  const [security] = useStorageItem(securityItem);
+  const [askingPassword, setAskingPassword] = useState(false);
+  const unlockPassword = security?.requireForUnlock ? security.password : null;
 
   // Hints clear themselves after a few seconds
   useEffect(() => {
@@ -36,10 +42,28 @@ export default function PageControls({
   }, [message]);
 
   return (
-    <div className={`page-controls${message ? " page-controls--active" : ""}`}>
+    <div
+      className={`page-controls${message || askingPassword ? " page-controls--active" : ""}`}
+    >
       <p className="page-controls__message" role="status">
         {message}
       </p>
+
+      {askingPassword && unlockPassword && (
+        <div className="page-controls__prompt">
+          <PasswordPrompt
+            record={unlockPassword}
+            label="Password to unlock"
+            variant="glass"
+            onSuccess={() => {
+              setAskingPassword(false);
+              onChange({ ...ui, locked: false });
+              setMessage("Unlocked");
+            }}
+            onCancel={() => setAskingPassword(false)}
+          />
+        </div>
+      )}
 
       <button
         type="button"
@@ -70,6 +94,10 @@ export default function PageControls({
             : "Lock: prevent changes to this page"
         }
         onClick={() => {
+          if (ui.locked && unlockPassword) {
+            setAskingPassword((open) => !open);
+            return;
+          }
           onChange({ ...ui, locked: !ui.locked });
           setMessage(ui.locked ? "Unlocked" : "Locked: no changes allowed");
         }}

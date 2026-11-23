@@ -1,5 +1,7 @@
 import { storage } from "wxt/utils/storage";
 
+import type { PasswordRecord } from "@/core/security/password";
+
 import type { TodoistProject, TodoistTask } from "./api";
 
 /**
@@ -54,3 +56,12 @@ export async function clearTodoistCache() {
     labelsItem.setValue(null),
   ]);
 }
+
+/**
+ * Optional password just for showing hidden tasks, when the user wants it
+ * separate from the Weborg password. Local only, never in backups.
+ */
+export const todoistPasswordItem = storage.defineItem<PasswordRecord | null>(
+  "local:todoist-password",
+  { fallback: null },
+);

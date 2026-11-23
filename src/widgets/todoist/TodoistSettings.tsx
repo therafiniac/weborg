@@ -12,6 +12,7 @@ import {
   TodoistError,
   TOKEN_SETTINGS_URL,
 } from "./api";
+import { ShowPasswordSettings } from "./privacy";
 import { clearTodoistCache, tokenItem } from "./storage";
 
 type Status = { kind: "idle" | "busy" | "error"; message?: string };
@@ -58,6 +59,7 @@ export default function TodoistSettings({
         checked={data.hideOnOpen}
         onChange={(hideOnOpen) => setData({ ...data, hideOnOpen })}
       />
+      <ShowPasswordSettings data={data} setData={setData} />
       <RangeField
         label="Tasks shown"
         min={3}

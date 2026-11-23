@@ -4,7 +4,18 @@ import { fakeBrowser } from "wxt/testing/fake-browser";
 
 import { todoistWidget } from ".";
 import * as api from "./api";
-import { cacheItem, projectsItem, tokenItem } from "./storage";
+import {
+  hashPassword,
+  securityItem,
+  verifyPassword,
+} from "@/core/security/password";
+
+import {
+  cacheItem,
+  projectsItem,
+  todoistPasswordItem,
+  tokenItem,
+} from "./storage";
 import Todoist from "./Todoist";
 import TodoistSettings from "./TodoistSettings";
 
@@ -596,6 +607,72 @@ describe("Todoist widget", () => {
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
   });
 
+  it("asks for the Weborg password before showing hidden tasks", async () => {
+    await securityItem.setValue({
+      password: await hashPassword("letmein", 1000),
+      requireForUnlock: false,
+    });
+    server = fakeTodoist([task("1", "Private")]);
+    fetchMock.mockImplementation(server.handler);
+    await tokenItem.setValue("tok");
+    const setData = vi.fn();
+    render(
+      <Todoist
+        instance={instance}
+        data={{ ...data, hidden: true, showPassword: "weborg" }}
+        setData={setData}
+      />,
+    );
+
+    await screen.findByText("1 task hidden.");
+    await waitFor(async () =>
+      expect((await securityItem.getValue()).password).not.toBeNull(),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Show tasks" }));
+    await userEvent.type(
+      screen.getByLabelText("Weborg password"),
+      "guess{Enter}",
+    );
+    expect(await screen.findByText("Wrong password.")).toBeInTheDocument();
+    expect(setData).not.toHaveBeenCalled();
+
+    await userEvent.type(
+      screen.getByLabelText("Weborg password"),
+      "letmein{Enter}",
+    );
+    await waitFor(() =>
+      expect(setData).toHaveBeenCalledWith({
+        ...data,
+        hidden: false,
+        showPassword: "weborg",
+      }),
+    );
+  });
+
+  it("uses a separate Todoist password when chosen", async () => {
+    await todoistPasswordItem.setValue(await hashPassword("tasks!", 1000));
+    server = fakeTodoist([task("1", "Private")]);
+    fetchMock.mockImplementation(server.handler);
+    await tokenItem.setValue("tok");
+    render(
+      <Todoist
+        instance={instance}
+        data={{ ...data, hideOnOpen: true, showPassword: "separate" }}
+        setData={vi.fn()}
+      />,
+    );
+    await screen.findByText("1 task hidden.");
+    await waitFor(async () =>
+      expect(await todoistPasswordItem.getValue()).not.toBeNull(),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Show tasks" }));
+    await userEvent.type(
+      screen.getByLabelText("Todoist password"),
+      "tasks!{Enter}",
+    );
+    expect(await findTask("Private")).toBeInTheDocument();
+  });
+
   it("clears the added notice after a while", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
@@ -676,6 +753,64 @@ describe("Todoist settings", () => {
 
     expect(await screen.findByText(/needs permission/)).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("sets a separate Todoist password", async () => {
+    const setData = vi.fn();
+    render(
+      <TodoistSettings
+        instance={instance}
+        data={{ ...data, showPassword: "separate" }}
+        setData={setData}
+      />,
+    );
+    await userEvent.type(
+      await screen.findByLabelText("New password"),
+      "tasks!",
+    );
+    await userEvent.type(
+      screen.getByLabelText("Repeat the password"),
+      "tasks!",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Set Todoist password" }),
+    );
+
+    await waitFor(async () =>
+      expect(await todoistPasswordItem.getValue()).not.toBeNull(),
+    );
+    const record = await todoistPasswordItem.getValue();
+    expect(record && (await verifyPassword(record, "tasks!"))).toBe(true);
+  });
+
+  it("needs the current password to stop protecting hidden tasks", async () => {
+    await todoistPasswordItem.setValue(await hashPassword("tasks!", 1000));
+    const setData = vi.fn();
+    render(
+      <TodoistSettings
+        instance={instance}
+        data={{ ...data, showPassword: "separate" }}
+        setData={setData}
+      />,
+    );
+    const select = await screen.findByRole("combobox", {
+      name: "Password to show hidden tasks",
+    });
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Change Todoist password" }),
+      ).toBeInTheDocument(),
+    );
+    await userEvent.selectOptions(select, "No password");
+    expect(setData).not.toHaveBeenCalled();
+
+    await userEvent.type(
+      screen.getByLabelText("Current Todoist password"),
+      "tasks!{Enter}",
+    );
+    await waitFor(() =>
+      expect(setData).toHaveBeenCalledWith({ ...data, showPassword: "none" }),
+    );
   });
 
   it("disconnects and clears cached tasks", async () => {

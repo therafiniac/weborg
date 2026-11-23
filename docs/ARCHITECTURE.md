@@ -354,10 +354,18 @@ status message that clears after a few seconds.
   | ------------------------- | ------------------------------------ | ------------------ |
   | Quick Links website icons | `icons.duckduckgo.com` (opt-in, off) | Each link's domain |
   | Search                    | Chosen engine, on submit only        | The search query   |
+  | Todoist widget            | `api.todoist.com` (after connecting) | API token, tasks   |
 
 - User-entered link URLs and custom search URLs are validated
   (`http`/`https` only), so `javascript:` URLs can never run.
 - No `dangerouslySetInnerHTML` with user content.
+- Optional passwords (page unlock; showing hidden Todoist tasks, with the
+  Weborg password or a separate one) are stored only as salted
+  PBKDF2-SHA256 hashes (600,000 iterations) in local storage, never
+  synced or backed up. Turning protection off or changing a password needs
+  the current one; five wrong tries pause attempts for 30 seconds. They
+  deter onlookers, not someone with access to the computer: nothing is
+  encrypted, and the UI says so.
 
 ## 11. Decisions log
 
