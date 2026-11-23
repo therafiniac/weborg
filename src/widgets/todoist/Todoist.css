@@ -24,6 +24,7 @@
 
 .todoist__icon-button,
 .todoist__check {
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -83,11 +84,19 @@
 }
 
 .todoist__task {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.todoist__task.is-expanded {
+  background: rgb(0 0 0 / 0.2);
+}
+
+.todoist__task-row {
   display: flex;
   align-items: flex-start;
   gap: 0.4rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
 }
 
 /* Todoist's priority colours: 4 is urgent */
@@ -112,27 +121,129 @@
   display: grid;
   flex: 1;
   min-width: 0;
-  padding-top: 0.1rem;
+  padding: 0.1rem 0 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
   color: inherit;
-  text-decoration: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Long titles: two lines in the list, the rest in the details */
+.todoist__name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow-wrap: anywhere;
 }
 
-.todoist__content:hover {
-  text-decoration: underline;
+.todoist__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  font-size: 0.75rem;
 }
 
-.todoist__due {
-  font-size: 0.75rem;
-  opacity: 0.65;
+.todoist__meta > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  opacity: 0.7;
+}
+
+.todoist__meta:empty {
+  display: none;
+}
+
+.todoist__flag {
+  opacity: 1 !important;
+}
+
+.todoist__flag--p4 {
+  color: #ff7066;
+}
+
+.todoist__flag--p3 {
+  color: #ff9a14;
+}
+
+.todoist__flag--p2 {
+  color: #5297ff;
+}
+
+/* Open and edit appear on hover or keyboard focus */
+.todoist__row-actions {
+  display: flex;
+  flex: none;
+  opacity: 0;
+}
+
+.todoist__task:hover .todoist__row-actions,
+.todoist__task-row:focus-within .todoist__row-actions,
+.todoist__task.is-expanded .todoist__row-actions {
+  opacity: 0.75;
+}
+
+@media (hover: none) {
+  .todoist__row-actions {
+    opacity: 0.75;
+  }
+}
+
+.todoist-details {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem 0.5rem 1.9rem;
+  font-size: 0.85rem;
+}
+
+.todoist-details__title {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.todoist-details__description {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  opacity: 0.85;
+}
+
+.todoist-details__facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.todoist-details__facts dt {
+  opacity: 0.6;
+}
+
+.todoist-details__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .todoist__icon-button:focus-visible,
 .todoist__check:focus-visible,
-.todoist__content:focus-visible,
-.todoist__input:focus-visible {
+.todoist__content:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Fields light up their own rounded border instead of an outline around it */
+.todoist__input:focus-visible,
+.todoist-smart:focus-within {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .todoist__input,
@@ -157,11 +268,6 @@
   opacity: 0.55;
 }
 
-.todoist-smart:focus-within {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
 /* Highlighting: the mirror draws the text, the input on top only the caret */
 .todoist-smart {
   position: relative;
@@ -180,6 +286,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  color: transparent;
   pointer-events: none;
 }
 
@@ -189,20 +296,14 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: transparent;
-  caret-color: currentColor;
+  color: inherit;
   outline: none;
-}
-
-.todoist-smart__input::selection {
-  background: rgb(255 255 255 / 0.25);
-  color: transparent;
 }
 
 .todoist-smart__token {
   border-radius: 0.2rem;
   background: rgb(255 255 255 / 0.14);
-  color: inherit;
+  color: transparent;
   /* Shadow instead of padding, so the text lines up with the input's */
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
 }
@@ -229,9 +330,8 @@
 }
 
 .todoist-smart__token--description {
-  background: transparent;
+  background: rgb(255 255 255 / 0.06);
   box-shadow: none;
-  opacity: 0.65;
 }
 
 .todoist__add,
@@ -256,28 +356,6 @@
   color: inherit;
 }
 
-.todoist__chip {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.15rem 0.2rem 0.15rem 0.5rem;
-  border-radius: 999px;
-  background: rgb(5 133 39 / 0.45);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.todoist__chip-clear {
-  display: inline-flex;
-  padding: 0.1rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
 /* Kept in the layout (not display: none) so showPicker() can open it */
 .todoist-date {
   position: relative;
@@ -293,22 +371,6 @@
   border: 0;
   opacity: 0;
   pointer-events: none;
-}
-
-/* Edit button appears on hover or keyboard focus, like the page controls */
-.todoist__edit {
-  opacity: 0;
-}
-
-.todoist__task:hover .todoist__edit,
-.todoist__task:focus-within .todoist__edit {
-  opacity: 0.7;
-}
-
-@media (hover: none) {
-  .todoist__edit {
-    opacity: 0.7;
-  }
 }
 
 .todoist-editor {
@@ -331,7 +393,11 @@
 }
 
 .todoist__text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.3rem 0.7rem;
+  text-decoration: none;
   border: 1px solid rgb(255 255 255 / 0.2);
   border-radius: 0.4rem;
   background: transparent;
@@ -347,13 +413,24 @@
   color: var(--color-accent-text);
 }
 
+.todoist__text-button--danger {
+  border-color: transparent;
+  color: #ff7066;
+}
+
+.todoist__text-button--danger.is-confirming {
+  border-color: #d1453b;
+  background: #d1453b;
+  color: #fff;
+}
+
 .todoist__text-button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
 .todoist__text-button:focus-visible,
-.todoist__chip-clear:focus-visible {
+.todoist__label-toggle:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -362,4 +439,35 @@
 .todoist-editor select option {
   background: var(--color-surface);
   color: var(--color-text);
+}
+
+.todoist__textarea {
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.todoist__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.todoist__label-toggle {
+  padding: 0.15rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.todoist__label-toggle[aria-pressed="true"] {
+  border-color: rgb(175 56 235 / 0.8);
+  background: rgb(175 56 235 / 0.4);
+}
+
+.todoist__add-full {
+  flex: none;
 }

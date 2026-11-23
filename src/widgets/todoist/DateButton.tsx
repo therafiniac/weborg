@@ -47,14 +47,3 @@ export default function DateButton({
     </span>
   );
 }
-
-/** "2026-12-05" → "Sat, Dec 5" in the user's locale. */
-export function formatPickedDate(date: string): string {
-  const [year, month, day] = date.split("-").map(Number);
-  if (!year || !month || !day) return date;
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(year, month - 1, day));
-}

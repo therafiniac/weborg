@@ -1,11 +1,4 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
@@ -41,6 +34,8 @@ interface FakeTask {
   priority: number;
   project_id: string;
   due: { date: string; string: string } | null;
+  description?: string;
+  labels?: string[];
 }
 
 /** A tiny in-memory Todoist. Filtered lists show only tasks due "today". */
@@ -69,9 +64,33 @@ function fakeTodoist(initial: FakeTask[] = []) {
       return json({
         results: [
           { id: "p1", name: "My Project" },
-          { id: "inbox", name: "Inbox" },
+          { id: "inbox", name: "Inbox", inbox_project: true },
         ],
       });
+    if (path === "/labels")
+      return json({
+        results: [
+          { id: "l1", name: "phone" },
+          { id: "l2", name: "home" },
+        ],
+      });
+    if (path === "/tasks" && method === "POST") {
+      const fields = body as Record<string, unknown>;
+      const task: FakeTask = {
+        id: String(nextId++),
+        content: String(fields.content),
+        priority: Number(fields.priority ?? 1),
+        project_id: String(fields.project_id ?? "inbox"),
+        description: String(fields.description ?? ""),
+        labels: (fields.labels as string[] | undefined) ?? [],
+        due:
+          typeof fields.due_string === "string"
+            ? { date: "2026-11-23", string: fields.due_string }
+            : null,
+      };
+      tasks.push(task);
+      return json(task);
+    }
     if (path === "/tasks/filter")
       return json({ results: tasks.filter((t) => t.due?.string === "today") });
     if (path === "/tasks/quick") {
@@ -104,11 +123,22 @@ function fakeTodoist(initial: FakeTask[] = []) {
       return new Response(null, { status: 204 });
     }
     const update = /^\/tasks\/(\w+)$/.exec(path);
+    if (update && method === "DELETE") {
+      tasks.splice(
+        tasks.findIndex((t) => t.id === update[1]),
+        1,
+      );
+      return new Response(null, { status: 204 });
+    }
     if (update && method === "POST") {
       const task = tasks.find((t) => t.id === update[1]);
       if (!task) return new Response("{}", { status: 404 });
       const changes = body as Record<string, string | number>;
       if (typeof changes.content === "string") task.content = changes.content;
+      if (typeof changes.description === "string")
+        task.description = changes.description;
+      if (Array.isArray(changes.labels))
+        task.labels = changes.labels as unknown as string[];
       if (typeof changes.priority === "number")
         task.priority = changes.priority;
       if (changes.due_string === "no date") task.due = null;
@@ -128,7 +158,7 @@ function fakeTodoist(initial: FakeTask[] = []) {
     fail(response: Response | Error) {
       failNext = response;
     },
-    writes: () => requests.filter((r) => r.method === "POST"),
+    writes: () => requests.filter((r) => r.method !== "GET"),
   };
 }
 
@@ -139,6 +169,10 @@ const task = (id: string, content: string, due = "today"): FakeTask => ({
   project_id: "inbox",
   due: due ? { date: "2026-11-23", string: due } : null,
 });
+
+/** A task's title in the list (not the add box's highlight mirror). */
+const findTask = (name: string) =>
+  screen.findByText(name, { selector: ".todoist__name" });
 
 describe("Todoist widget", () => {
   const fetchMock = vi.fn<typeof fetch>();
@@ -235,9 +269,7 @@ describe("Todoist widget", () => {
     const input = screen.getByRole("textbox", { name: "Add a task" });
     await userEvent.type(input, "Buy milk{Enter}");
 
-    expect(
-      await screen.findByRole("link", { name: "Buy milk today" }),
-    ).toBeInTheDocument();
+    expect(await findTask("Buy milk")).toBeInTheDocument();
     expect(input).toHaveValue("");
     expect(server.writes()).toEqual([
       { method: "POST", path: "/tasks/quick", body: { text: "Buy milk" } },
@@ -270,32 +302,148 @@ describe("Todoist widget", () => {
     ]);
   });
 
-  it("uses a picked date instead of the default", async () => {
+  it("creates a task with every detail from the full form", async () => {
     await start();
     await screen.findByText("Nothing to do.");
-
-    const picker = document.querySelector<HTMLInputElement>(
-      ".todoist-date__picker",
+    await waitFor(async () =>
+      expect(await projectsItem.getValue()).not.toBeNull(),
     );
-    if (!picker) throw new Error("no date picker");
-    fireEvent.change(picker, { target: { value: "2026-12-05" } });
+    await userEvent.click(
+      screen.getByRole("button", { name: "New task with details" }),
+    );
+
+    // One form at a time
     expect(
-      screen.getByRole("button", { name: "Clear date" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("textbox", { name: "Add a task" }),
+    ).not.toBeInTheDocument();
+    const form = screen.getByRole("form", { name: "New task" });
+    expect(within(form).getByRole("textbox", { name: "Due date" })).toHaveValue(
+      "today",
+    );
+    expect(within(form).getByRole("combobox", { name: "Project" })).toHaveValue(
+      "inbox",
+    );
 
     await userEvent.type(
-      screen.getByRole("textbox", { name: "Add a task" }),
-      "Dentist{Enter}",
+      within(form).getByRole("textbox", { name: "Task name" }),
+      "Book flights",
     );
-    await waitFor(() => expect(server.writes()).toHaveLength(2));
-    expect(server.writes()[1]).toEqual({
-      method: "POST",
-      path: "/tasks/100",
-      body: { due_date: "2026-12-05" },
-    });
+    await userEvent.type(
+      within(form).getByRole("textbox", { name: "Description" }),
+      "Window seat",
+    );
+    await userEvent.selectOptions(
+      within(form).getByRole("combobox", { name: "Project" }),
+      "My Project",
+    );
+    await userEvent.click(
+      await within(form).findByRole("button", { name: "@phone" }),
+    );
+    await userEvent.click(within(form).getByRole("radio", { name: "P2" }));
+    await userEvent.click(
+      within(form).getByRole("button", { name: "Add task" }),
+    );
+
+    expect(await findTask("Book flights")).toBeInTheDocument();
+    expect(server.writes()).toEqual([
+      {
+        method: "POST",
+        path: "/tasks",
+        body: {
+          content: "Book flights",
+          description: "Window seat",
+          labels: ["phone"],
+          priority: 3,
+          project_id: "p1",
+          due_string: "today",
+        },
+      },
+    ]);
     expect(
-      screen.queryByRole("button", { name: "Clear date" }),
+      screen.getByRole("textbox", { name: "Add a task" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows details when a task is clicked, without leaving the page", async () => {
+    await start([
+      {
+        ...task("1", "Plan offsite"),
+        priority: 4,
+        project_id: "p1",
+        description: "Pick a venue",
+        labels: ["home"],
+      },
+    ]);
+    await waitFor(async () =>
+      expect(await projectsItem.getValue()).not.toBeNull(),
+    );
+    const title = await screen.findByRole("button", { name: /^Plan offsite/ });
+    expect(title).toHaveTextContent("P1");
+    expect(title).toHaveTextContent("My Project");
+
+    await userEvent.click(title);
+    const details = screen.getByRole("region", {
+      name: 'Details of "Plan offsite"',
+    });
+    expect(details).toHaveTextContent("Pick a venue");
+    expect(details).toHaveTextContent("@home");
+    expect(title).toHaveAttribute("aria-expanded", "true");
+
+    await userEvent.click(title);
+    expect(
+      screen.queryByRole("region", { name: /^Details of/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it("deletes a task only after confirming", async () => {
+    await start([task("1", "Old idea")]);
+    await userEvent.click(
+      await screen.findByRole("button", { name: 'Edit "Old idea"' }),
+    );
+
+    const remove = screen.getByRole("button", { name: "Delete" });
+    await userEvent.click(remove);
+    expect(server.writes()).toEqual([]);
+    expect(remove).toHaveTextContent("Delete task?");
+
+    await userEvent.click(remove);
+    await waitFor(() => expect(screen.queryByText("Old idea")).toBeNull());
+    expect(server.writes()).toEqual([
+      { method: "DELETE", path: "/tasks/1", body: null },
+    ]);
+  });
+
+  it("edits the description and labels", async () => {
+    await start([{ ...task("1", "Call"), labels: ["home"] }]);
+    await userEvent.click(
+      await screen.findByRole("button", { name: 'Edit "Call"' }),
+    );
+    const form = screen.getByRole("form", { name: 'Edit "Call"' });
+    // The add box hides while editing
+    expect(
+      screen.queryByRole("textbox", { name: "Add a task" }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.type(
+      within(form).getByRole("textbox", { name: "Description" }),
+      "About the lease",
+    );
+    expect(within(form).getByRole("button", { name: "@home" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await userEvent.click(within(form).getByRole("button", { name: "@home" }));
+    await userEvent.click(within(form).getByRole("button", { name: "@phone" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(screen.queryByRole("form")).toBeNull());
+    expect(server.writes()).toEqual([
+      {
+        method: "POST",
+        path: "/tasks/1",
+        body: { description: "About the lease", labels: ["phone"] },
+      },
+    ]);
   });
 
   it("highlights Quick Add syntax while typing", async () => {
@@ -327,7 +475,7 @@ describe("Todoist widget", () => {
     await userEvent.click(within(editor).getByRole("radio", { name: "P1" }));
     await userEvent.click(within(editor).getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByText("Final")).toBeInTheDocument();
+    expect(await findTask("Final")).toBeInTheDocument();
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
     expect(server.writes()).toEqual([
       {

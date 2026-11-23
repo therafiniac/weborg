@@ -40,7 +40,17 @@ export const projectsItem = storage.defineItem<{
   fetchedAt: number;
 } | null>("local:todoist-projects", { fallback: null });
 
+/** Label names, for the label picker. */
+export const labelsItem = storage.defineItem<{
+  labels: string[];
+  fetchedAt: number;
+} | null>("local:todoist-labels", { fallback: null });
+
 /** Everything cached from the account; used when disconnecting. */
 export async function clearTodoistCache() {
-  await Promise.all([cacheItem.setValue({}), projectsItem.setValue(null)]);
+  await Promise.all([
+    cacheItem.setValue({}),
+    projectsItem.setValue(null),
+    labelsItem.setValue(null),
+  ]);
 }

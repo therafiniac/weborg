@@ -9,8 +9,9 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
 };
 
 /**
- * A text input that highlights Quick Add syntax. The input's own text is
- * transparent; a mirror behind it draws the same text with highlights.
+ * A text input that highlights Quick Add syntax. A mirror behind the input
+ * lays out the same text invisibly and paints only the highlight colours;
+ * the input draws its own text and caret on top.
  */
 export default function SmartInput({
   value,

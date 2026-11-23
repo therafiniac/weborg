@@ -22,6 +22,9 @@ export interface TodoistTask {
   due: { date: string; string: string } | null;
   /** Missing on tasks cached before projects were tracked. */
   projectId?: string;
+  /** Missing on tasks cached before these were tracked. */
+  description?: string;
+  labels?: string[];
 }
 
 export type TodoistErrorKind = "auth" | "network" | "rate" | "server";
@@ -98,7 +101,7 @@ async function request(
 
 function parseTask(value: unknown): TodoistTask | null {
   if (!isRecord(value)) return null;
-  const { id, content, priority, due, project_id } = value;
+  const { id, content, priority, due, project_id, description, labels } = value;
   if (typeof id !== "string" || typeof content !== "string") return null;
   return {
     id,
@@ -114,6 +117,10 @@ function parseTask(value: unknown): TodoistTask | null {
         ? { date: due.date, string: due.string }
         : null,
     ...(typeof project_id === "string" && { projectId: project_id }),
+    description: typeof description === "string" ? description : "",
+    labels: Array.isArray(labels)
+      ? labels.filter((label): label is string => typeof label === "string")
+      : [],
   };
 }
 
@@ -183,6 +190,9 @@ export type DueChange =
 
 export interface TaskChanges {
   content?: string;
+  description?: string;
+  /** Label names; replaces the task's labels. */
+  labels?: string[];
   /** 1 (normal) to 4 (urgent) */
   priority?: number;
   due?: DueChange;
@@ -206,6 +216,10 @@ export async function updateTask(
 ): Promise<TodoistTask> {
   const body = {
     ...(changes.content !== undefined && { content: changes.content }),
+    ...(changes.description !== undefined && {
+      description: changes.description,
+    }),
+    ...(changes.labels !== undefined && { labels: changes.labels }),
     ...(changes.priority !== undefined && { priority: changes.priority }),
     ...(changes.due && dueFields(changes.due)),
   };
@@ -218,6 +232,47 @@ export async function updateTask(
   if (!task)
     throw new TodoistError("server", "Todoist sent an unreadable task.");
   return task;
+}
+
+export interface NewTask {
+  content: string;
+  description: string;
+  labels: string[];
+  priority: number;
+  /** null: the Inbox */
+  projectId: string | null;
+  due: DueChange;
+}
+
+/** Structured create, for the full form; the add box uses quickAdd. */
+export async function createTask(
+  token: string,
+  fields: NewTask,
+): Promise<TodoistTask> {
+  const body = {
+    content: fields.content,
+    ...(fields.description && { description: fields.description }),
+    ...(fields.labels.length > 0 && { labels: fields.labels }),
+    priority: fields.priority,
+    ...(fields.projectId && { project_id: fields.projectId }),
+    // "no date" is only needed to clear an existing date
+    ...(fields.due.kind !== "none" && dueFields(fields.due)),
+  };
+  const task = parseTask(
+    await request(token, "/tasks", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  );
+  if (!task)
+    throw new TodoistError("server", "Todoist sent an unreadable task.");
+  return task;
+}
+
+export async function deleteTask(token: string, id: string): Promise<void> {
+  await request(token, `/tasks/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }
 
 /** The update endpoint cannot change projects; this one does. */
@@ -240,6 +295,7 @@ export async function moveTask(
 export interface TodoistProject {
   id: string;
   name: string;
+  isInbox?: boolean;
 }
 
 export async function fetchProjects(token: string): Promise<TodoistProject[]> {
@@ -249,7 +305,21 @@ export async function fetchProjects(token: string): Promise<TodoistProject[]> {
     isRecord(project) &&
     typeof project.id === "string" &&
     typeof project.name === "string"
-      ? [{ id: project.id, name: project.name }]
+      ? [
+          {
+            id: project.id,
+            name: project.name,
+            isInbox: project.inbox_project === true,
+          },
+        ]
       : [],
+  );
+}
+
+export async function fetchLabels(token: string): Promise<string[]> {
+  const value = await request(token, "/labels?limit=200");
+  if (!isRecord(value) || !Array.isArray(value.results)) return [];
+  return value.results.flatMap((label: unknown) =>
+    isRecord(label) && typeof label.name === "string" ? [label.name] : [],
   );
 }

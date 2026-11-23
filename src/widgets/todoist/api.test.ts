@@ -141,12 +141,21 @@ describe("Todoist API client", () => {
         ],
       }),
     ).toEqual([
-      { id: "a", content: "A", priority: 1, due: null },
+      {
+        id: "a",
+        content: "A",
+        priority: 1,
+        due: null,
+        description: "",
+        labels: [],
+      },
       {
         id: "b",
         content: "B",
         priority: 4,
         due: { date: "2026-01-01", string: "Jan 1" },
+        description: "",
+        labels: [],
       },
     ]);
     expect(parseTasks({ nope: true })).toEqual([]);
