@@ -129,6 +129,15 @@ describe("link style", () => {
     // Preset colours follow the theme; picked colours are used as chosen
     expect(vars["--links-border"]).toBe("rgb(var(--tile-border-rgb) / 0.16)");
     expect(vars["--links-text"]).toBe("var(--tile-text)");
+    // The tabs panel's shadow never rises above its top edge
+    for (const layer of vars["--links-panel-shadow"]!.split("), ")) {
+      // "x y blur spread colour"; x is a bare 0
+      const [, y = 0, blur = 0, spread = 0] = layer
+        .split(" ")
+        .slice(0, 4)
+        .map((part) => parseFloat(part));
+      expect(blur - y + spread).toBeLessThanOrEqual(0);
+    }
     const custom = styleVars(
       { ...glassPreset, borderColour: "#ff0000", textColour: "#00ff00" },
       0,
