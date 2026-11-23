@@ -533,6 +533,69 @@ describe("Todoist widget", () => {
     ).toBeInTheDocument();
   });
 
+  it("hides tasks behind the eye button and remembers it", async () => {
+    server = fakeTodoist([task("1", "Secret plan"), task("2", "Gift for Sam")]);
+    fetchMock.mockImplementation(server.handler);
+    await tokenItem.setValue("tok");
+    const setData = vi.fn();
+    const { rerender } = render(
+      <Todoist instance={instance} data={data} setData={setData} />,
+    );
+    await findTask("Secret plan");
+
+    await userEvent.click(screen.getByRole("button", { name: "Hide tasks" }));
+    expect(setData).toHaveBeenLastCalledWith({ ...data, hidden: true });
+
+    // The saved value is what a new tab reads
+    rerender(
+      <Todoist
+        instance={instance}
+        data={{ ...data, hidden: true }}
+        setData={setData}
+      />,
+    );
+    expect(screen.getByText("2 tasks hidden.")).toBeInTheDocument();
+    expect(screen.queryByText(/Secret plan|Gift for Sam/)).toBeNull();
+    expect(
+      screen.queryByRole("textbox", { name: "Add a task" }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Show tasks" }));
+    expect(setData).toHaveBeenLastCalledWith({ ...data, hidden: false });
+  });
+
+  it("starts every tab hidden when hide on open is set", async () => {
+    server = fakeTodoist([task("1", "Private")]);
+    fetchMock.mockImplementation(server.handler);
+    await tokenItem.setValue("tok");
+    const setData = vi.fn();
+    render(
+      <Todoist
+        instance={instance}
+        data={{ ...data, hideOnOpen: true }}
+        setData={setData}
+      />,
+    );
+
+    expect(await screen.findByText("1 task hidden.")).toBeInTheDocument();
+    expect(screen.queryByText("Private")).toBeNull();
+
+    // Showing lasts for this tab only, so nothing is saved
+    await userEvent.click(screen.getByRole("button", { name: "Show tasks" }));
+    expect(await findTask("Private")).toBeInTheDocument();
+    expect(setData).not.toHaveBeenCalled();
+  });
+
+  it("closes an open form when hiding", async () => {
+    await start([task("1", "Draft")]);
+    await userEvent.click(
+      await screen.findByRole("button", { name: 'Edit "Draft"' }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Hide tasks" }));
+    // The test's setData does not persist, so the widget stays shown
+    expect(screen.queryByRole("form")).not.toBeInTheDocument();
+  });
+
   it("clears the added notice after a while", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {

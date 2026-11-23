@@ -13,6 +13,10 @@ export interface TodoistData {
   defaultDue: string;
   /** px */
   width: number;
+  /** Tasks hidden from onlookers; remembered across new tabs. */
+  hidden: boolean;
+  /** Every new tab starts hidden; showing lasts for that tab only. */
+  hideOnOpen: boolean;
 }
 
 export const todoistWidget = defineWidget<TodoistData>({
@@ -25,6 +29,8 @@ export const todoistWidget = defineWidget<TodoistData>({
     maxTasks: 8,
     defaultDue: "today",
     width: 340,
+    hidden: false,
+    hideOnOpen: false,
   },
   dataVersion: 1,
   Component: Todoist,

@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
@@ -41,7 +41,12 @@ type Mode =
 function TaskList({
   token,
   data,
+  setData,
 }: WidgetProps<TodoistData> & { token: string }) {
+  // With hideOnOpen, each new tab starts hidden and showing is not saved
+  const [tabHidden, setTabHidden] = useState(true);
+  const hidden = data.hideOnOpen ? tabHidden : data.hidden;
+
   const {
     tasks,
     loading,
@@ -86,6 +91,17 @@ function TaskList({
     );
   };
 
+  const toggleHidden = () => {
+    if (!hidden) {
+      // Nothing private stays open behind the curtain
+      setMode({ kind: "list" });
+      setExpanded(null);
+      setNotice(null);
+    }
+    if (data.hideOnOpen) setTabHidden(!hidden);
+    else setData({ ...data, hidden: !hidden });
+  };
+
   const shown = tasks?.slice(0, data.maxTasks) ?? [];
   const projectOf = (task: TodoistTask) =>
     projects.find((project) => project.id === task.projectId);
@@ -94,15 +110,26 @@ function TaskList({
     <>
       <header className="todoist__header">
         <h2 className="todoist__title">{data.title || "Tasks"}</h2>
-        <button
-          type="button"
-          className="todoist__icon-button"
-          aria-label="Refresh tasks"
-          disabled={loading}
-          onClick={() => void reload()}
-        >
-          <RefreshCw size={14} className={loading ? "todoist__spin" : ""} />
-        </button>
+        <span className="todoist__header-actions">
+          <button
+            type="button"
+            className="todoist__icon-button"
+            aria-label={hidden ? "Show tasks" : "Hide tasks"}
+            title={hidden ? "Show tasks" : "Hide tasks"}
+            onClick={toggleHidden}
+          >
+            {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+          <button
+            type="button"
+            className="todoist__icon-button"
+            aria-label="Refresh tasks"
+            disabled={loading}
+            onClick={() => void reload()}
+          >
+            <RefreshCw size={14} className={loading ? "todoist__spin" : ""} />
+          </button>
+        </span>
       </header>
 
       {error && (
@@ -115,7 +142,9 @@ function TaskList({
         </p>
       )}
 
-      {tasks === null ? (
+      {hidden ? (
+        <HiddenTasks count={tasks?.length ?? null} />
+      ) : tasks === null ? (
         loading && <p className="todoist__message">Loading…</p>
       ) : shown.length === 0 ? (
         <p className="todoist__message">Nothing to do.</p>
@@ -164,7 +193,7 @@ function TaskList({
 
       {/* Adding and editing are everyday use, so they stay on when locked.
           One form at a time: the add box hides while a form is open. */}
-      {mode.kind === "create" ? (
+      {hidden ? null : mode.kind === "create" ? (
         <TaskForm
           token={token}
           projects={projects}
@@ -201,7 +230,26 @@ function TaskList({
           />
         )
       )}
-      {notice && mode.kind === "list" && <AddedMessage notice={notice} />}
+      {notice && !hidden && mode.kind === "list" && (
+        <AddedMessage notice={notice} />
+      )}
     </>
+  );
+}
+
+/** Placeholder bars only: no task text is on the page while hidden. */
+function HiddenTasks({ count }: { count: number | null }) {
+  const bars = Math.min(count ?? 3, 3);
+  return (
+    <div className="todoist__hidden">
+      <p className="todoist__message">
+        {count === null
+          ? "Tasks hidden."
+          : `${count} ${count === 1 ? "task" : "tasks"} hidden.`}
+      </p>
+      {Array.from({ length: bars }, (_, index) => (
+        <span key={index} className="todoist__hidden-bar" aria-hidden="true" />
+      ))}
+    </div>
   );
 }

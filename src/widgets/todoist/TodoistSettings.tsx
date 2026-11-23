@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
 import type { WidgetSettingsProps } from "@/core/widgets/types";
-import { RangeField, TextField } from "@/ui/fields";
+import { CheckboxField, RangeField, TextField } from "@/ui/fields";
 
 import type { TodoistData } from ".";
 import {
@@ -52,6 +52,11 @@ export default function TodoistSettings({
         placeholder="No date"
         hint="Used when you add a task without a date, like “today”. Leave empty to add undated tasks to their project."
         onChange={(defaultDue) => setData({ ...data, defaultDue })}
+      />
+      <CheckboxField
+        label="Hide tasks when a new tab opens"
+        checked={data.hideOnOpen}
+        onChange={(hideOnOpen) => setData({ ...data, hideOnOpen })}
       />
       <RangeField
         label="Tasks shown"
