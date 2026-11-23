@@ -405,7 +405,7 @@
   border: 1px solid var(--links-border);
   border-radius: 0 var(--links-radius) var(--links-radius) var(--links-radius);
   background: var(--links-panel-bg);
-  box-shadow: var(--links-shadow);
+  box-shadow: var(--links-panel-shadow);
   backdrop-filter: blur(var(--links-blur));
   -webkit-backdrop-filter: blur(var(--links-blur));
 }

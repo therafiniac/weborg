@@ -114,6 +114,10 @@ export function styleVars(style: LinkStyle, columns: number): CSSProperties {
       "--tile-border-rgb",
     ),
     "--links-shadow": `0 4px 12px rgba(0, 0, 0, ${round(0.35 * shadow)}), 0 10px 24px rgba(0, 0, 0, ${round(0.25 * shadow)})`,
+    // Tabs panel: the same depth, but only below. Negative spread keeps the
+    // blur from rising above the top edge, where it would draw a seam
+    // under the tabs.
+    "--links-panel-shadow": `0 12px 20px -10px rgba(0, 0, 0, ${round(0.35 * shadow)}), 0 22px 32px -16px rgba(0, 0, 0, ${round(0.25 * shadow)})`,
     "--links-text": defaultText
       ? style.mode === "plain"
         ? "var(--dashboard-text, var(--backdrop-text))"
