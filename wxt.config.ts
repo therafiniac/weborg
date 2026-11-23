@@ -4,6 +4,15 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   srcDir: "src",
   modules: ["@wxt-dev/module-react"],
+  zip: {
+    // Source zip for Mozilla's review: never ship signed builds, local
+    // config or a stray pnpm lockfile (the project uses npm)
+    excludeSources: [
+      "web-ext-artifacts/**",
+      "web-ext.config.ts",
+      "pnpm-lock.yaml",
+    ],
+  },
   // Use Manifest V3 for Firefox too (WXT defaults Firefox to MV2)
   manifestVersion: 3,
   manifest: ({ browser }) => ({
