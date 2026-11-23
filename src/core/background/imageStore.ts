@@ -45,13 +45,35 @@ export function validateImage(file: File): string | null {
   return null;
 }
 
-export const saveBackgroundImage = (blob: Blob) =>
-  run("readwrite", (store) => store.put(blob, KEY)).then(() => undefined);
+/**
+ * "main": the one image, shown in both themes. With separate images on,
+ * "dark" and "light" are the per-theme slots; an empty slot falls back to
+ * the other slot, then to the main image.
+ */
+export type ImageVariant = "main" | "dark" | "light";
 
-export const loadBackgroundImage = () =>
-  run<Blob | undefined>("readonly", (store) => store.get(KEY)).then(
+const ALL_VARIANTS: readonly ImageVariant[] = ["main", "dark", "light"];
+
+const keyFor = (variant: ImageVariant) =>
+  variant === "main" ? KEY : `${KEY}-${variant}`;
+
+export const saveBackgroundImage = (
+  blob: Blob,
+  variant: ImageVariant = "main",
+) =>
+  run("readwrite", (store) => store.put(blob, keyFor(variant))).then(
+    () => undefined,
+  );
+
+export const loadBackgroundImage = (variant: ImageVariant = "main") =>
+  run<Blob | undefined>("readonly", (store) => store.get(keyFor(variant))).then(
     (blob) => blob ?? null,
   );
 
-export const deleteBackgroundImage = () =>
-  run("readwrite", (store) => store.delete(KEY)).then(() => undefined);
+/** Without a variant, removes every image. */
+export const deleteBackgroundImage = (variant?: ImageVariant) =>
+  Promise.all(
+    (variant ? [variant] : ALL_VARIANTS).map((v) =>
+      run("readwrite", (store) => store.delete(keyFor(v))),
+    ),
+  ).then(() => undefined);

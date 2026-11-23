@@ -168,7 +168,7 @@ interface WidgetDefinition<Data> {
   show cached data when available.
 
 Built: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
-Notes, and Text (the minimal reference implementation). Default layout:
+Notes, Todoist, and Text (the minimal reference implementation). Default layout:
 Clock, Greeting, Search and Quick Links in the centre.
 
 Shared pieces: `core/time` (aligned `useTime` hook and `Intl` formatting)
@@ -176,6 +176,19 @@ and `ui/fields.tsx` (labelled form controls every settings screen uses).
 
 Widget settings changes are pure functions in `core/widgets/actions.ts`
 (add, remove, update, move) so they are unit tested without React.
+
+Todoist talks to the Todoist API v1 with a personal API token. The token
+lives in `local:todoist-token`, outside widget data, so it never syncs and
+is never in backups. Access to `api.todoist.com` is an optional host
+permission requested when the user connects. Last tasks per filter are
+cached in `local:todoist-cache` for offline display. New tasks go
+through Quick Add (`syntax.ts` only previews its syntax for highlighting);
+a picked or default date is applied with a follow-up update, since Quick
+Add takes text only. Project names are cached in `local:todoist-projects`.
+Views (`views.ts`) mirror Todoist's sidebar: Inbox, Today, Next 7 days,
+Upcoming, a project, a label, or a custom filter. Today and the upcoming
+views include overdue tasks in their own section, as Todoist does, and
+rows omit what the view already says (the day, or the project).
 
 ### Quick Links data (Built)
 
@@ -250,7 +263,19 @@ interface LinksData {
 Styles cascade in four layers, all through CSS custom properties:
 
 1. **Tokens**: `styles/global.css` defines base variables (`--color-text`,
-   `--font-sans`, ...) with light and dark values for the settings UI.
+   `--font-sans`, ...) and page-theme tokens (`--theme-text`, `--glass-*`,
+   `--menu-bg`, `--tile-*`), dark on `:root` and light under
+   `:root[data-theme="light"]`. `appearance.theme` (System by default,
+   Dark or Light) is resolved in `core/appearance/theme.ts` and written to
+   `<html data-theme>`. Widgets use the glass tokens, never fixed white or
+   black, so they work in both themes. Preset defaults (white text, Quick
+   Links Glass colours) follow the theme; colours the user picked are always
+   used as chosen. Text straight on the background (clock, greeting, plain
+   links) follows the background instead: `core/background/tone.ts` picks
+   white or near-black text by worst-case WCAG contrast across the colours
+   shown (Darken included; images by their average colour) and sets
+   `<html data-backdrop>`, read as `--backdrop-text` and
+   `--backdrop-shadow-*`. Glass widgets use `--glass-text`.
 2. **Global appearance** (`Settings.appearance`): font, weight, text colour,
    text shadow, text size, edge padding and widget spacing, written by
    `appearanceVars()` as `--dashboard-*`, `--edge-padding` and
@@ -295,6 +320,16 @@ Catppuccin Mocha palette. Each preset carries the darken level that keeps
 white text at WCAG AA contrast (4.5:1); `presets.test.ts` fails if a preset
 breaks that. Reset restores the default background and, after asking,
 deletes an uploaded image.
+
+Background kinds: **Dynamic** (default; presets with a dark and a light
+fill that switch with the theme), Colour, Gradient and Image. An image is
+one main image for both themes, or separate dark and light images
+(`background-image-dark` / `-light` in IndexedDB); an empty slot falls
+back to the other theme's image, then to the main one.
+`resolveBackground(settings, theme)` returns what is drawn. Presets need
+no darkening: `presets.test.ts` checks every one gets text with at least
+4.5:1 contrast. Background v2 migration moves an untouched old default
+gradient to the dynamic default.
 
 ## 8a. Settings panel (Built)
 
@@ -345,10 +380,18 @@ status message that clears after a few seconds.
   | ------------------------- | ------------------------------------ | ------------------ |
   | Quick Links website icons | `icons.duckduckgo.com` (opt-in, off) | Each link's domain |
   | Search                    | Chosen engine, on submit only        | The search query   |
+  | Todoist widget            | `api.todoist.com` (after connecting) | API token, tasks   |
 
 - User-entered link URLs and custom search URLs are validated
   (`http`/`https` only), so `javascript:` URLs can never run.
 - No `dangerouslySetInnerHTML` with user content.
+- Optional passwords (page unlock; showing hidden Todoist tasks, with the
+  Weborg password or a separate one) are stored only as salted
+  PBKDF2-SHA256 hashes (600,000 iterations) in local storage, never
+  synced or backed up. Turning protection off or changing a password needs
+  the current one; five wrong tries pause attempts for 30 seconds. They
+  deter onlookers, not someone with access to the computer: nothing is
+  encrypted, and the UI says so.
 
 ## 11. Decisions log
 

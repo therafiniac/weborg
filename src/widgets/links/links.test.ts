@@ -126,7 +126,15 @@ describe("link style", () => {
   it("builds variables and classes", () => {
     const vars = styleVars(glassPreset, 0) as Record<string, string>;
     expect(vars["--links-columns"]).toBe("1");
-    expect(vars["--links-border"]).toBe("rgba(205, 214, 244, 0.16)");
+    // Preset colours follow the theme; picked colours are used as chosen
+    expect(vars["--links-border"]).toBe("rgb(var(--tile-border-rgb) / 0.16)");
+    expect(vars["--links-text"]).toBe("var(--tile-text)");
+    const custom = styleVars(
+      { ...glassPreset, borderColour: "#ff0000", textColour: "#00ff00" },
+      0,
+    ) as Record<string, string>;
+    expect(custom["--links-border"]).toBe("rgba(255, 0, 0, 0.16)");
+    expect(custom["--links-text"]).toBe("#00ff00");
     expect(styleClasses(glassPreset)).toBe(
       "links links--tiles links--lift links--glow links--shine",
     );

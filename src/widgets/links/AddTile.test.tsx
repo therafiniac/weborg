@@ -103,6 +103,27 @@ describe("+ tile", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("hints that the + tile can also make folders", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Add a link" }));
+    const dialog = screen.getByRole("dialog", { name: "Add a link" });
+    expect(dialog).toHaveTextContent("choose Folder to group several links");
+
+    await user.click(within(dialog).getByRole("radio", { name: "Folder" }));
+    expect(dialog).toHaveTextContent("A folder groups links under one tile");
+  });
+
+  it("shows no folder hint inside a folder, where folders cannot go", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Work folder/ }));
+    await user.click(
+      screen.getByRole("button", { name: "Add a link to Work" }),
+    );
+    expect(screen.queryByText(/choose Folder/)).toBeNull();
+  });
+
   it("adds into an open folder from its own + tile", async () => {
     const user = userEvent.setup();
     render(<Harness />);

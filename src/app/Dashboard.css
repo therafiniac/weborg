@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   padding: var(--edge-padding, 0);
-  color: var(--dashboard-text, #ffffff);
+  color: var(--dashboard-text, var(--backdrop-text));
   font-family: var(--dashboard-font, inherit);
   font-weight: var(--dashboard-weight, normal);
   font-size: calc(var(--dashboard-scale, 1) * 1rem);

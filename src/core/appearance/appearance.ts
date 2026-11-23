@@ -4,20 +4,30 @@ import { isRecord } from "@/core/storage/guards";
 
 import { fontFamilyCss } from "./fonts";
 
+/** Follow the background: dark shadows on dark ones, light glows on light. */
 export const TEXT_SHADOWS = {
   none: undefined,
-  soft: "0 1px 3px rgb(0 0 0 / 0.45)",
-  strong: "0 2px 8px rgb(0 0 0 / 0.75), 0 0 2px rgb(0 0 0 / 0.6)",
+  soft: "var(--backdrop-shadow-soft)",
+  strong: "var(--backdrop-shadow-strong)",
 } as const;
+
+export const THEMES = ["dark", "light", "system"] as const;
+export type ThemeChoice = (typeof THEMES)[number];
+export type ResolvedTheme = Exclude<ThemeChoice, "system">;
 
 export type TextShadow = keyof typeof TEXT_SHADOWS;
 
 /** Global look for every widget (layer 2 in docs/ARCHITECTURE.md §6). */
 export interface Appearance {
+  /** "system" follows the computer's light or dark setting. */
+  theme: ThemeChoice;
+  /** Text follows the background: white on dark, near-black on light. */
+  textColourAuto: boolean;
   /** Font preset key or custom font name; "" = system default. */
   fontFamily: string;
   /** 0 = each widget's own weight. */
   fontWeight: number;
+  /** Used when textColourAuto is off. */
   textColour: string;
   textShadow: TextShadow;
   /** Percent, 50-200. Scales all widget text. */
@@ -29,6 +39,8 @@ export interface Appearance {
 }
 
 export const defaultAppearance: Appearance = {
+  theme: "system",
+  textColourAuto: true,
   fontFamily: "",
   fontWeight: 0,
   textColour: "#ffffff",
@@ -50,10 +62,19 @@ export interface WidgetDisplay {
 export function normalizeAppearance(value: unknown): Appearance {
   if (!isRecord(value)) return defaultAppearance;
   const d = defaultAppearance;
+  const textColour = colour(value.textColour) ?? d.textColour;
   return {
+    theme: (THEMES as readonly unknown[]).includes(value.theme)
+      ? (value.theme as ThemeChoice)
+      : d.theme,
+    // Saved before themes: white was the default, so it means automatic
+    textColourAuto:
+      typeof value.textColourAuto === "boolean"
+        ? value.textColourAuto
+        : textColour.toLowerCase() === "#ffffff",
     fontFamily: str(value.fontFamily, d.fontFamily),
     fontWeight: num(value.fontWeight, 0, 900, d.fontWeight),
-    textColour: colour(value.textColour) ?? d.textColour,
+    textColour,
     textShadow: Object.hasOwn(TEXT_SHADOWS, String(value.textShadow))
       ? (value.textShadow as TextShadow)
       : d.textShadow,
@@ -80,7 +101,9 @@ export function normalizeDisplay(value: unknown): WidgetDisplay {
 /** Variables on the dashboard root. */
 export function appearanceVars(appearance: Appearance): CSSProperties {
   const vars: Record<string, string> = {
-    "--dashboard-text": appearance.textColour,
+    "--dashboard-text": appearance.textColourAuto
+      ? "var(--backdrop-text)"
+      : appearance.textColour,
     "--dashboard-scale": String(appearance.textScale / 100),
     "--edge-padding": `${appearance.edgePadding}px`,
     "--widget-spacing": `${appearance.widgetSpacing}px`,

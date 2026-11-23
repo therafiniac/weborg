@@ -50,7 +50,7 @@ export function TextField({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: "text" | "url" | "search";
+  type?: "text" | "url" | "search" | "password";
   hint?: ReactNode;
   invalid?: boolean;
 }) {

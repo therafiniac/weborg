@@ -1,4 +1,4 @@
-import { Archive, Image, LayoutGrid, Type } from "lucide-react";
+import { Archive, Image, KeyRound, LayoutGrid, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Background from "@/app/Background";
@@ -7,6 +7,7 @@ import PageControls from "@/app/PageControls";
 import AppearanceSettings from "@/app/settings/AppearanceSettings";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
+import PasswordSettings from "@/app/settings/PasswordSettings";
 import SettingsPanel from "@/app/settings/SettingsPanel";
 import WidgetList from "@/app/settings/WidgetList";
 import WidgetSection from "@/app/settings/WidgetSection";
@@ -20,6 +21,7 @@ import {
   settingsItem,
   type Settings,
 } from "@/core/storage/settings";
+import { useApplyTheme, useResolvedTheme } from "@/core/appearance/theme";
 import { useStorageItem } from "@/core/storage/useStorageItem";
 import { widgets } from "@/widgets";
 
@@ -38,6 +40,13 @@ export default function App() {
     if (wasOpen.current && !settingsOpen) toggleRef.current?.focus();
     wasOpen.current = settingsOpen;
   }, [settingsOpen]);
+
+  const theme = useResolvedTheme(
+    stored === undefined
+      ? "system"
+      : normalizeSettings(stored).appearance.theme,
+  );
+  useApplyTheme(theme);
 
   // Render nothing until settings load, to avoid flashing defaults
   if (stored === undefined || storedBackground === undefined) return null;
@@ -58,13 +67,24 @@ export default function App() {
 
   return (
     <main className="app">
-      <Background settings={background} />
+      <Background settings={background} theme={theme} />
       <h1 className="visually-hidden">Weborg</h1>
       <Dashboard settings={settings} />
 
       {!settingsOpen && (
         <PageControls
           ui={settings.ui}
+          theme={theme}
+          onToggleTheme={() =>
+            saveSettings({
+              ...settings,
+              appearance: {
+                ...settings.appearance,
+                // From "system" too: switch to the opposite of what shows
+                theme: theme === "dark" ? "light" : "dark",
+              },
+            })
+          }
           settingsRef={toggleRef}
           onOpenSettings={() => setSettingsOpen(true)}
           onChange={(ui) => saveSettings({ ...settings, ui })}
@@ -121,6 +141,12 @@ export default function App() {
               content: (
                 <WidgetList settings={settings} onChange={saveSettings} />
               ),
+            },
+            {
+              id: "password",
+              label: "Password",
+              icon: KeyRound,
+              content: <PasswordSettings />,
             },
             {
               id: "backup",

@@ -30,6 +30,7 @@ describe("Settings panel layout", () => {
       "Appearance",
       "Links",
       "Widgets",
+      "Password",
       "Backup",
     ]);
     expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Background");

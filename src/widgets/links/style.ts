@@ -77,23 +77,48 @@ export function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
+/**
+ * A colour with opacity. The preset's own default colours become theme
+ * tokens, so untouched tiles turn light in the light theme; colours the
+ * user picked are used as chosen.
+ */
+function tint(hex: string, alpha: number, preset: string, token: string) {
+  return hex.toLowerCase() === preset.toLowerCase()
+    ? `rgb(var(${token}) / ${round(Math.min(1, Math.max(0, alpha)))})`
+    : hexToRgba(hex, alpha);
+}
+
 /** CSS variables read by Links.css. */
 export function styleVars(style: LinkStyle, columns: number): CSSProperties {
   const bg = style.backgroundOpacity / 100;
   const shadow = style.shadow / 50;
+  const fill = (alpha: number) =>
+    tint(style.background, alpha, glassPreset.background, "--tile-rgb");
+  const defaultText =
+    style.textColour.toLowerCase() === glassPreset.textColour.toLowerCase() ||
+    style.textColour.toLowerCase() === plainPreset.textColour.toLowerCase();
   return {
     "--links-columns": String(Math.max(1, Math.round(columns))),
     "--links-tile-width": `${style.tileWidth}px`,
     "--links-tile-height": `${style.tileHeight}px`,
     "--links-gap": `${style.gap}px`,
     // Tabs layout: tabs and panel share a lighter glass so tiles stand out
-    "--links-panel-bg": hexToRgba(style.background, bg * 0.55),
-    "--links-bg": `linear-gradient(145deg, ${hexToRgba(style.background, bg)}, ${hexToRgba(style.background, bg * 0.75)})`,
+    "--links-panel-bg": fill(bg * 0.55),
+    "--links-bg": `linear-gradient(145deg, ${fill(bg)}, ${fill(bg * 0.75)})`,
     "--links-blur": `${style.blur}px`,
     "--links-radius": `${style.radius}px`,
-    "--links-border": hexToRgba(style.borderColour, style.borderOpacity / 100),
+    "--links-border": tint(
+      style.borderColour,
+      style.borderOpacity / 100,
+      glassPreset.borderColour,
+      "--tile-border-rgb",
+    ),
     "--links-shadow": `0 4px 12px rgba(0, 0, 0, ${round(0.35 * shadow)}), 0 10px 24px rgba(0, 0, 0, ${round(0.25 * shadow)})`,
-    "--links-text": style.textColour,
+    "--links-text": defaultText
+      ? style.mode === "plain"
+        ? "var(--dashboard-text, var(--backdrop-text))"
+        : "var(--tile-text)"
+      : style.textColour,
     "--links-font-size": `${style.fontSize}px`,
     "--links-font-weight": String(style.fontWeight),
     "--links-icon-size": `${style.iconSize}px`,

@@ -1,6 +1,9 @@
 .search {
   position: relative;
   width: min(32rem, 90vw);
+  /* Text follows the glass, not the background behind it */
+  color: var(--widget-colour, var(--glass-text));
+  text-shadow: none;
 }
 
 .search__icon {
@@ -15,9 +18,9 @@
 .search__input {
   width: 100%;
   padding: 0.8rem 1rem 0.8rem 2.75rem;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.3);
+  background: var(--glass-bg);
   color: inherit;
   font: inherit;
   font-size: 1rem;

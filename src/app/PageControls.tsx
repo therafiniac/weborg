@@ -3,16 +3,25 @@ import {
   EyeOff,
   Lock,
   LockOpen,
+  Moon,
   Settings as SettingsIcon,
+  Sun,
 } from "lucide-react";
 import { useEffect, useState, type Ref } from "react";
 
+import type { ResolvedTheme } from "@/core/appearance/appearance";
+import { securityItem } from "@/core/security/password";
 import type { PageUi } from "@/core/storage/settings";
+import { useStorageItem } from "@/core/storage/useStorageItem";
+import { PasswordPrompt } from "@/ui/PasswordFields";
 
 import "./PageControls.css";
 
 interface Props {
   ui: PageUi;
+  /** The theme showing now. */
+  theme: ResolvedTheme;
+  onToggleTheme: () => void;
   onChange: (ui: PageUi) => void;
   onOpenSettings: () => void;
   settingsRef: Ref<HTMLButtonElement>;
@@ -21,12 +30,17 @@ interface Props {
 /** Bottom-right buttons: show/hide widgets, lock the page, settings. */
 export default function PageControls({
   ui,
+  theme,
+  onToggleTheme,
   onChange,
   onOpenSettings,
   settingsRef,
 }: Props) {
   // Spoken (and shown as a hint) after a toggle or a blocked action
   const [message, setMessage] = useState("");
+  const [security] = useStorageItem(securityItem);
+  const [askingPassword, setAskingPassword] = useState(false);
+  const unlockPassword = security?.requireForUnlock ? security.password : null;
 
   // Hints clear themselves after a few seconds
   useEffect(() => {
@@ -36,10 +50,51 @@ export default function PageControls({
   }, [message]);
 
   return (
-    <div className={`page-controls${message ? " page-controls--active" : ""}`}>
+    <div
+      className={`page-controls${message || askingPassword ? " page-controls--active" : ""}`}
+    >
       <p className="page-controls__message" role="status">
         {message}
       </p>
+
+      {askingPassword && unlockPassword && (
+        <div className="page-controls__prompt">
+          <PasswordPrompt
+            record={unlockPassword}
+            label="Password to unlock"
+            variant="glass"
+            onSuccess={() => {
+              setAskingPassword(false);
+              onChange({ ...ui, locked: false });
+              setMessage("Unlocked");
+            }}
+            onCancel={() => setAskingPassword(false)}
+          />
+        </div>
+      )}
+
+      {/* Icon shows the current theme; a click switches to the other one.
+          Allowed while locked: it changes the look, not the page. */}
+      <button
+        type="button"
+        className="page-controls__button"
+        aria-label={
+          theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+        }
+        title={
+          theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+        }
+        onClick={() => {
+          onToggleTheme();
+          setMessage(theme === "dark" ? "Light theme" : "Dark theme");
+        }}
+      >
+        {theme === "dark" ? (
+          <Moon size={20} aria-hidden />
+        ) : (
+          <Sun size={20} aria-hidden />
+        )}
+      </button>
 
       <button
         type="button"
@@ -70,6 +125,10 @@ export default function PageControls({
             : "Lock: prevent changes to this page"
         }
         onClick={() => {
+          if (ui.locked && unlockPassword) {
+            setAskingPassword((open) => !open);
+            return;
+          }
           onChange({ ...ui, locked: !ui.locked });
           setMessage(ui.locked ? "Unlocked" : "Locked: no changes allowed");
         }}

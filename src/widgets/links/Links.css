@@ -99,7 +99,7 @@
   background: var(--links-bg);
   box-shadow:
     var(--links-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.08);
+    inset 0 1px 0 var(--glass-highlight);
   font: inherit;
   backdrop-filter: blur(var(--links-blur));
   -webkit-backdrop-filter: blur(var(--links-blur));
@@ -115,12 +115,12 @@
   background: var(--links-hover-bg);
   box-shadow:
     var(--links-hover-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+    inset 0 1px 0 var(--glass-highlight);
 }
 
 .links__item:focus-visible {
-  outline: 2px solid var(--links-accent);
-  outline-offset: 2px;
+  outline: 3px solid var(--links-accent);
+  outline-offset: 3px;
 }
 
 /* Hover: lift */
@@ -303,7 +303,7 @@
 .folder-popup__close:hover,
 .folder-popup__close:focus-visible {
   opacity: 1;
-  background: rgb(255 255 255 / 0.1);
+  background: var(--glass-fill-strong);
 }
 
 .folder-popup__empty {
@@ -370,21 +370,30 @@
   opacity: 0.9;
 }
 
+/* The open tab: full strength, accent bar on top and an accent wash */
 .links-tabs__tab[aria-selected="true"] {
   opacity: 1;
-  box-shadow: inset 0 2px 0 var(--links-accent);
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--links-accent) 18%, transparent),
+      color-mix(in srgb, var(--links-accent) 18%, transparent)
+    ),
+    var(--links-panel-bg);
+  box-shadow: inset 0 3px 0 var(--links-accent);
+  font-weight: 700;
 }
 
 .links-tabs__tab:focus-visible {
-  outline: 2px solid var(--links-accent);
-  outline-offset: -2px;
+  outline: 3px solid var(--links-accent);
+  outline-offset: -3px;
+  box-shadow: none;
 }
 
 .links-tabs__count {
   min-width: 1.5em;
   padding: 0.05em 0.45em;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
+  background: var(--glass-fill-strong);
   font-size: 0.8em;
   text-align: center;
   opacity: 0.8;
@@ -427,7 +436,8 @@
 }
 
 .links-tabs--plain .links-tabs__tab[aria-selected="true"] {
-  box-shadow: inset 0 -2px 0 var(--links-accent);
+  background: none;
+  box-shadow: inset 0 -3px 0 var(--links-accent);
 }
 
 .links-tabs--plain .links-tabs__panel {
@@ -498,7 +508,7 @@
 .folder-popup .quick-add__row input,
 .folder-popup .quick-add__row select {
   border-color: var(--links-border);
-  background: rgb(255 255 255 / 0.07);
+  background: var(--glass-fill);
   color: var(--links-text);
 }
 
@@ -511,6 +521,12 @@
 .add-popover .hint,
 .folder-popup .hint {
   color: inherit;
+  opacity: 0.7;
+}
+
+.add-popover__hint {
+  margin: 0;
+  font-size: 0.75rem;
   opacity: 0.7;
 }
 
@@ -569,7 +585,7 @@
 
 .add-popover .segmented {
   border-color: var(--links-border);
-  background: rgb(255 255 255 / 0.05);
+  background: var(--glass-fill);
 }
 
 .add-popover .segmented__option {
@@ -578,7 +594,14 @@
 }
 
 .add-popover .segmented__option[aria-checked="true"] {
-  background: rgb(255 255 255 / 0.12);
+  background: var(--glass-fill-strong);
   color: inherit;
   opacity: 1;
+}
+
+/* Tiles and boxed tabs are glass: no background-following text shadow */
+.links--tiles,
+.links-tabs:not(.links-tabs--plain),
+.folder-popup {
+  text-shadow: none;
 }
