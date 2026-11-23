@@ -360,7 +360,7 @@
 .password-glass__field input:focus-visible {
   border-color: var(--color-accent);
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 
 .password-glass__field .field__error {

@@ -238,12 +238,20 @@
   outline-offset: 2px;
 }
 
-/* Fields light up their own rounded border instead of an outline around it */
+/*
+ * One focus ring: the field's own rounded border turns accent, thickened
+ * to 2px with an inset shadow (no layout shift, no outline around it).
+ */
 .todoist__input:focus-visible,
 .todoist-smart:focus-within {
   border-color: var(--color-accent);
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* The global :focus-visible outline must not draw inside the wrapper */
+.todoist-smart__input:focus-visible {
+  outline: none;
 }
 
 .todoist__input,
