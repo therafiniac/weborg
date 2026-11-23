@@ -18,6 +18,8 @@ import {
 
 import { listIndexForKey } from "@/ui/keyboard";
 
+import AboutFooter from "./AboutFooter";
+
 import {
   readMode,
   readSection,
@@ -219,6 +221,7 @@ export default function SettingsPanel({ sections, onClose }: Props) {
           <SettingsNavContext.Provider value={selectSection}>
             {active.content}
           </SettingsNavContext.Provider>
+          <AboutFooter />
         </div>
       </div>
     </aside>
