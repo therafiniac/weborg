@@ -4,6 +4,15 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   srcDir: "src",
   modules: ["@wxt-dev/module-react"],
+  zip: {
+    // Source zip for Mozilla's review: never ship signed builds, local
+    // config or a stray pnpm lockfile (the project uses npm)
+    excludeSources: [
+      "web-ext-artifacts/**",
+      "web-ext.config.ts",
+      "pnpm-lock.yaml",
+    ],
+  },
   // Use Manifest V3 for Firefox too (WXT defaults Firefox to MV2)
   manifestVersion: 3,
   manifest: ({ browser }) => ({
@@ -14,6 +23,10 @@ export default defineConfig({
     // Asked for only when someone connects the Todoist widget
     optional_host_permissions: ["https://api.todoist.com/*"],
     ...(browser === "firefox" && {
+      // Offer Weborg as the homepage too. Firefox asks the user once
+      // ("Keep Changes" / "Restore Settings") and remembers the answer;
+      // it can be undone any time in Settings → Home.
+      chrome_settings_overrides: { homepage: "newtab.html" },
       browser_specific_settings: {
         gecko: {
           // Permanent add-on ID: never change it, or Firefox treats the

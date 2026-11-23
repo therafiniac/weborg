@@ -10,7 +10,7 @@ Free and open source. No accounts, no analytics, no tracking.
 
 [![MIT licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 
-> **Status:** v0.2.2, an early public release. Install it locally from
+> **Status:** v0.2.4, an early public release. Install it locally from
 > the [latest release](https://github.com/therafiniac/weborg/releases/latest).
 > Chrome Web Store and Firefox Add-ons listings are coming soon.
 
@@ -80,6 +80,11 @@ is coming soon. Until then you can try Weborg for one session:
 3. Click **Load Temporary Add-on…** and choose the zip.
 
 Firefox removes temporary add-ons when it closes.
+
+**Homepage (Firefox):** Weborg also offers to be your Firefox homepage.
+The first time Firefox shows it, a notice asks whether to **Keep
+Changes** or **Restore Settings**; either way Firefox remembers. You can
+change it back any time in **Settings → Home**.
 
 ### Keep your settings safe
 
