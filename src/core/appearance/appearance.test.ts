@@ -31,11 +31,34 @@ describe("appearance", () => {
     expect(normalizeDisplay("junk")).toEqual({});
   });
 
+  it("defaults to the system theme and theme-coloured text", () => {
+    expect(defaultAppearance.theme).toBe("system");
+    expect(normalizeAppearance({ theme: "light" }).theme).toBe("light");
+    expect(normalizeAppearance({ theme: "neon" }).theme).toBe("system");
+  });
+
+  it("treats the old white default as automatic text colour", () => {
+    expect(normalizeAppearance({ textColour: "#FFFFFF" }).textColourAuto).toBe(
+      true,
+    );
+    const picked = normalizeAppearance({ textColour: "#ff8800" });
+    expect(picked.textColourAuto).toBe(false);
+    expect(
+      (appearanceVars(picked) as Record<string, string>)["--dashboard-text"],
+    ).toBe("#ff8800");
+    // An explicit choice is kept even when it is white
+    expect(
+      normalizeAppearance({ textColour: "#ffffff", textColourAuto: false })
+        .textColourAuto,
+    ).toBe(false);
+  });
+
   it("writes page variables, leaving unset options out", () => {
     const vars = appearanceVars(defaultAppearance) as Record<string, string>;
-    expect(vars["--dashboard-text"]).toBe("#ffffff");
+    // Default text and shadow follow the theme
+    expect(vars["--dashboard-text"]).toBe("var(--theme-text)");
     expect(vars["--dashboard-scale"]).toBe("1");
-    expect(vars["--dashboard-shadow"]).toContain("rgb");
+    expect(vars["--dashboard-shadow"]).toBe("var(--text-shadow-soft)");
     expect(vars).not.toHaveProperty("--dashboard-font");
     expect(vars).not.toHaveProperty("--dashboard-weight");
   });

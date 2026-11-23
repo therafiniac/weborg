@@ -2,9 +2,11 @@ import {
   defaultAppearance,
   type Appearance,
   type TextShadow,
+  type ThemeChoice,
 } from "@/core/appearance/appearance";
 import FontField from "@/ui/FontField";
-import { ColourField, RangeField, SelectField } from "@/ui/fields";
+import { OptionalColourField, RangeField, SelectField } from "@/ui/fields";
+import SegmentedControl from "@/ui/SegmentedControl";
 
 export const WEIGHT_OPTIONS = [
   { value: "0", label: "Default" },
@@ -31,6 +33,23 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         Applies to every widget. Each widget can override these in its own
         settings.
       </p>
+      <h4 className="settings-subheading">Theme</h4>
+      <div className="field">
+        <SegmentedControl<ThemeChoice>
+          label="Theme"
+          value={appearance.theme}
+          options={[
+            { value: "system", label: "System" },
+            { value: "dark", label: "Dark" },
+            { value: "light", label: "Light" },
+          ]}
+          onChange={(theme) => set({ theme })}
+        />
+      </div>
+      <p className="hint">
+        System follows your computer's light or dark setting. The sun/moon
+        button in the bottom-right corner switches quickly.
+      </p>
       <h4 className="settings-subheading">Text</h4>
       <FontField
         value={appearance.fontFamily}
@@ -43,10 +62,16 @@ export default function AppearanceSettings({ appearance, onChange }: Props) {
         options={WEIGHT_OPTIONS}
         onChange={(weight) => set({ fontWeight: Number(weight) })}
       />
-      <ColourField
+      <OptionalColourField
         label="Text colour"
-        value={appearance.textColour}
-        onChange={(textColour) => set({ textColour })}
+        // Unset: follows the theme (white in dark, near-black in light)
+        value={appearance.textColourAuto ? undefined : appearance.textColour}
+        fallback={appearance.textColour}
+        onChange={(textColour) =>
+          textColour
+            ? set({ textColour, textColourAuto: false })
+            : set({ textColourAuto: true })
+        }
       />
       <SelectField<TextShadow>
         label="Text shadow"

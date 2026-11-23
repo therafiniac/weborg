@@ -2,9 +2,9 @@
   display: grid;
   gap: 0.5rem;
   padding: 0.85rem 1rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--glass-border);
   border-radius: 0.75rem;
-  background: rgb(0 0 0 / 0.3);
+  background: var(--glass-bg);
   text-align: left;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -72,7 +72,7 @@
 
 .todoist__message--error {
   opacity: 1;
-  color: var(--color-danger-bg);
+  color: var(--on-glass-danger);
 }
 
 .todoist__list {
@@ -90,7 +90,7 @@
 }
 
 .todoist__task.is-expanded {
-  background: rgb(0 0 0 / 0.2);
+  background: var(--glass-bg-soft);
 }
 
 .todoist__task-row {
@@ -258,9 +258,9 @@
 .todoist-smart {
   width: 100%;
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--glass-border);
   border-radius: 0.5rem;
-  background: rgb(0 0 0 / 0.2);
+  background: var(--glass-bg-soft);
   font: inherit;
   font-size: 0.875rem;
 }
@@ -310,10 +310,10 @@
 
 .todoist-smart__token {
   border-radius: 0.2rem;
-  background: rgb(255 255 255 / 0.14);
+  background: var(--glass-fill-strong);
   color: transparent;
   /* Shadow instead of padding, so the text lines up with the input's */
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+  box-shadow: 0 0 0 1px var(--glass-fill-strong);
 }
 
 .todoist-smart__token--date {
@@ -338,7 +338,7 @@
 }
 
 .todoist-smart__token--description {
-  background: rgb(255 255 255 / 0.06);
+  background: var(--glass-fill);
   box-shadow: none;
 }
 
@@ -384,7 +384,7 @@
 .todoist-editor {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  background: rgb(0 0 0 / 0.25);
+  background: var(--glass-bg-soft);
 }
 
 .todoist-editor__footer {
@@ -406,7 +406,7 @@
   gap: 0.3rem;
   padding: 0.3rem 0.7rem;
   text-decoration: none;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 0.4rem;
   background: transparent;
   color: inherit;
@@ -423,7 +423,7 @@
 
 .todoist__text-button--danger {
   border-color: transparent;
-  color: #ff7066;
+  color: var(--on-glass-danger);
 }
 
 .todoist__text-button--danger.is-confirming {
@@ -462,7 +462,7 @@
 
 .todoist__label-toggle {
   padding: 0.15rem 0.55rem;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 999px;
   background: transparent;
   color: inherit;
@@ -493,7 +493,7 @@
 .todoist__hidden-bar {
   height: 0.7rem;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.12);
+  background: var(--glass-fill-strong);
 }
 
 .todoist__hidden-bar:nth-child(3) {
@@ -526,7 +526,7 @@
 }
 
 .todoist-views__trigger:hover {
-  background: rgb(255 255 255 / 0.08);
+  background: var(--glass-fill-strong);
 }
 
 .todoist-views__trigger:focus-visible {
@@ -549,10 +549,10 @@
   max-height: 18rem;
   padding: 0.3rem;
   overflow-y: auto;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--glass-border);
   border-radius: 0.6rem;
-  background: rgb(20 20 28 / 0.95);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  background: var(--menu-bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
   font-size: 0.875rem;
   font-weight: 400;
 }
@@ -584,7 +584,7 @@
 
 .todoist-views__item:hover,
 .todoist-views__item:focus-visible {
-  background: rgb(255 255 255 / 0.1);
+  background: var(--glass-fill-strong);
   outline: none;
 }
 
@@ -597,19 +597,19 @@
 .todoist__group-title {
   margin: 0 0 0.25rem;
   padding-bottom: 0.2rem;
-  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  border-bottom: 1px solid var(--glass-border);
   font-size: 0.75rem;
   font-weight: 600;
   opacity: 0.75;
 }
 
 .todoist__group-title--overdue {
-  color: #ff7066;
+  color: var(--on-glass-danger);
   opacity: 1;
 }
 
 .todoist__overdue {
-  color: #ff7066;
+  color: var(--on-glass-danger);
   opacity: 1 !important;
 }
 

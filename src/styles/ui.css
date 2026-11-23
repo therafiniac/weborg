@@ -333,10 +333,10 @@
 /* On the page, over any background */
 .password-form--glass {
   padding: 0.85rem;
-  border: 1px solid rgb(255 255 255 / 0.18);
+  border: 1px solid var(--glass-border);
   border-radius: 0.75rem;
-  background: rgb(0 0 0 / 0.55);
-  color: #fff;
+  background: var(--glass-bg-strong);
+  color: var(--theme-text);
   font-size: 0.875rem;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -350,9 +350,9 @@
 .password-glass__field input {
   width: 100%;
   padding: 0.45rem 0.6rem;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 0.5rem;
-  background: rgb(0 0 0 / 0.3);
+  background: var(--glass-bg);
   color: inherit;
   font: inherit;
 }
@@ -364,12 +364,12 @@
 }
 
 .password-glass__field .field__error {
-  color: #ff8a80;
+  color: var(--on-glass-danger);
 }
 
 .password-glass__button {
   padding: 0.35rem 0.8rem;
-  border: 1px solid rgb(255 255 255 / 0.25);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 0.45rem;
   background: transparent;
   color: inherit;

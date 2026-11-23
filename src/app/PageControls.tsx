@@ -3,10 +3,13 @@ import {
   EyeOff,
   Lock,
   LockOpen,
+  Moon,
   Settings as SettingsIcon,
+  Sun,
 } from "lucide-react";
 import { useEffect, useState, type Ref } from "react";
 
+import type { ResolvedTheme } from "@/core/appearance/appearance";
 import { securityItem } from "@/core/security/password";
 import type { PageUi } from "@/core/storage/settings";
 import { useStorageItem } from "@/core/storage/useStorageItem";
@@ -16,6 +19,9 @@ import "./PageControls.css";
 
 interface Props {
   ui: PageUi;
+  /** The theme showing now. */
+  theme: ResolvedTheme;
+  onToggleTheme: () => void;
   onChange: (ui: PageUi) => void;
   onOpenSettings: () => void;
   settingsRef: Ref<HTMLButtonElement>;
@@ -24,6 +30,8 @@ interface Props {
 /** Bottom-right buttons: show/hide widgets, lock the page, settings. */
 export default function PageControls({
   ui,
+  theme,
+  onToggleTheme,
   onChange,
   onOpenSettings,
   settingsRef,
@@ -64,6 +72,29 @@ export default function PageControls({
           />
         </div>
       )}
+
+      {/* Icon shows the current theme; a click switches to the other one.
+          Allowed while locked: it changes the look, not the page. */}
+      <button
+        type="button"
+        className="page-controls__button"
+        aria-label={
+          theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+        }
+        title={
+          theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+        }
+        onClick={() => {
+          onToggleTheme();
+          setMessage(theme === "dark" ? "Light theme" : "Dark theme");
+        }}
+      >
+        {theme === "dark" ? (
+          <Moon size={20} aria-hidden />
+        ) : (
+          <Sun size={20} aria-hidden />
+        )}
+      </button>
 
       <button
         type="button"

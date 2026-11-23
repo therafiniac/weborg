@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 
+import type { ResolvedTheme } from "@/core/appearance/appearance";
 import {
   backgroundLayerStyle,
+  themedDefaults,
   type BackgroundSettings,
 } from "@/core/background/background";
 import { loadBackgroundImage } from "@/core/background/imageStore";
@@ -10,8 +12,10 @@ import "./Background.css";
 
 export default function Background({
   settings,
+  theme = "dark",
 }: {
   settings: BackgroundSettings;
+  theme?: ResolvedTheme;
 }) {
   const imageUrl = useBackgroundImageUrl(
     settings.kind === "image" ? settings.image.updatedAt : null,
@@ -21,7 +25,7 @@ export default function Background({
     <div className="background" aria-hidden>
       <div
         className="background__layer"
-        style={backgroundLayerStyle(settings, imageUrl)}
+        style={backgroundLayerStyle(themedDefaults(settings, theme), imageUrl)}
       />
       {settings.dim > 0 && (
         <div

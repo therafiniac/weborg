@@ -51,6 +51,38 @@ export function normalizeBackground(value: unknown): BackgroundSettings {
   };
 }
 
+/** The built-in defaults, in light colours for the light theme. */
+export const lightDefaults = {
+  colour: "#eef0f7",
+  gradient: { from: "#eef1fb", to: "#efe4f7", angle: 135 },
+} as const;
+
+/**
+ * Only untouched built-in defaults follow the theme; a colour, gradient or
+ * image the user chose is always shown as chosen.
+ */
+export function themedDefaults(
+  settings: BackgroundSettings,
+  theme: "dark" | "light",
+): BackgroundSettings {
+  if (theme === "dark") return settings;
+  const d = defaultBackground;
+  const g = settings.gradient;
+  const defaultGradient = g.from === d.gradient.from && g.to === d.gradient.to;
+  return {
+    ...settings,
+    colour:
+      settings.colour === d.colour ? lightDefaults.colour : settings.colour,
+    gradient: defaultGradient
+      ? {
+          ...g,
+          from: lightDefaults.gradient.from,
+          to: lightDefaults.gradient.to,
+        }
+      : g,
+  };
+}
+
 /** Style for the background layer (blur applies here, dim is an overlay). */
 export function backgroundLayerStyle(
   settings: BackgroundSettings,

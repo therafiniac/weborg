@@ -11,21 +11,58 @@
   --color-danger-text: #11111b;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius: 0.5rem;
+
+  /* Page theme (data-theme on <html>): text and glass over the background */
+  --theme-text: #ffffff;
+  --text-shadow-soft: 0 1px 3px rgb(0 0 0 / 0.45);
+  --text-shadow-strong: 0 2px 8px rgb(0 0 0 / 0.75), 0 0 2px rgb(0 0 0 / 0.6);
+  --glass-bg: rgb(0 0 0 / 0.3);
+  --glass-bg-soft: rgb(0 0 0 / 0.2);
+  --glass-bg-strong: rgb(0 0 0 / 0.55);
+  --glass-border: rgb(255 255 255 / 0.15);
+  --glass-border-strong: rgb(255 255 255 / 0.25);
+  --glass-fill: rgb(255 255 255 / 0.07);
+  --glass-fill-strong: rgb(255 255 255 / 0.12);
+  --glass-highlight: rgb(255 255 255 / 0.08);
+  --menu-bg: rgb(20 20 28 / 0.95);
+  --on-glass-danger: #ff7066;
+  /* Default link tiles: background and border as RGB, used with opacity */
+  --tile-rgb: 30 30 46;
+  --tile-border-rgb: 205 214 244;
+  --tile-text: #cdd6f4;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --color-bg: #eff1f5;
-    --color-text: #4c4f69;
-    --color-surface: #ffffff;
-    --color-surface-2: #e6e9ef;
-    --color-border: #ccd0da;
-    --color-muted: #6c6f85;
-    --color-accent: #8839ef;
-    --color-accent-text: #ffffff;
-    --color-danger-bg: #d20f39;
-    --color-danger-text: #ffffff;
-  }
+:root[data-theme="light"] {
+  --color-bg: #eff1f5;
+  --color-text: #4c4f69;
+  --color-surface: #ffffff;
+  --color-surface-2: #e6e9ef;
+  --color-border: #ccd0da;
+  --color-muted: #6c6f85;
+  --color-accent: #8839ef;
+  --color-accent-text: #ffffff;
+  --color-danger-bg: #d20f39;
+  --color-danger-text: #ffffff;
+
+  --theme-text: #1f2335;
+  --text-shadow-soft: 0 1px 2px rgb(255 255 255 / 0.6);
+  --text-shadow-strong:
+    0 1px 6px rgb(255 255 255 / 0.9), 0 0 2px rgb(255 255 255 / 0.8);
+  --glass-bg: rgb(255 255 255 / 0.62);
+  --glass-bg-soft: rgb(255 255 255 / 0.45);
+  --glass-bg-strong: rgb(255 255 255 / 0.9);
+  --glass-border: rgb(31 35 53 / 0.12);
+  --glass-border-strong: rgb(31 35 53 / 0.2);
+  --glass-fill: rgb(31 35 53 / 0.05);
+  --glass-fill-strong: rgb(31 35 53 / 0.09);
+  --glass-highlight: rgb(255 255 255 / 0.6);
+  --menu-bg: rgb(255 255 255 / 0.97);
+  --on-glass-danger: #c0392b;
+  --tile-rgb: 255 255 255;
+  --tile-border-rgb: 31 35 53;
+  --tile-text: #1f2335;
+  color-scheme: light;
 }
 
 *,
