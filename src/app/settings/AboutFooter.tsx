@@ -1,6 +1,7 @@
-import { Code, Coffee } from "lucide-react";
+import { Code } from "lucide-react";
 import { browser } from "wxt/browser";
 
+import kofiButton from "@/assets/kofi-button.png";
 import { ABOUT } from "@/core/about";
 
 function version(): string | null {
@@ -38,7 +39,13 @@ export default function AboutFooter() {
               target="_blank"
               rel="noreferrer"
             >
-              <Coffee size={14} aria-hidden /> Support Weborg on Ko-fi
+              {/* Ko-fi's official button, bundled: no request to Ko-fi */}
+              <img
+                src={kofiButton}
+                alt="Buy me a coffee on Ko-fi"
+                width={145}
+                height={36}
+              />
             </a>
           )}
         </p>

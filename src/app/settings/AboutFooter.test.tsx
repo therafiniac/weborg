@@ -18,7 +18,7 @@ describe("About footer", () => {
       "https://github.com/therafiniac/weborg",
     );
     expect(
-      screen.getByRole("link", { name: /Support Weborg on Ko-fi/ }),
-    ).toHaveAttribute("href", "https://ko-fi.com/therafiniac");
+      screen.getByRole("link", { name: "Buy me a coffee on Ko-fi" }),
+    ).toHaveAttribute("href", "https://ko-fi.com/Q3C02B5R99");
   });
 });
