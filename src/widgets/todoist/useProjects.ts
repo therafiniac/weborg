@@ -18,9 +18,15 @@ type CachedItem = WxtStorageItem<
 >;
 
 /** Refetch a cached list when stale. Failures only mean less to pick from. */
-function useRefresh(item: CachedItem, refresh: () => Promise<void>) {
+function useRefresh(
+  item: CachedItem,
+  refresh: () => Promise<void>,
+  /** True for a cache saved in an older shape: refetch at once. */
+  outdated: boolean = false,
+) {
   const [cached] = useStorageItem(item);
-  const fetchedAt = cached === undefined ? undefined : (cached?.fetchedAt ?? 0);
+  const fetchedAt =
+    cached === undefined ? undefined : outdated ? 0 : (cached?.fetchedAt ?? 0);
 
   useEffect(() => {
     // undefined: storage not read yet
@@ -35,10 +41,16 @@ function useRefresh(item: CachedItem, refresh: () => Promise<void>) {
 
 export function useProjects(token: string): TodoistProject[] {
   const [cached] = useStorageItem(projectsItem);
-  useRefresh(projectsItem as CachedItem, async () => {
-    const projects = await fetchProjects(token);
-    await projectsItem.setValue({ projects, fetchedAt: Date.now() });
-  });
+  useRefresh(
+    projectsItem as CachedItem,
+    async () => {
+      const projects = await fetchProjects(token);
+      await projectsItem.setValue({ projects, fetchedAt: Date.now() });
+    },
+    // Saved before the Inbox was marked, so it would show under Projects.
+    // Fresh lists always have the field, so this cannot repeat.
+    Boolean(cached?.projects.some((project) => !("isInbox" in project))),
+  );
   return cached?.projects ?? NO_PROJECTS;
 }
 
