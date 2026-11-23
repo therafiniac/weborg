@@ -269,8 +269,13 @@ Styles cascade in four layers, all through CSS custom properties:
    Dark or Light) is resolved in `core/appearance/theme.ts` and written to
    `<html data-theme>`. Widgets use the glass tokens, never fixed white or
    black, so they work in both themes. Preset defaults (white text, Quick
-   Links Glass colours, the default background) follow the theme; colours
-   the user picked are always used as chosen.
+   Links Glass colours) follow the theme; colours the user picked are always
+   used as chosen. Text straight on the background (clock, greeting, plain
+   links) follows the background instead: `core/background/tone.ts` picks
+   white or near-black text by worst-case WCAG contrast across the colours
+   shown (Darken included; images by their average colour) and sets
+   `<html data-backdrop>`, read as `--backdrop-text` and
+   `--backdrop-shadow-*`. Glass widgets use `--glass-text`.
 2. **Global appearance** (`Settings.appearance`): font, weight, text colour,
    text shadow, text size, edge padding and widget spacing, written by
    `appearanceVars()` as `--dashboard-*`, `--edge-padding` and
@@ -315,6 +320,14 @@ Catppuccin Mocha palette. Each preset carries the darken level that keeps
 white text at WCAG AA contrast (4.5:1); `presets.test.ts` fails if a preset
 breaks that. Reset restores the default background and, after asking,
 deletes an uploaded image.
+
+Background kinds: **Dynamic** (default; presets with a dark and a light
+fill that switch with the theme), Colour, Gradient and Image. Images can
+have a second, light-theme image (`background-image-light` in IndexedDB).
+`resolveBackground(settings, theme)` returns what is drawn. Presets need
+no darkening: `presets.test.ts` checks every one gets text with at least
+4.5:1 contrast. Background v2 migration moves an untouched old default
+gradient to the dynamic default.
 
 ## 8a. Settings panel (Built)
 

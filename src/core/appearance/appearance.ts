@@ -4,11 +4,11 @@ import { isRecord } from "@/core/storage/guards";
 
 import { fontFamilyCss } from "./fonts";
 
-/** Theme-aware: dark shadows in the dark theme, light glows in light. */
+/** Follow the background: dark shadows on dark ones, light glows on light. */
 export const TEXT_SHADOWS = {
   none: undefined,
-  soft: "var(--text-shadow-soft)",
-  strong: "var(--text-shadow-strong)",
+  soft: "var(--backdrop-shadow-soft)",
+  strong: "var(--backdrop-shadow-strong)",
 } as const;
 
 export const THEMES = ["dark", "light", "system"] as const;
@@ -21,7 +21,7 @@ export type TextShadow = keyof typeof TEXT_SHADOWS;
 export interface Appearance {
   /** "system" follows the computer's light or dark setting. */
   theme: ThemeChoice;
-  /** Text follows the theme (white in dark, near-black in light). */
+  /** Text follows the background: white on dark, near-black on light. */
   textColourAuto: boolean;
   /** Font preset key or custom font name; "" = system default. */
   fontFamily: string;
@@ -102,7 +102,7 @@ export function normalizeDisplay(value: unknown): WidgetDisplay {
 export function appearanceVars(appearance: Appearance): CSSProperties {
   const vars: Record<string, string> = {
     "--dashboard-text": appearance.textColourAuto
-      ? "var(--theme-text)"
+      ? "var(--backdrop-text)"
       : appearance.textColour,
     "--dashboard-scale": String(appearance.textScale / 100),
     "--edge-padding": `${appearance.edgePadding}px`,

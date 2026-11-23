@@ -3,9 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
 import {
+  backgroundItem,
   defaultBackground,
-  lightDefaults,
-  themedDefaults,
 } from "@/core/background/background";
 import { settingsItem } from "@/core/storage/settings";
 import App from "@/entrypoints/newtab/App";
@@ -48,19 +47,42 @@ describe("Theme", () => {
   });
 });
 
-describe("Background defaults by theme", () => {
-  it("lightens only the untouched built-in defaults", () => {
-    expect(themedDefaults(defaultBackground, "dark")).toBe(defaultBackground);
+describe("Text follows the background", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
 
-    const light = themedDefaults(defaultBackground, "light");
-    expect(light.gradient.from).toBe(lightDefaults.gradient.from);
-    expect(light.colour).toBe(lightDefaults.colour);
-
-    const chosen = {
+  it("marks a light background so text turns dark, and back", async () => {
+    await backgroundItem.setValue({
       ...defaultBackground,
-      colour: "#123456",
-      gradient: { from: "#000000", to: "#ff0000", angle: 90 },
-    };
-    expect(themedDefaults(chosen, "light")).toEqual(chosen);
+      kind: "colour",
+      colour: "#f4f4f5",
+    });
+    render(<App />);
+    await waitFor(() =>
+      expect(document.documentElement.dataset.backdrop).toBe("light"),
+    );
+    await backgroundItem.setValue({
+      ...defaultBackground,
+      kind: "colour",
+      colour: "#11111b",
+    });
+    await waitFor(() =>
+      expect(document.documentElement.dataset.backdrop).toBe("dark"),
+    );
+  });
+
+  it("the default background follows the theme", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await waitFor(() =>
+      expect(document.documentElement.dataset.backdrop).toBe("dark"),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Switch to light theme" }),
+    );
+    await waitFor(() =>
+      expect(document.documentElement.dataset.backdrop).toBe("light"),
+    );
   });
 });

@@ -1,4 +1,7 @@
 .todoist {
+  /* Text follows the glass, not the background behind it */
+  color: var(--widget-colour, var(--glass-text));
+  text-shadow: none;
   display: grid;
   gap: 0.5rem;
   padding: 0.85rem 1rem;

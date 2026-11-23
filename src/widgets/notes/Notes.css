@@ -1,4 +1,6 @@
 .notes {
+  color: var(--widget-colour, var(--glass-text));
+  text-shadow: none;
   display: block;
   padding: 0.85rem 1rem;
   border: 1px solid var(--glass-border);
