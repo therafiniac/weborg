@@ -81,6 +81,11 @@ is coming soon. Until then you can try Weborg for one session:
 
 Firefox removes temporary add-ons when it closes.
 
+**Homepage (Firefox):** Weborg also offers to be your Firefox homepage.
+The first time Firefox shows it, a notice asks whether to **Keep
+Changes** or **Restore Settings**; either way Firefox remembers. You can
+change it back any time in **Settings → Home**.
+
 ### Keep your settings safe
 
 Before updating or moving browsers, open **Settings → Backup → Export**
