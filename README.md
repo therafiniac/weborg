@@ -6,7 +6,12 @@ links and tasks one keypress away, all without writing a line of code.
 
 Free and open source. No accounts, no analytics, no tracking.
 
-> **Status:** ready for testing; store listings are on the way.
+[![Support Weborg on Ko-fi](https://img.shields.io/badge/Support%20Weborg-Ko--fi-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/therafiniac)
+[![MIT licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+
+> **Status:** v0.2.0, the first public release. Install it locally from
+> the [latest release](https://github.com/therafiniac/weborg/releases/latest).
+> Chrome Web Store and Firefox Add-ons listings are coming soon.
 
 ## Features
 
@@ -32,23 +37,54 @@ Free and open source. No accounts, no analytics, no tracking.
 
 ## Install
 
-Store links will appear here once published. Until then, install a build
-by hand:
+| Where            | Status                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| GitHub (local)   | Available: [latest release](https://github.com/therafiniac/weborg/releases/latest) |
+| Chrome Web Store | Coming soon                                                                        |
+| Firefox Add-ons  | Coming soon                                                                        |
 
-**Chrome, Brave, Edge and other Chromium browsers**
+Until the store listings are live, install Weborg from GitHub. It takes
+about a minute.
 
-1. Download `weborg-<version>-chrome.zip` from the
-   [releases page](https://github.com/therafiniac/weborg/releases) and
-   unzip it into a folder you will keep.
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and choose that folder.
+### Chrome, Brave, Edge, Opera, Vivaldi and other Chromium browsers
 
-**Firefox (140 or newer)**
+1. Open the [latest release](https://github.com/therafiniac/weborg/releases/latest)
+   and download `weborg-<version>-chrome.zip`.
+2. Unzip it into a folder you will **keep**, for example
+   `Documents/weborg`. Not in Downloads: if the folder is deleted or
+   moved, the browser removes Weborg and your settings with it.
+3. Open the extensions page (`chrome://extensions`, or
+   `brave://extensions` in Brave, `edge://extensions` in Edge).
+4. Turn on **Developer mode** (top right).
+5. Click **Load unpacked** and choose the unzipped folder (the one that
+   contains `manifest.json`).
+6. Open a new tab. If the browser asks whether to keep the changed new
+   tab page, choose to keep it.
 
-Firefox installs only signed add-ons permanently. To try an unsigned
-build, open `about:debugging#/runtime/this-firefox`, click **Load
-Temporary Add-on…** and choose `weborg-<version>-firefox.zip`. It is
-removed when Firefox closes.
+The browser may remind you at startup that a developer-mode extension is
+installed. That is expected for extensions installed this way.
+
+**Updating:** download the new zip and unzip it **over the same folder**,
+replacing the old files, then click the reload button on Weborg's card in
+the extensions page. Keeping the same folder keeps your settings.
+
+### Firefox (140 or newer)
+
+Firefox installs only signed add-ons permanently, and the signed listing
+is coming soon. Until then you can try Weborg for one session:
+
+1. Download `weborg-<version>-firefox.zip` from the
+   [latest release](https://github.com/therafiniac/weborg/releases/latest).
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on…** and choose the zip.
+
+Firefox removes temporary add-ons when it closes.
+
+### Keep your settings safe
+
+Before updating or moving browsers, open **Settings → Backup → Export**
+to save your settings to a file. **Import** restores them in any browser.
+Background images, passwords and the Todoist token are not in backups.
 
 ## Privacy
 
@@ -112,7 +148,7 @@ export default defineWebExtConfig({
 ## Support
 
 Weborg is free and always will be. If it makes your new tab nicer, you
-can [buy me a coffee on Ko-fi](https://ko-fi.com/therafiniac). Stars,
+can **[buy me a coffee on Ko-fi ☕](https://ko-fi.com/therafiniac)**. Stars,
 bug reports and ideas help just as much.
 
 ## Contributing
