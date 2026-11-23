@@ -21,6 +21,7 @@ import {
   settingsItem,
   type Settings,
 } from "@/core/storage/settings";
+import { useApplyTheme, useResolvedTheme } from "@/core/appearance/theme";
 import { useStorageItem } from "@/core/storage/useStorageItem";
 import { widgets } from "@/widgets";
 
@@ -39,6 +40,13 @@ export default function App() {
     if (wasOpen.current && !settingsOpen) toggleRef.current?.focus();
     wasOpen.current = settingsOpen;
   }, [settingsOpen]);
+
+  const theme = useResolvedTheme(
+    stored === undefined
+      ? "system"
+      : normalizeSettings(stored).appearance.theme,
+  );
+  useApplyTheme(theme);
 
   // Render nothing until settings load, to avoid flashing defaults
   if (stored === undefined || storedBackground === undefined) return null;
@@ -59,13 +67,24 @@ export default function App() {
 
   return (
     <main className="app">
-      <Background settings={background} />
+      <Background settings={background} theme={theme} />
       <h1 className="visually-hidden">Weborg</h1>
       <Dashboard settings={settings} />
 
       {!settingsOpen && (
         <PageControls
           ui={settings.ui}
+          theme={theme}
+          onToggleTheme={() =>
+            saveSettings({
+              ...settings,
+              appearance: {
+                ...settings.appearance,
+                // From "system" too: switch to the opposite of what shows
+                theme: theme === "dark" ? "light" : "dark",
+              },
+            })
+          }
           settingsRef={toggleRef}
           onOpenSettings={() => setSettingsOpen(true)}
           onChange={(ui) => saveSettings({ ...settings, ui })}

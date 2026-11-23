@@ -99,7 +99,7 @@
   background: var(--links-bg);
   box-shadow:
     var(--links-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.08);
+    inset 0 1px 0 var(--glass-highlight);
   font: inherit;
   backdrop-filter: blur(var(--links-blur));
   -webkit-backdrop-filter: blur(var(--links-blur));
@@ -115,7 +115,7 @@
   background: var(--links-hover-bg);
   box-shadow:
     var(--links-hover-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+    inset 0 1px 0 var(--glass-highlight);
 }
 
 .links__item:focus-visible {
@@ -303,7 +303,7 @@
 .folder-popup__close:hover,
 .folder-popup__close:focus-visible {
   opacity: 1;
-  background: rgb(255 255 255 / 0.1);
+  background: var(--glass-fill-strong);
 }
 
 .folder-popup__empty {
@@ -384,7 +384,7 @@
   min-width: 1.5em;
   padding: 0.05em 0.45em;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
+  background: var(--glass-fill-strong);
   font-size: 0.8em;
   text-align: center;
   opacity: 0.8;
@@ -498,7 +498,7 @@
 .folder-popup .quick-add__row input,
 .folder-popup .quick-add__row select {
   border-color: var(--links-border);
-  background: rgb(255 255 255 / 0.07);
+  background: var(--glass-fill);
   color: var(--links-text);
 }
 
@@ -575,7 +575,7 @@
 
 .add-popover .segmented {
   border-color: var(--links-border);
-  background: rgb(255 255 255 / 0.05);
+  background: var(--glass-fill);
 }
 
 .add-popover .segmented__option {
@@ -584,7 +584,7 @@
 }
 
 .add-popover .segmented__option[aria-checked="true"] {
-  background: rgb(255 255 255 / 0.12);
+  background: var(--glass-fill-strong);
   color: inherit;
   opacity: 1;
 }

@@ -263,7 +263,14 @@ interface LinksData {
 Styles cascade in four layers, all through CSS custom properties:
 
 1. **Tokens**: `styles/global.css` defines base variables (`--color-text`,
-   `--font-sans`, ...) with light and dark values for the settings UI.
+   `--font-sans`, ...) and page-theme tokens (`--theme-text`, `--glass-*`,
+   `--menu-bg`, `--tile-*`), dark on `:root` and light under
+   `:root[data-theme="light"]`. `appearance.theme` (System by default,
+   Dark or Light) is resolved in `core/appearance/theme.ts` and written to
+   `<html data-theme>`. Widgets use the glass tokens, never fixed white or
+   black, so they work in both themes. Preset defaults (white text, Quick
+   Links Glass colours, the default background) follow the theme; colours
+   the user picked are always used as chosen.
 2. **Global appearance** (`Settings.appearance`): font, weight, text colour,
    text shadow, text size, edge padding and widget spacing, written by
    `appearanceVars()` as `--dashboard-*`, `--edge-padding` and
