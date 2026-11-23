@@ -1,13 +1,8 @@
-/**
- * Public details shown at the bottom of the settings panel. Links left
- * empty are not shown, so fill them in once the pages exist.
- */
+/** Public details shown at the bottom of the settings panel. */
 export const ABOUT = {
   name: "Weborg",
   author: "therafiniac",
   license: "MIT",
-  /** e.g. "https://github.com/<user>/weborg" */
-  repositoryUrl: "",
-  /** e.g. "https://ko-fi.com/<user>" */
-  supportUrl: "",
+  repositoryUrl: "https://github.com/therafiniac/weborg",
+  supportUrl: "https://ko-fi.com/therafiniac",
 } as const;

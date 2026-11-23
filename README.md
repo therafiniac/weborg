@@ -37,7 +37,8 @@ by hand:
 
 **Chrome, Brave, Edge and other Chromium browsers**
 
-1. Download `weborg-<version>-chrome.zip` from the releases page and
+1. Download `weborg-<version>-chrome.zip` from the
+   [releases page](https://github.com/therafiniac/weborg/releases) and
    unzip it into a folder you will keep.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Click **Load unpacked** and choose that folder.
@@ -107,6 +108,12 @@ export default defineWebExtConfig({
   startUrls: ["chrome://newtab"],
 });
 ```
+
+## Support
+
+Weborg is free and always will be. If it makes your new tab nicer, you
+can [buy me a coffee on Ko-fi](https://ko-fi.com/therafiniac). Stars,
+bug reports and ideas help just as much.
 
 ## Contributing
 

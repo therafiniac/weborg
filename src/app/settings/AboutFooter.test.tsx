@@ -11,9 +11,14 @@ describe("About footer", () => {
     expect(footer).toHaveTextContent("no tracking");
   });
 
-  it("hides links that are not set up yet", () => {
+  it("links to the source code and Ko-fi", () => {
     render(<AboutFooter />);
-    // ABOUT.repositoryUrl and supportUrl start empty
-    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByRole("link", { name: /Source code/ })).toHaveAttribute(
+      "href",
+      "https://github.com/therafiniac/weborg",
+    );
+    expect(
+      screen.getByRole("link", { name: /Support Weborg on Ko-fi/ }),
+    ).toHaveAttribute("href", "https://ko-fi.com/therafiniac");
   });
 });
