@@ -1,12 +1,15 @@
-import { Circle, RefreshCw } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Circle, Pencil, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 import { useStorageItem } from "@/core/storage/useStorageItem";
 import type { WidgetProps } from "@/core/widgets/types";
 
 import type { TodoistData } from ".";
-import { addTask, closeTask, taskUrl, type TodoistTask } from "./api";
+import AddTask from "./AddTask";
+import { closeTask, taskUrl, type TodoistTask } from "./api";
 import { tokenItem } from "./storage";
+import TaskEditor from "./TaskEditor";
+import { useProjects } from "./useProjects";
 import { useTasks } from "./useTasks";
 import "./Todoist.css";
 
@@ -35,10 +38,18 @@ function TaskList({
   token,
   data,
 }: WidgetProps<TodoistData> & { token: string }) {
-  const { tasks, loading, error, reload, removeTask, restoreTask, setError } =
-    useTasks(token, data.filter);
-  const [draft, setDraft] = useState("");
-  const [adding, setAdding] = useState(false);
+  const {
+    tasks,
+    loading,
+    error,
+    reload,
+    removeTask,
+    restoreTask,
+    replaceTask,
+    setError,
+  } = useTasks(token, data.filter);
+  const projects = useProjects(token);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const complete = async (task: TodoistTask) => {
     removeTask(task.id);
@@ -47,22 +58,6 @@ function TaskList({
     } catch (error) {
       restoreTask(task);
       setError(error);
-    }
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    const content = draft.trim();
-    if (!content || adding) return;
-    setAdding(true);
-    try {
-      await addTask(token, content);
-      setDraft("");
-      await reload();
-    } catch (error) {
-      setError(error);
-    } finally {
-      setAdding(false);
     }
   };
 
@@ -99,44 +94,73 @@ function TaskList({
         <p className="todoist__message">Nothing to do.</p>
       ) : (
         <ul className="todoist__list">
-          {shown.map((task) => (
-            <li key={task.id} className="todoist__task">
-              <button
-                type="button"
-                className={`todoist__check todoist__check--p${task.priority}`}
-                aria-label={`Complete "${task.content}"`}
-                onClick={() => void complete(task)}
-              >
-                <Circle size={16} />
-              </button>
-              <a
-                className="todoist__content"
-                href={taskUrl(task.id)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {task.content}
-                {task.due && (
-                  <span className="todoist__due">{task.due.string}</span>
-                )}
-              </a>
-            </li>
-          ))}
+          {shown.map((task) =>
+            editing === task.id ? (
+              <li key={task.id}>
+                <TaskEditor
+                  token={token}
+                  task={task}
+                  projects={projects}
+                  onSaved={(saved, moved) => {
+                    setEditing(null);
+                    // A new project may take it out of this widget's filter
+                    if (moved) void reload();
+                    else replaceTask(saved);
+                  }}
+                  onCancel={() => setEditing(null)}
+                  onError={setError}
+                />
+              </li>
+            ) : (
+              <li key={task.id} className="todoist__task">
+                <button
+                  type="button"
+                  className={`todoist__check todoist__check--p${task.priority}`}
+                  aria-label={`Complete "${task.content}"`}
+                  onClick={() => void complete(task)}
+                >
+                  <Circle size={16} />
+                </button>
+                <a
+                  className="todoist__content"
+                  href={taskUrl(task.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {task.content}
+                  {/* Space keeps the accessible name "Buy milk today" */}
+                  {task.due && " "}
+                  {task.due && (
+                    <span className="todoist__due">{task.due.string}</span>
+                  )}
+                </a>
+                <button
+                  type="button"
+                  className="todoist__icon-button todoist__edit"
+                  aria-label={`Edit "${task.content}"`}
+                  onClick={() => setEditing(task.id)}
+                >
+                  <Pencil size={14} />
+                </button>
+              </li>
+            ),
+          )}
         </ul>
       )}
 
-      {/* Adding tasks is everyday use, so it stays on when the page is locked */}
-      <form className="todoist__add" onSubmit={(event) => void submit(event)}>
-        <input
-          className="todoist__input"
-          aria-label="Add a task"
-          placeholder="Add a task…"
-          maxLength={500}
-          value={draft}
-          disabled={adding}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-      </form>
+      {/* Adding and editing are everyday use, so they stay on when locked */}
+      <AddTask
+        token={token}
+        projects={projects}
+        defaultDue={data.defaultDue}
+        onError={setError}
+        onAdded={async (task) => {
+          const fresh = await reload();
+          return Boolean(
+            fresh?.slice(0, data.maxTasks).some((t) => t.id === task.id),
+          );
+        }}
+      />
     </>
   );
 }

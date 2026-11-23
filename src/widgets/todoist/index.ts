@@ -9,6 +9,8 @@ export interface TodoistData {
   /** Todoist filter query; empty lists every active task. */
   filter: string;
   maxTasks: number;
+  /** Given to new tasks typed without a date; "" leaves them undated. */
+  defaultDue: string;
   /** px */
   width: number;
 }
@@ -21,6 +23,7 @@ export const todoistWidget = defineWidget<TodoistData>({
     title: "Today",
     filter: "today | overdue",
     maxTasks: 8,
+    defaultDue: "today",
     width: 340,
   },
   dataVersion: 1,

@@ -12,7 +12,7 @@ import {
   TodoistError,
   TOKEN_SETTINGS_URL,
 } from "./api";
-import { cacheItem, tokenItem } from "./storage";
+import { clearTodoistCache, tokenItem } from "./storage";
 
 type Status = { kind: "idle" | "busy" | "error"; message?: string };
 
@@ -28,7 +28,7 @@ export default function TodoistSettings({
         <Connected
           onDisconnect={async () => {
             await setToken("");
-            await cacheItem.setValue({});
+            await clearTodoistCache();
           }}
         />
       ) : (
@@ -45,6 +45,13 @@ export default function TodoistSettings({
         placeholder="today | overdue"
         hint="A Todoist filter, like “today | overdue” or “#Work”. Leave empty for all tasks."
         onChange={(filter) => setData({ ...data, filter })}
+      />
+      <TextField
+        label="Default date for new tasks"
+        value={data.defaultDue}
+        placeholder="No date"
+        hint="Used when you add a task without a date, like “today”. Leave empty to add undated tasks to their project."
+        onChange={(defaultDue) => setData({ ...data, defaultDue })}
       />
       <RangeField
         label="Tasks shown"

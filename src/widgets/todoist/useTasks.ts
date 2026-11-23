@@ -27,21 +27,23 @@ export function useTasks(token: string, filter: string) {
   // Ignore responses for a token or filter that is no longer current
   const run = useRef(0);
 
-  const load = useCallback(async () => {
+  /** Resolves with the fresh tasks, or null if loading failed. */
+  const load = useCallback(async (): Promise<TodoistTask[] | null> => {
     const id = ++run.current;
     firstLoad.current = false;
     setState((s) => ({ ...s, loading: true }));
     try {
       const tasks = await fetchTasks(token, filter);
-      if (id !== run.current) return;
+      if (id !== run.current) return null;
       fetchedAt.current = Date.now();
       loadedFilter.current = filter;
       setState({ tasks, loading: false, error: null });
       saveCache(filter, tasks).catch((error: unknown) =>
         console.error("Weborg: failed to cache Todoist tasks", error),
       );
+      return tasks;
     } catch (error) {
-      if (id !== run.current) return;
+      if (id !== run.current) return null;
       setState((s) => ({
         ...s,
         loading: false,
@@ -50,6 +52,7 @@ export function useTasks(token: string, filter: string) {
             ? error
             : new TodoistError("server", "Could not load tasks."),
       }));
+      return null;
     }
   }, [token, filter]);
 
@@ -95,6 +98,14 @@ export function useTasks(token: string, filter: string) {
       tasks: sortTasks([...(s.tasks ?? []), task]),
     }));
 
+  const replaceTask = (task: TodoistTask) =>
+    setState((s) => ({
+      ...s,
+      tasks: s.tasks
+        ? sortTasks(s.tasks.map((t) => (t.id === task.id ? task : t)))
+        : null,
+    }));
+
   const setError = (error: unknown) =>
     setState((s) => ({
       ...s,
@@ -104,5 +115,12 @@ export function useTasks(token: string, filter: string) {
           : new TodoistError("server", "Something went wrong."),
     }));
 
-  return { ...state, reload: load, removeTask, restoreTask, setError };
+  return {
+    ...state,
+    reload: load,
+    removeTask,
+    restoreTask,
+    replaceTask,
+    setError,
+  };
 }

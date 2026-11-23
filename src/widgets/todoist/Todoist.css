@@ -135,18 +135,231 @@
   outline-offset: 2px;
 }
 
-.todoist__input {
+.todoist__input,
+.todoist-smart {
   width: 100%;
-  padding: 0.45rem 0.6rem;
+  min-width: 0;
   border: 1px solid rgb(255 255 255 / 0.15);
   border-radius: 0.5rem;
   background: rgb(0 0 0 / 0.2);
-  color: inherit;
   font: inherit;
   font-size: 0.875rem;
 }
 
-.todoist__input::placeholder {
+.todoist__input {
+  padding: 0.45rem 0.6rem;
+  color: inherit;
+}
+
+.todoist__input::placeholder,
+.todoist-smart__input::placeholder {
   color: inherit;
   opacity: 0.55;
+}
+
+.todoist-smart:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Highlighting: the mirror draws the text, the input on top only the caret */
+.todoist-smart {
+  position: relative;
+  flex: 1;
+}
+
+.todoist-smart__mirror,
+.todoist-smart__input {
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  letter-spacing: normal;
+  white-space: pre;
+}
+
+.todoist-smart__mirror {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.todoist-smart__input {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: currentColor;
+  outline: none;
+}
+
+.todoist-smart__input::selection {
+  background: rgb(255 255 255 / 0.25);
+  color: transparent;
+}
+
+.todoist-smart__token {
+  border-radius: 0.2rem;
+  background: rgb(255 255 255 / 0.14);
+  color: inherit;
+  /* Shadow instead of padding, so the text lines up with the input's */
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.todoist-smart__token--date {
+  background: rgb(5 133 39 / 0.45);
+  box-shadow: 0 0 0 1px rgb(5 133 39 / 0.45);
+}
+
+.todoist-smart__token--project,
+.todoist-smart__token--section {
+  background: rgb(36 111 224 / 0.45);
+  box-shadow: 0 0 0 1px rgb(36 111 224 / 0.45);
+}
+
+.todoist-smart__token--label {
+  background: rgb(175 56 235 / 0.4);
+  box-shadow: 0 0 0 1px rgb(175 56 235 / 0.4);
+}
+
+.todoist-smart__token--priority {
+  background: rgb(209 69 59 / 0.5);
+  box-shadow: 0 0 0 1px rgb(209 69 59 / 0.5);
+}
+
+.todoist-smart__token--description {
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.65;
+}
+
+.todoist__add,
+.todoist-editor {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.todoist__add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.todoist__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.todoist__hint a {
+  color: inherit;
+}
+
+.todoist__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.2rem 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgb(5 133 39 / 0.45);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.todoist__chip-clear {
+  display: inline-flex;
+  padding: 0.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Kept in the layout (not display: none) so showPicker() can open it */
+.todoist-date {
+  position: relative;
+  flex: none;
+}
+
+.todoist-date__picker {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Edit button appears on hover or keyboard focus, like the page controls */
+.todoist__edit {
+  opacity: 0;
+}
+
+.todoist__task:hover .todoist__edit,
+.todoist__task:focus-within .todoist__edit {
+  opacity: 0.7;
+}
+
+@media (hover: none) {
+  .todoist__edit {
+    opacity: 0.7;
+  }
+}
+
+.todoist-editor {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: rgb(0 0 0 / 0.25);
+}
+
+.todoist-editor__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.todoist-editor__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.todoist__text-button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.todoist__text-button--primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.todoist__text-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.todoist__text-button:focus-visible,
+.todoist__chip-clear:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The dropdown list itself is drawn by the browser on a light background */
+.todoist-editor select option {
+  background: var(--color-surface);
+  color: var(--color-text);
 }

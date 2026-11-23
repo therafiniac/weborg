@@ -1,10 +1,12 @@
 import {
-  addTask,
   closeTask,
   fetchTasks,
   parseTasks,
+  quickAdd,
   sortTasks,
   TodoistError,
+  moveTask,
+  updateTask,
   type TodoistTask,
 } from "./api";
 
@@ -79,12 +81,48 @@ describe("Todoist API client", () => {
     await closeTask("tok", "a/b");
     expect(call(0)[0]).toBe("https://api.todoist.com/api/v1/tasks/a%2Fb/close");
     expect(call(0)[1]?.method).toBe("POST");
+  });
 
-    fetchMock.mockResolvedValue(json(task("new")));
-    await addTask("tok", "Buy milk");
-    const [url, init] = call(1);
-    expect(url).toBe("https://api.todoist.com/api/v1/tasks");
-    expect(init?.body).toBe(JSON.stringify({ content: "Buy milk" }));
+  it("adds through Quick Add and reports the project", async () => {
+    fetchMock.mockResolvedValue(
+      json({ ...task("new"), project_id: "p9", content: "Buy milk" }),
+    );
+    const added = await quickAdd("tok", "Buy milk #Shop p1");
+    const [url, init] = call(0);
+    expect(url).toBe("https://api.todoist.com/api/v1/tasks/quick");
+    expect(init?.body).toBe(JSON.stringify({ text: "Buy milk #Shop p1" }));
+    expect(added.projectId).toBe("p9");
+    expect(added.task.content).toBe("Buy milk");
+  });
+
+  it("sends only the changed fields when updating", async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(json(task("a"))));
+    const bodyFor = async (changes: Parameters<typeof updateTask>[2]) => {
+      fetchMock.mockClear();
+      await updateTask("tok", "a", changes);
+      return JSON.parse(String(call(0)[1]?.body)) as unknown;
+    };
+
+    expect(await bodyFor({ content: "New" })).toEqual({ content: "New" });
+    expect(await bodyFor({ priority: 4 })).toEqual({ priority: 4 });
+    expect(await bodyFor({ due: { kind: "none" } })).toEqual({
+      due_string: "no date",
+    });
+    expect(
+      await bodyFor({ due: { kind: "date", date: "2026-12-05" } }),
+    ).toEqual({ due_date: "2026-12-05" });
+    expect(
+      await bodyFor({ due: { kind: "text", text: "next mon 9am" } }),
+    ).toEqual({ due_string: "next mon 9am" });
+    expect(call(0)[0]).toBe("https://api.todoist.com/api/v1/tasks/a");
+  });
+
+  it("moves a task to a project", async () => {
+    fetchMock.mockResolvedValue(json({ ...task("a"), project_id: "p2" }));
+    const moved = await moveTask("tok", "a", "p2");
+    expect(call(0)[0]).toBe("https://api.todoist.com/api/v1/tasks/a/move");
+    expect(call(0)[1]?.body).toBe(JSON.stringify({ project_id: "p2" }));
+    expect(moved.projectId).toBe("p2");
   });
 
   it("drops malformed tasks and normalises fields", () => {
