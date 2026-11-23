@@ -121,6 +121,7 @@ describe("Background presets and reset", () => {
         fit: "cover",
         updatedAt: 1,
         perTheme: false,
+        darkUpdatedAt: null,
         lightUpdatedAt: null,
       },
     });
@@ -202,7 +203,7 @@ describe("Images per theme", () => {
     fakeBrowser.reset();
   });
 
-  it("offers a second image for the light theme", async () => {
+  it("offers equal dark and light image slots", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(
@@ -215,7 +216,7 @@ describe("Images per theme", () => {
 
     await user.click(
       screen.getByRole("checkbox", {
-        name: "Use a different image for the light theme",
+        name: "Use separate images for dark and light",
       }),
     );
     expect(

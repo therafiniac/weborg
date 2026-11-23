@@ -45,6 +45,7 @@ describe("backup", () => {
         fit: "cover",
         updatedAt: 123,
         perTheme: false,
+        darkUpdatedAt: null,
         lightUpdatedAt: null,
       },
     });

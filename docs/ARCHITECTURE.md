@@ -322,8 +322,10 @@ breaks that. Reset restores the default background and, after asking,
 deletes an uploaded image.
 
 Background kinds: **Dynamic** (default; presets with a dark and a light
-fill that switch with the theme), Colour, Gradient and Image. Images can
-have a second, light-theme image (`background-image-light` in IndexedDB).
+fill that switch with the theme), Colour, Gradient and Image. An image is
+one main image for both themes, or separate dark and light images
+(`background-image-dark` / `-light` in IndexedDB); an empty slot falls
+back to the other theme's image, then to the main one.
 `resolveBackground(settings, theme)` returns what is drawn. Presets need
 no darkening: `presets.test.ts` checks every one gets text with at least
 4.5:1 contrast. Background v2 migration moves an untouched old default

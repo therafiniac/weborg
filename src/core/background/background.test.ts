@@ -27,6 +27,7 @@ describe("background", () => {
       fit: "cover",
       updatedAt: 5,
       perTheme: false,
+      darkUpdatedAt: null,
       lightUpdatedAt: null,
     });
   });
@@ -37,36 +38,51 @@ describe("background", () => {
     expect(resolveBackground(defaultBackground, "light")).toEqual(mist.light);
   });
 
-  it("shows the light image in the light theme only when there is one", () => {
-    const image = {
-      fit: "cover" as const,
-      updatedAt: 1,
-      perTheme: true,
-      lightUpdatedAt: 2,
+  it("uses one main image in both themes by default", () => {
+    const bg = {
+      ...defaultBackground,
+      kind: "image" as const,
+      image: { ...defaultBackground.image, updatedAt: 1 },
     };
-    const bg = { ...defaultBackground, kind: "image" as const, image };
-    expect(resolveBackground(bg, "dark")).toEqual({
-      type: "image",
-      variant: "dark",
-      version: 1,
+    for (const theme of ["dark", "light"] as const)
+      expect(resolveBackground(bg, theme)).toEqual({
+        type: "image",
+        variant: "main",
+        version: 1,
+      });
+  });
+
+  it("with separate images, each theme falls back to the other, then main", () => {
+    const withImages = (
+      darkUpdatedAt: number | null,
+      lightUpdatedAt: number | null,
+      updatedAt: number | null = null,
+    ) => ({
+      ...defaultBackground,
+      kind: "image" as const,
+      image: {
+        fit: "cover" as const,
+        perTheme: true,
+        updatedAt,
+        darkUpdatedAt,
+        lightUpdatedAt,
+      },
     });
-    expect(resolveBackground(bg, "light")).toEqual({
-      type: "image",
-      variant: "light",
-      version: 2,
-    });
-    const noLight = { ...bg, image: { ...image, lightUpdatedAt: null } };
-    expect(resolveBackground(noLight, "light")).toMatchObject({
-      variant: "dark",
-    });
-    const noImages = {
-      ...bg,
-      image: { ...image, updatedAt: null, lightUpdatedAt: null },
+    const variant = (
+      bg: ReturnType<typeof withImages>,
+      theme: "dark" | "light",
+    ) => {
+      const resolved = resolveBackground(bg, theme);
+      return resolved.type === "image" ? resolved.variant : resolved.type;
     };
-    expect(resolveBackground(noImages, "dark")).toEqual({
-      type: "colour",
-      colour: bg.colour,
-    });
+
+    expect(variant(withImages(1, 2), "dark")).toBe("dark");
+    expect(variant(withImages(1, 2), "light")).toBe("light");
+    // Neither slot is primary: a lone light image also shows in dark
+    expect(variant(withImages(null, 2), "dark")).toBe("light");
+    expect(variant(withImages(1, null), "light")).toBe("dark");
+    expect(variant(withImages(null, null, 3), "light")).toBe("main");
+    expect(variant(withImages(null, null), "dark")).toBe("colour");
   });
 
   it("builds layer styles per kind", () => {
@@ -83,7 +99,7 @@ describe("background", () => {
     ).toBe("linear-gradient(135deg, #1e1e2e, #45305e)");
 
     const image = backgroundLayerStyle(
-      { type: "image", variant: "dark", version: 1 },
+      { type: "image", variant: "main", version: 1 },
       "blob:abc",
       { ...opts, blur: 4 },
     );
@@ -95,7 +111,7 @@ describe("background", () => {
   it("falls back to the colour while an image loads", () => {
     expect(
       backgroundLayerStyle(
-        { type: "image", variant: "dark", version: 1 },
+        { type: "image", variant: "main", version: 1 },
         null,
         opts,
       ),

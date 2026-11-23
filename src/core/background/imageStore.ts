@@ -45,29 +45,35 @@ export function validateImage(file: File): string | null {
   return null;
 }
 
-/** "dark" is the main image; "light" the optional one for the light theme. */
-export type ImageVariant = "dark" | "light";
+/**
+ * "main": the one image, shown in both themes. With separate images on,
+ * "dark" and "light" are the per-theme slots; an empty slot falls back to
+ * the other slot, then to the main image.
+ */
+export type ImageVariant = "main" | "dark" | "light";
+
+const ALL_VARIANTS: readonly ImageVariant[] = ["main", "dark", "light"];
 
 const keyFor = (variant: ImageVariant) =>
-  variant === "light" ? `${KEY}-light` : KEY;
+  variant === "main" ? KEY : `${KEY}-${variant}`;
 
 export const saveBackgroundImage = (
   blob: Blob,
-  variant: ImageVariant = "dark",
+  variant: ImageVariant = "main",
 ) =>
   run("readwrite", (store) => store.put(blob, keyFor(variant))).then(
     () => undefined,
   );
 
-export const loadBackgroundImage = (variant: ImageVariant = "dark") =>
+export const loadBackgroundImage = (variant: ImageVariant = "main") =>
   run<Blob | undefined>("readonly", (store) => store.get(keyFor(variant))).then(
     (blob) => blob ?? null,
   );
 
-/** Without a variant, removes both images. */
+/** Without a variant, removes every image. */
 export const deleteBackgroundImage = (variant?: ImageVariant) =>
   Promise.all(
-    (variant ? [variant] : (["dark", "light"] as const)).map((v) =>
+    (variant ? [variant] : ALL_VARIANTS).map((v) =>
       run("readwrite", (store) => store.delete(keyFor(v))),
     ),
   ).then(() => undefined);

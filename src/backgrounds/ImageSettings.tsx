@@ -23,30 +23,40 @@ export default function ImageSettings({
 
   return (
     <>
-      <ImagePicker
-        label={image.perTheme ? "Dark theme image" : undefined}
-        variant="dark"
-        hasImage={image.updatedAt !== null}
-        onSaved={() => setImage({ updatedAt: Date.now() })}
-        onRemoved={() => setImage({ updatedAt: null })}
-      />
+      {image.perTheme ? (
+        <>
+          {/* Two equal slots; neither theme is the main one */}
+          {(["dark", "light"] as const).map((theme) => {
+            const key = theme === "dark" ? "darkUpdatedAt" : "lightUpdatedAt";
+            return (
+              <ImagePicker
+                key={theme}
+                label={
+                  theme === "dark" ? "Dark theme image" : "Light theme image"
+                }
+                variant={theme}
+                hasImage={image[key] !== null}
+                hint={`Empty: uses the ${theme === "dark" ? "light" : "dark"} theme image, or your main image.`}
+                onSaved={() => setImage({ [key]: Date.now() })}
+                onRemoved={() => setImage({ [key]: null })}
+              />
+            );
+          })}
+        </>
+      ) : (
+        <ImagePicker
+          variant="main"
+          hasImage={image.updatedAt !== null}
+          onSaved={() => setImage({ updatedAt: Date.now() })}
+          onRemoved={() => setImage({ updatedAt: null })}
+        />
+      )}
 
       <CheckboxField
-        label="Use a different image for the light theme"
+        label="Use separate images for dark and light"
         checked={image.perTheme}
         onChange={(perTheme) => setImage({ perTheme })}
       />
-
-      {image.perTheme && (
-        <ImagePicker
-          label="Light theme image"
-          variant="light"
-          hasImage={image.lightUpdatedAt !== null}
-          hint="Shown in the light theme. Until you add one, the dark theme image is used."
-          onSaved={() => setImage({ lightUpdatedAt: Date.now() })}
-          onRemoved={() => setImage({ lightUpdatedAt: null })}
-        />
-      )}
 
       <div className="field">
         <label htmlFor={fitId}>Fit</label>
