@@ -3,6 +3,14 @@
 All notable changes to Weborg. Versions follow
 [Semantic Versioning](https://semver.org).
 
+## 0.2.1
+
+### Changed
+
+- Settings and the README show Ko-fi's official "Buy me a coffee"
+  button. In the extension it is bundled, so settings still contact no
+  other site.
+
 ## 0.2.0: first public release
 
 Install locally from GitHub; see the README. Chrome Web Store and Firefox
