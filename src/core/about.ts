@@ -4,5 +4,5 @@ export const ABOUT = {
   author: "therafiniac",
   license: "MIT",
   repositoryUrl: "https://github.com/therafiniac/weborg",
-  supportUrl: "https://ko-fi.com/therafiniac",
+  supportUrl: "https://ko-fi.com/Q3C02B5R99",
 } as const;
