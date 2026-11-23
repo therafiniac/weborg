@@ -3,6 +3,13 @@
 All notable changes to Weborg. Versions follow
 [Semantic Versioning](https://semver.org).
 
+## 0.2.4
+
+### Added
+
+- Firefox: Weborg also offers to be your homepage. Firefox asks once
+  whether to keep the change, and it can be undone in Settings → Home.
+
 ## 0.2.3
 
 ### Changed
