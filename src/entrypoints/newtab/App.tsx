@@ -1,4 +1,4 @@
-import { Archive, Image, LayoutGrid, Type } from "lucide-react";
+import { Archive, Image, KeyRound, LayoutGrid, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Background from "@/app/Background";
@@ -7,6 +7,7 @@ import PageControls from "@/app/PageControls";
 import AppearanceSettings from "@/app/settings/AppearanceSettings";
 import BackgroundSettings from "@/app/settings/BackgroundSettings";
 import DataSettings from "@/app/settings/DataSettings";
+import PasswordSettings from "@/app/settings/PasswordSettings";
 import SettingsPanel from "@/app/settings/SettingsPanel";
 import WidgetList from "@/app/settings/WidgetList";
 import WidgetSection from "@/app/settings/WidgetSection";
@@ -121,6 +122,12 @@ export default function App() {
               content: (
                 <WidgetList settings={settings} onChange={saveSettings} />
               ),
+            },
+            {
+              id: "password",
+              label: "Password",
+              icon: KeyRound,
+              content: <PasswordSettings />,
             },
             {
               id: "backup",
