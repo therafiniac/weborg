@@ -791,6 +791,32 @@ describe("Todoist widget", () => {
     ]);
   });
 
+  it("refetches projects saved before the Inbox was marked", async () => {
+    await projectsItem.setValue({
+      projects: [
+        { id: "inbox", name: "Inbox" },
+        { id: "p1", name: "My Project" },
+      ],
+      fetchedAt: Date.now(),
+    });
+    await start([task("1", "Anything")]);
+    await findTask("Anything");
+    await waitFor(async () =>
+      expect((await projectsItem.getValue())?.projects[1]).toEqual({
+        id: "inbox",
+        name: "Inbox",
+        isInbox: true,
+      }),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Today: change view" }),
+    );
+    expect(
+      screen.getAllByRole("menuitemradio", { name: "Inbox" }),
+    ).toHaveLength(1);
+  });
+
   it("clears the added notice after a while", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
