@@ -226,7 +226,7 @@
   max-width: min(92vw, 1100px);
   border: 1px solid var(--links-border);
   border-radius: calc(var(--links-radius) + 4px);
-  background: rgb(17 17 27 / 0.88);
+  background: var(--popover-bg);
   color: var(--links-text);
   box-shadow: var(--shadow-popover);
   backdrop-filter: blur(20px);
@@ -248,7 +248,7 @@
   height: 12px;
   margin-left: -6px;
   border: 1px solid var(--links-border);
-  background: rgb(17 17 27 / 0.95);
+  background: var(--popover-bg-solid);
   rotate: 45deg;
 }
 
@@ -569,7 +569,7 @@
 .links.links__overlay .links__item,
 .links.links__overlay .links__item:hover {
   border: 1px solid var(--links-accent);
-  background: rgb(17 17 27 / 0.96);
+  background: var(--popover-bg-solid);
   box-shadow: var(--shadow-popover);
 }
 
