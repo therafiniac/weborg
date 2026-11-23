@@ -23,6 +23,9 @@
   --glass-fill-strong: rgb(255 255 255 / 0.12);
   --glass-highlight: rgb(255 255 255 / 0.08);
   --menu-bg: rgb(20 20 28 / 0.95);
+  /* Popovers attached to tiles (folders, add link) and their arrow */
+  --popover-bg: rgb(17 17 27 / 0.88);
+  --popover-bg-solid: rgb(17 17 27 / 0.96);
   --on-glass-danger: #ff7066;
   /* Default link tiles: background and border as RGB, used with opacity */
   --tile-rgb: 30 30 46;
@@ -61,6 +64,8 @@
   --glass-fill-strong: rgb(31 35 53 / 0.09);
   --glass-highlight: rgb(255 255 255 / 0.6);
   --menu-bg: rgb(255 255 255 / 0.97);
+  --popover-bg: rgb(255 255 255 / 0.88);
+  --popover-bg-solid: rgb(255 255 255 / 0.97);
   --on-glass-danger: #c0392b;
   --tile-rgb: 255 255 255;
   --tile-border-rgb: 31 35 53;
