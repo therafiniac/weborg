@@ -6,7 +6,8 @@ links and tasks one keypress away, all without writing a line of code.
 
 Free and open source. No accounts, no analytics, no tracking.
 
-[![Support Weborg on Ko-fi](https://img.shields.io/badge/Support%20Weborg-Ko--fi-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/therafiniac)
+<a href="https://ko-fi.com/Q3C02B5R99" target="_blank"><img height="36" src="https://storage.ko-fi.com/cdn/kofi4.png?v=6" alt="Buy Me a Coffee at ko-fi.com" /></a>
+
 [![MIT licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 
 > **Status:** v0.2.0, the first public release. Install it locally from
@@ -150,6 +151,8 @@ export default defineWebExtConfig({
 Weborg is free and always will be. If it makes your new tab nicer, you
 can **[buy me a coffee on Ko-fi ☕](https://ko-fi.com/therafiniac)**. Stars,
 bug reports and ideas help just as much.
+
+<a href="https://ko-fi.com/Q3C02B5R99" target="_blank"><img height="36" src="https://storage.ko-fi.com/cdn/kofi4.png?v=6" alt="Buy Me a Coffee at ko-fi.com" /></a>
 
 ## Contributing
 
