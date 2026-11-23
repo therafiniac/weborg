@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchTasks, sortTasks, TodoistError, type TodoistTask } from "./api";
 import { cacheItem, saveCache } from "./storage";
+import { viewKey, viewQuery, type TodoistView } from "./views";
 
 /** Filter edits arrive per keystroke; wait before asking Todoist. */
 const FILTER_DELAY_MS = 600;
@@ -14,7 +15,9 @@ export interface TasksState {
   error: TodoistError | null;
 }
 
-export function useTasks(token: string, filter: string) {
+export function useTasks(token: string, view: TodoistView) {
+  // Objects change identity each render; the key is what matters
+  const filter = viewKey(view);
   const [state, setState] = useState<TasksState>({
     tasks: null,
     loading: true,
@@ -33,7 +36,10 @@ export function useTasks(token: string, filter: string) {
     firstLoad.current = false;
     setState((s) => ({ ...s, loading: true }));
     try {
-      const tasks = await fetchTasks(token, filter);
+      const tasks = await fetchTasks(
+        token,
+        viewQuery(JSON.parse(filter) as TodoistView),
+      );
       if (id !== run.current) return null;
       fetchedAt.current = Date.now();
       loadedFilter.current = filter;
@@ -66,7 +72,9 @@ export function useTasks(token: string, filter: string) {
         setState((s) => ({ ...s, tasks: cache[filter]?.tasks ?? null }));
       })
       .catch(() => {});
-    const delay = firstLoad.current ? 0 : FILTER_DELAY_MS;
+    // Only typed filters wait; picking a view loads at once
+    const typed = (JSON.parse(filter) as TodoistView).kind === "filter";
+    const delay = firstLoad.current || !typed ? 0 : FILTER_DELAY_MS;
     const timer = setTimeout(() => void load(), delay);
     return () => {
       cancelled = true;

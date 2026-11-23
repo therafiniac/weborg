@@ -9,6 +9,9 @@ const priorityName = (priority: number) => `P${5 - priority}`;
 export default function TaskRow({
   task,
   project,
+  showProject,
+  due,
+  overdue,
   expanded,
   onToggle,
   onComplete,
@@ -17,6 +20,11 @@ export default function TaskRow({
 }: {
   task: TodoistTask;
   project: TodoistProject | undefined;
+  /** False when the view already says which project (row only). */
+  showProject: boolean;
+  /** Due text for the list row; "" when the view already says it. */
+  due: string;
+  overdue: boolean;
   expanded: boolean;
   onToggle: () => void;
   onComplete: () => void;
@@ -46,7 +54,11 @@ export default function TaskRow({
         >
           <span className="todoist__name">{task.content}</span>
           <span className="todoist__meta">
-            {task.due && <span>{task.due.string}</span>}
+            {due && (
+              <span className={overdue ? "todoist__overdue" : undefined}>
+                {due}
+              </span>
+            )}
             {task.priority > 1 && (
               <span
                 className={`todoist__flag todoist__flag--p${task.priority}`}
@@ -55,7 +67,7 @@ export default function TaskRow({
                 {priorityName(task.priority)}
               </span>
             )}
-            {project && (
+            {showProject && project && (
               <span className="todoist__project">
                 <Hash size={11} aria-hidden="true" />
                 {project.name}

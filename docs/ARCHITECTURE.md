@@ -185,6 +185,10 @@ cached in `local:todoist-cache` for offline display. New tasks go
 through Quick Add (`syntax.ts` only previews its syntax for highlighting);
 a picked or default date is applied with a follow-up update, since Quick
 Add takes text only. Project names are cached in `local:todoist-projects`.
+Views (`views.ts`) mirror Todoist's sidebar: Inbox, Today, Next 7 days,
+Upcoming, a project, a label, or a custom filter. Today and the upcoming
+views include overdue tasks in their own section, as Todoist does, and
+rows omit what the view already says (the day, or the project).
 
 ### Quick Links data (Built)
 

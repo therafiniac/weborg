@@ -2,6 +2,8 @@ import { browser } from "wxt/browser";
 
 import { isRecord } from "@/core/storage/guards";
 
+import type { ViewQuery } from "./views";
+
 /** Todoist API v1: https://developer.todoist.com/api/v1/ */
 const BASE_URL = "https://api.todoist.com/api/v1";
 
@@ -11,8 +13,8 @@ export const TODOIST_ORIGIN = "https://api.todoist.com/*";
 export const TOKEN_SETTINGS_URL =
   "https://app.todoist.com/app/settings/integrations/developer";
 
-/** Enough to rank and sort; the API's page limit is 200. */
-const FETCH_LIMIT = 50;
+/** The API's page limit; a widget never shows more. */
+const FETCH_LIMIT = 200;
 
 export interface TodoistTask {
   id: string;
@@ -144,15 +146,17 @@ export function sortTasks(tasks: TodoistTask[]): TodoistTask[] {
   });
 }
 
-/** Empty filter lists every active task. */
 export async function fetchTasks(
   token: string,
-  filter: string,
+  query: ViewQuery,
 ): Promise<TodoistTask[]> {
-  const query = filter.trim();
   const params = new URLSearchParams({ limit: String(FETCH_LIMIT) });
-  if (query) params.set("query", query);
-  const path = query ? "/tasks/filter" : "/tasks";
+  let path = "/tasks";
+  if (query.kind === "filter") {
+    path = "/tasks/filter";
+    params.set("query", query.query);
+  } else if (query.kind === "project") params.set("project_id", query.id);
+  else if (query.kind === "label") params.set("label", query.name);
   return sortTasks(parseTasks(await request(token, `${path}?${params}`)));
 }
 
@@ -322,4 +326,11 @@ export async function fetchLabels(token: string): Promise<string[]> {
   return value.results.flatMap((label: unknown) =>
     isRecord(label) && typeof label.name === "string" ? [label.name] : [],
   );
+}
+
+export async function createLabel(token: string, name: string): Promise<void> {
+  await request(token, "/labels", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
 }
