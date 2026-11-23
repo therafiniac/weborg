@@ -168,7 +168,7 @@ interface WidgetDefinition<Data> {
   show cached data when available.
 
 Built: Clock, Greeting, Search, Quick Links (tiles, presets, folders),
-Notes, and Text (the minimal reference implementation). Default layout:
+Notes, Todoist, and Text (the minimal reference implementation). Default layout:
 Clock, Greeting, Search and Quick Links in the centre.
 
 Shared pieces: `core/time` (aligned `useTime` hook and `Intl` formatting)
@@ -176,6 +176,15 @@ and `ui/fields.tsx` (labelled form controls every settings screen uses).
 
 Widget settings changes are pure functions in `core/widgets/actions.ts`
 (add, remove, update, move) so they are unit tested without React.
+
+Todoist talks to the Todoist API v1 with a personal API token. The token
+lives in `local:todoist-token`, outside widget data, so it never syncs and
+is never in backups. Access to `api.todoist.com` is an optional host
+permission requested when the user connects. Last tasks per filter are
+cached in `local:todoist-cache` for offline display. New tasks go
+through Quick Add (`syntax.ts` only previews its syntax for highlighting);
+a picked or default date is applied with a follow-up update, since Quick
+Add takes text only. Project names are cached in `local:todoist-projects`.
 
 ### Quick Links data (Built)
 
