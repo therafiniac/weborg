@@ -28,6 +28,14 @@
   --tile-rgb: 30 30 46;
   --tile-border-rgb: 205 214 244;
   --tile-text: #cdd6f4;
+  /* Shadows: colour as RGB, and a multiplier for their opacity */
+  --shadow-rgb: 6 6 18;
+  --shadow-strength: 3;
+  /* Floating surfaces (popovers, menus): soft and layered */
+  --shadow-popover:
+    0 2px 6px rgb(var(--shadow-rgb) / calc(0.06 * var(--shadow-strength))),
+    0 16px 40px -8px
+      rgb(var(--shadow-rgb) / calc(0.16 * var(--shadow-strength)));
   color-scheme: dark;
 }
 
@@ -57,6 +65,8 @@
   --tile-rgb: 255 255 255;
   --tile-border-rgb: 31 35 53;
   --tile-text: #1f2335;
+  --shadow-rgb: 64 54 110;
+  --shadow-strength: 1;
   color-scheme: light;
 }
 
