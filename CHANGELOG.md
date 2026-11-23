@@ -3,6 +3,14 @@
 All notable changes to Weborg. Versions follow
 [Semantic Versioning](https://semver.org).
 
+## 0.2.3
+
+### Changed
+
+- First build submitted to the public Firefox Add-ons store. No feature
+  changes: built from the npm lockfile so Mozilla's reviewers can rebuild
+  it exactly from the source code.
+
 ## 0.2.2
 
 ### Changed
