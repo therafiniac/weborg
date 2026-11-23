@@ -3,10 +3,15 @@ import { useEffect, useState } from "react";
 import type { ResolvedTheme } from "@/core/appearance/appearance";
 import {
   backgroundLayerStyle,
-  themedDefaults,
+  fillColours,
+  resolveBackground,
   type BackgroundSettings,
 } from "@/core/background/background";
-import { loadBackgroundImage } from "@/core/background/imageStore";
+import {
+  loadBackgroundImage,
+  type ImageVariant,
+} from "@/core/background/imageStore";
+import { averageColour, backdropFor } from "@/core/background/tone";
 
 import "./Background.css";
 
@@ -17,15 +22,35 @@ export default function Background({
   settings: BackgroundSettings;
   theme?: ResolvedTheme;
 }) {
-  const imageUrl = useBackgroundImageUrl(
-    settings.kind === "image" ? settings.image.updatedAt : null,
+  const resolved = resolveBackground(settings, theme);
+  const image = resolved.type === "image" ? resolved : null;
+  const { url, colour } = useBackgroundImage(
+    image?.variant ?? null,
+    image?.version ?? null,
   );
+
+  // Text on the background follows its brightness (Darken included).
+  // Until an image is measured, assume dark, the safer guess for photos.
+  const backdrop =
+    resolved.type === "image"
+      ? colour
+        ? backdropFor([colour], settings.dim)
+        : "dark"
+      : backdropFor(fillColours(resolved), settings.dim);
+
+  useEffect(() => {
+    document.documentElement.dataset.backdrop = backdrop;
+  }, [backdrop]);
 
   return (
     <div className="background" aria-hidden>
       <div
         className="background__layer"
-        style={backgroundLayerStyle(themedDefaults(settings, theme), imageUrl)}
+        style={backgroundLayerStyle(resolved, url, {
+          blur: settings.blur,
+          fit: settings.image.fit,
+          colour: settings.colour,
+        })}
       />
       {settings.dim > 0 && (
         <div
@@ -37,20 +62,30 @@ export default function Background({
   );
 }
 
-/** Object URL for the stored image; reloads when `version` changes. */
-function useBackgroundImageUrl(version: number | null): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+/** Object URL and average colour of a stored image; reloads on `version`. */
+function useBackgroundImage(
+  variant: ImageVariant | null,
+  version: number | null,
+): { url: string | null; colour: string | null } {
+  const [loaded, setLoaded] = useState<{
+    key: string;
+    url: string;
+    colour: string | null;
+  } | null>(null);
+  const key = variant && version !== null ? `${variant}:${version}` : null;
 
   useEffect(() => {
-    if (version === null) return;
+    if (!variant || version === null) return;
     let objectUrl: string | null = null;
     let cancelled = false;
 
-    loadBackgroundImage()
-      .then((blob) => {
+    loadBackgroundImage(variant)
+      .then(async (blob) => {
         if (cancelled || !blob) return;
         objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
+        const colour = await averageColour(blob);
+        if (!cancelled)
+          setLoaded({ key: `${variant}:${version}`, url: objectUrl, colour });
       })
       .catch((error: unknown) =>
         console.error("Weborg: failed to load background image", error),
@@ -59,9 +94,10 @@ function useBackgroundImageUrl(version: number | null): string | null {
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      setUrl(null);
     };
-  }, [version]);
+  }, [variant, version]);
 
-  return version === null ? null : url;
+  return loaded && loaded.key === key
+    ? { url: loaded.url, colour: loaded.colour }
+    : { url: null, colour: null };
 }

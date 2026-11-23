@@ -45,13 +45,29 @@ export function validateImage(file: File): string | null {
   return null;
 }
 
-export const saveBackgroundImage = (blob: Blob) =>
-  run("readwrite", (store) => store.put(blob, KEY)).then(() => undefined);
+/** "dark" is the main image; "light" the optional one for the light theme. */
+export type ImageVariant = "dark" | "light";
 
-export const loadBackgroundImage = () =>
-  run<Blob | undefined>("readonly", (store) => store.get(KEY)).then(
+const keyFor = (variant: ImageVariant) =>
+  variant === "light" ? `${KEY}-light` : KEY;
+
+export const saveBackgroundImage = (
+  blob: Blob,
+  variant: ImageVariant = "dark",
+) =>
+  run("readwrite", (store) => store.put(blob, keyFor(variant))).then(
+    () => undefined,
+  );
+
+export const loadBackgroundImage = (variant: ImageVariant = "dark") =>
+  run<Blob | undefined>("readonly", (store) => store.get(keyFor(variant))).then(
     (blob) => blob ?? null,
   );
 
-export const deleteBackgroundImage = () =>
-  run("readwrite", (store) => store.delete(KEY)).then(() => undefined);
+/** Without a variant, removes both images. */
+export const deleteBackgroundImage = (variant?: ImageVariant) =>
+  Promise.all(
+    (variant ? [variant] : (["dark", "light"] as const)).map((v) =>
+      run("readwrite", (store) => store.delete(keyFor(v))),
+    ),
+  ).then(() => undefined);

@@ -41,7 +41,12 @@ describe("backup", () => {
     await backgroundItem.setValue({
       ...defaultBackground,
       kind: "image",
-      image: { fit: "cover", updatedAt: 123 },
+      image: {
+        fit: "cover",
+        updatedAt: 123,
+        perTheme: false,
+        lightUpdatedAt: null,
+      },
     });
     expect((await createBackup()).background.image.updatedAt).toBeNull();
   });

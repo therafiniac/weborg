@@ -55,10 +55,10 @@ describe("appearance", () => {
 
   it("writes page variables, leaving unset options out", () => {
     const vars = appearanceVars(defaultAppearance) as Record<string, string>;
-    // Default text and shadow follow the theme
-    expect(vars["--dashboard-text"]).toBe("var(--theme-text)");
+    // Default text and shadow follow the background
+    expect(vars["--dashboard-text"]).toBe("var(--backdrop-text)");
     expect(vars["--dashboard-scale"]).toBe("1");
-    expect(vars["--dashboard-shadow"]).toBe("var(--text-shadow-soft)");
+    expect(vars["--dashboard-shadow"]).toBe("var(--backdrop-shadow-soft)");
     expect(vars).not.toHaveProperty("--dashboard-font");
     expect(vars).not.toHaveProperty("--dashboard-weight");
   });

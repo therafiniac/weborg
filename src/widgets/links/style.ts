@@ -116,7 +116,7 @@ export function styleVars(style: LinkStyle, columns: number): CSSProperties {
     "--links-shadow": `0 4px 12px rgba(0, 0, 0, ${round(0.35 * shadow)}), 0 10px 24px rgba(0, 0, 0, ${round(0.25 * shadow)})`,
     "--links-text": defaultText
       ? style.mode === "plain"
-        ? "var(--dashboard-text, var(--theme-text))"
+        ? "var(--dashboard-text, var(--backdrop-text))"
         : "var(--tile-text)"
       : style.textColour,
     "--links-font-size": `${style.fontSize}px`,

@@ -194,6 +194,11 @@
   transform: scale(1.05);
 }
 
+/* The check stays visible on light and dark swatches alike */
+.preset-swatch svg {
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.85));
+}
+
 .preset-swatch[aria-pressed="true"] {
   border-color: var(--color-accent);
 }
@@ -336,7 +341,8 @@
   border: 1px solid var(--glass-border);
   border-radius: 0.75rem;
   background: var(--glass-bg-strong);
-  color: var(--theme-text);
+  color: var(--glass-text);
+  text-shadow: none;
   font-size: 0.875rem;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

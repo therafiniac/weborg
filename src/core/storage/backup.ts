@@ -49,7 +49,7 @@ export async function createBackup(): Promise<Backup> {
     settings,
     background: {
       ...background,
-      image: { ...background.image, updatedAt: null },
+      image: { ...background.image, updatedAt: null, lightUpdatedAt: null },
     },
     widgets,
   };
