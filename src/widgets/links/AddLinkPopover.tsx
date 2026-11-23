@@ -60,6 +60,13 @@ export default function AddLinkPopover({
             onChange={setMode}
           />
         )}
+        {onAddFolder && (
+          <p className="add-popover__hint">
+            {mode === "link"
+              ? "Tip: choose Folder to group several links under one tile."
+              : "A folder groups links under one tile. Add links to it after."}
+          </p>
+        )}
         {mode === "link" || !onAddFolder ? (
           <QuickAddForm
             title={title}
