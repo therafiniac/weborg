@@ -34,9 +34,10 @@ export default function BackgroundSettings({ settings, onChange }: Props) {
   const definition = getBackground(settings.kind);
 
   const handleReset = async () => {
-    const hasImage =
-      settings.image.updatedAt !== null ||
-      settings.image.lightUpdatedAt !== null;
+    const { updatedAt, darkUpdatedAt, lightUpdatedAt } = settings.image;
+    const hasImage = [updatedAt, darkUpdatedAt, lightUpdatedAt].some(
+      (version) => version !== null,
+    );
     if (
       hasImage &&
       !confirm("Reset the background? Your uploaded image will be removed.")

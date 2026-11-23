@@ -17,10 +17,10 @@ import "./Background.css";
 
 export default function Background({
   settings,
-  theme = "dark",
+  theme,
 }: {
   settings: BackgroundSettings;
-  theme?: ResolvedTheme;
+  theme: ResolvedTheme;
 }) {
   const resolved = resolveBackground(settings, theme);
   const image = resolved.type === "image" ? resolved : null;
@@ -30,12 +30,12 @@ export default function Background({
   );
 
   // Text on the background follows its brightness (Darken included).
-  // Until an image is measured, assume dark, the safer guess for photos.
+  // Until an image is measured (or if it cannot be), go with the theme.
   const backdrop =
     resolved.type === "image"
       ? colour
         ? backdropFor([colour], settings.dim)
-        : "dark"
+        : theme
       : backdropFor(fillColours(resolved), settings.dim);
 
   useEffect(() => {

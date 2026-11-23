@@ -3,6 +3,7 @@ import { storage } from "wxt/utils/storage";
 
 import { isRecord } from "@/core/storage/guards";
 
+import type { ImageVariant } from "./imageStore";
 import { DEFAULT_DYNAMIC, getDynamicPreset } from "./presets";
 
 /** "dynamic": a preset with a dark and a light version, following the theme. */
@@ -21,12 +22,14 @@ export type Fill =
   | { type: "colour"; colour: string }
   | { type: "gradient"; from: string; to: string; angle: number };
 
+/** Save times identify each stored image; null means none is stored. */
 export interface BackgroundImage {
   fit: "cover" | "contain";
-  /** When the (dark, or only) image was saved; null when there is none. */
+  /** The main image, shown in both themes. */
   updatedAt: number | null;
-  /** A second image for the light theme. */
+  /** Separate images for the dark and the light theme. */
   perTheme: boolean;
+  darkUpdatedAt: number | null;
   lightUpdatedAt: number | null;
 }
 
@@ -53,6 +56,7 @@ export const defaultBackground: BackgroundSettings = {
     fit: "cover",
     updatedAt: null,
     perTheme: false,
+    darkUpdatedAt: null,
     lightUpdatedAt: null,
   },
   blur: 0,
@@ -106,6 +110,8 @@ export function normalizeBackground(value: unknown): BackgroundSettings {
       fit: image.fit === "contain" ? "contain" : "cover",
       updatedAt: typeof image.updatedAt === "number" ? image.updatedAt : null,
       perTheme: image.perTheme === true,
+      darkUpdatedAt:
+        typeof image.darkUpdatedAt === "number" ? image.darkUpdatedAt : null,
       lightUpdatedAt:
         typeof image.lightUpdatedAt === "number" ? image.lightUpdatedAt : null,
     },
@@ -120,7 +126,7 @@ export type ResolvedBackground =
   | {
       type: "image";
       /** Which stored image to show. */
-      variant: Theme;
+      variant: ImageVariant;
       /** Changes when that image is replaced, to reload it. */
       version: number;
     };
@@ -141,12 +147,24 @@ export function resolveBackground(
     case "gradient":
       return { type: "gradient", ...settings.gradient };
     case "image": {
-      const { updatedAt, perTheme, lightUpdatedAt } = settings.image;
-      // The light image only when asked for and present; else the main one
-      if (theme === "light" && perTheme && lightUpdatedAt !== null)
-        return { type: "image", variant: "light", version: lightUpdatedAt };
-      if (updatedAt !== null)
-        return { type: "image", variant: "dark", version: updatedAt };
+      const { updatedAt, perTheme, darkUpdatedAt, lightUpdatedAt } =
+        settings.image;
+      const slots: [ImageVariant, number | null][] = perTheme
+        ? // This theme's image, else the other theme's, else the main one
+          theme === "dark"
+          ? [
+              ["dark", darkUpdatedAt],
+              ["light", lightUpdatedAt],
+              ["main", updatedAt],
+            ]
+          : [
+              ["light", lightUpdatedAt],
+              ["dark", darkUpdatedAt],
+              ["main", updatedAt],
+            ]
+        : [["main", updatedAt]];
+      for (const [variant, version] of slots)
+        if (version !== null) return { type: "image", variant, version };
       return { type: "colour", colour: settings.colour };
     }
   }
